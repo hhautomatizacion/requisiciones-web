@@ -1,0 +1,116 @@
+<?php
+	require_once("libconfig.php");
+	require_once("libdb.php");
+	require_once("libphp.php");
+	require_once("librequisicion.php");
+
+	if ( isset($_GET["id"]) ) {
+		$idpartida=$_GET["id"];
+		switch ($_GET["action"]) {
+			case "partsupplied":
+				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE id=". $idpartida .";");
+				$res->execute();
+				echo "OK";
+				break;
+			case "partdelete":
+				$res = $db->prepare("UPDATE partidas SET activo=0 WHERE id=". $idpartida .";");
+				$res->execute();
+				echo "OK";
+				break;
+			case "partundelete":
+				$res = $db->prepare("UPDATE partidas SET activo=1 WHERE id=". $idpartida .";");
+				$res->execute();
+				echo "OK";
+				break;
+		}
+	}
+	
+	function PartidaEsActiva($idpartida) {
+		global $db;
+		$resultado=false;
+		$res = $db->prepare("SELECT activo FROM partidas WHERE id=". $idpartida .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			if ( $row[0] == 1 ) {
+				$resultado=true;
+			}
+		}
+		return $resultado;
+	}
+	function PartidaEsSurtida($idpartida) {
+		global $db;
+		$resultado=0;
+		
+		$res = $db->prepare("SELECT surtida FROM partidas WHERE activo=1 AND id=". $idpartida .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			if ( $row[0] == 1 ) {
+				$resultado=1;
+			}
+		}
+		return $resultado;
+	}
+	function AccionesPartida($idpartida) {
+		global $db;
+		$idrequisicion=0;
+		$resultado="";
+		$res = $db->prepare("SELECT idrequisicion FROM partidas WHERE id=". $idpartida .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$idrequisicion=$row[0];
+		}
+		if ( usuarioEsLogeado() ) {
+			if ( !(PartidaEsSurtida($idpartida)) && (PartidaEsActiva($idpartida)) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
+				$resultado .= "<button onClick=\"appSurtePartida(". $idpartida .",". $idrequisicion .");\">Surtida</button>";
+			}
+		}
+		if ( RequisicionEsMia($idrequisicion) ) {
+			if ( RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && !PartidaEsSurtida($idpartida) ) {
+				$resultado .= "<button onClick=\"appBorraPartida(". $idpartida .",". $idrequisicion .");\">Eliminar</button>";
+			}
+		}
+		if ( usuarioEsSuper() ) {
+			if ( RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && PartidaEsSurtida($idpartida) ) {
+				$resultado .= "<button onClick=\"appPorsurtirPartida(". $idpartida .",". $idrequisicion .");\">Por surtir</button>";
+			}
+			if ( !RequisicionEsMia($idrequisicion) && RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && !PartidaEsSurtida($idpartida) ) {
+				$resultado .= "<button onClick=\"appBorraPartida(". $idpartida .",". $idrequisicion .");\">Eliminar</button>";
+			}
+			if ( !PartidaEsActiva($idpartida) && RequisicionEsActiva($idrequisicion) ) {	
+				$resultado .= "<button onClick=\"appRestauraPartida(". $idpartida .",". $idrequisicion .");\">Restaurar</button>";
+			}
+		}
+		return $resultado;
+	}
+
+	function MostrarAdjuntosPartida($idpartida) {
+		global $db;
+		$resultado="";
+		$res = $db->prepare("SELECT * FROM adjuntospartidas WHERE idpartida=". $idpartida .";");
+		$res->execute();
+		$resultado .= "<table>";
+		$resultado .= "<tr><td width=\"50%\"><small>Archivo</small></td><td width=\"10%\"><small>Tama&ntilde;o</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\"><small>Accion</small></td></tr>";
+		while ($row = $res->fetch()) {
+			$rutaarchivo = "uploads/p". $idpartida ."/". $row[2];
+			$resultado .= "<tr><td>". $row[2] ."</td><td>". formatBytes($row[3]) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td><button onClick=\"window.open('". $rutaarchivo ."');\">Abrir</button></td></tr>";
+		}
+		$resultado .= "</table>";
+		return $resultado;
+	}
+	
+	function MostrarComentariosPartida($idpartida) {
+		global $db;	
+		$resultado="";
+		$res = $db->prepare("SELECT * FROM comentariospartidas WHERE idpartida=". $idpartida .";");
+		$res->execute();
+		$resultado .= "<table>";
+		$resultado .= "<tr><td width=\"60%\"><small>Comentario</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\"><small>Acciones</small></td></tr>";
+		while ($row = $res->fetch()) {
+			$resultado .= "<tr><td>". $row[3] ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>Acciones com</td></tr>";
+		}
+		$resultado .= "</table>";
+		return $resultado;
+	}	
+	
+	
+?>
