@@ -188,6 +188,18 @@
 					}
 				}
 			}
+			function GetFileSizeAdjunto(el, tableID, fileID) {
+				console.log(el.id);
+				thesize=formatBytes(el.files.item(0).size);
+				if (el.files.item(0).size >  100 * 1024 * 1024 ) {
+					alert("El archivo es demasiado grande.\n\nFile: " + el.files.item(0).name + "\nSize: " + thesize);
+					var table = document.getElementById(tableID);
+					table.rows[fileID].cells[1].innerHTML='<b>'+ thesize +'</b>';
+				}else{
+					var table = document.getElementById(tableID);
+					table.rows[fileID].cells[1].innerHTML=thesize;
+				}
+			}
 			function elementoMostrar(idelemento) {
 				document.getElementById(idelemento).style.visibility="visible";
 				
@@ -222,9 +234,17 @@
 								div.innerHTML= this.responseText;
 								divContenido.appendChild(div);
 								item = item+ 1;
+								
+							}else{
+								if ( item == 0 ) {
+									//divContenido.innerHTML ='<div><p><b>No hay resultados.</b></p></div>';
+									console.log("No hay resultados");
+								}
 							}
 							ocupado=false;
-							yHandler();
+							if ( item > 0 ) {
+								yHandler();
+							}
 						}
 					};
 					if ( mostrarusuarios ) {
@@ -237,7 +257,11 @@
 					xmlhttp.send();
 				}
 			}
-			
+			function appTextBusqueda(e) {
+				if ( e.key == 'Enter' ) {
+					appBusqueda();
+				}
+			}
 			function appBusqueda() {
 				txtBusqueda= document.getElementById("busquedarequisiciones");
 				busquedarequisiciones=txtBusqueda.value;
@@ -358,6 +382,9 @@
 									item = item+ 1;
 								}else{
 									clearInterval(t);
+									if ( item == 0 ) {
+										console.log("No hay resultados");
+									}
 								}
 								ocupado=false;
 							}
@@ -589,7 +616,7 @@
 				table.rows[rowID].style.display='none';
 			}
 			function populateUsersCombo(el,tabla,campo){
-				
+				if ( el.options.length <= 1 ) {
 					if (window.XMLHttpRequest) {
 						xmlhttp = new XMLHttpRequest();
 					} else {
@@ -604,7 +631,7 @@
 					};
 					xmlhttp.open("GET","libdb.php?action=getoptions&table="+ tabla +"&description="+ campo,true);
 					xmlhttp.send();
-				
+				}
 			}
 
 			function populateCombo(el,tabla,campo){
@@ -633,6 +660,43 @@
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"15%\"><small>Cantidad</small></td><td width=\"15%\"><small>Unidad</small></td><td width=\"50%\"><small>Descripcion</small></td><td width=\"20%\"><small>C.R.</small></td></tr><tr><td><input type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select name = 'unidad["+newRow+"]' onfocus=\"populateCombo(this,'unidades','unidad');\"></select></td><td><input type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select name = 'centrocostos["+newRow+"]' onfocus=\"populateCombo(this, 'centroscostos','descripcion')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\"tablapartidas\","+ newRow +");'>";
 			}
+			function addAdjuntoPart(idpartida) {
+				var table = document.getElementById('tablaadjuntospart'+ idpartida);
+				var newRow = table.rows.length;
+				var row = table.insertRow(newRow);
+				var fecha = new Date().toISOString().replace("T"," ").slice(0,19);
+				row.insertCell(0).innerHTML = "<input type='file' id='adjuntospartida"+ idpartida +"["+ newRow +"]' onchange='GetFileSizeAdjunto(this, \"tablaadjuntospart"+ idpartida +"\", "+ newRow +");' />";
+				row.insertCell(1).innerHTML = "";
+				row.insertCell(2).innerHTML = fecha;
+				row.insertCell(3).innerHTML = "";
+				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoPart("+  idpartida +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntospart"+  idpartida +"\","+ newRow +");'>";
+			}
+			function saveAdjuntoPart(idpartida, adjunto) {
+				
+				var input = document.getElementById("adjuntospartida"+ idpartida +"["+ adjunto +"]");
+				var file = input.files.item(0);
+				var celdas = document.getElementById('tablaadjuntospart'+ idpartida).rows[adjunto].cells;
+				
+				console.log(file.name);
+				console.log(file.size);
+				celdas[4].innerHTML="";
+				xmlhttp = new XMLHttpRequest();
+					
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							celdas[0].innerHTML= file.name;
+							celdas[4].innerHTML= "<button onClick=\"window.open('uploads/p"+ idpartida +"/"+ file.name +"');\">Abrir</button>";
+						}
+					}
+				};
+				var formdata = new FormData();
+				formdata.append("partida", idpartida);
+				formdata.append("archivo", file);
+				xmlhttp.open("POST","libpartida.php");
+				xmlhttp.send(formdata);
+			
+			}
 			function addComentarioReq(tableID) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
@@ -647,7 +711,6 @@
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-				
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartcomentarios["+ tableID +"][]' value='"+ newRow +"'><input type='text' name='partcomentarios["+ tableID +"]["+ newRow +"]' />";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
@@ -954,16 +1017,22 @@
 				xmlhttp.open("GET","librequisicion.php?action=saveprinted&id="+idrequisicion + reqno + fecha,true);
 				xmlhttp.send();
 			}	
+			function appTextSaveEditarImpresa(e, idrequisicion) {
+				if ( e.key == 'Enter' ) {
+					appSaveEditarImpresa(idrequisicion);
+				}
+				
+			}
 			function appEditarImpresa(el,idrequisicion) {
 				var divRequisicion=document.getElementById('mostrarrequisicion'+ idrequisicion);
 				if ( !document.getElementById('editreqno'+ idrequisicion) ) {
 					
 					var cellRequisicion = divRequisicion.children[0].children[0].children[3];
 					var requisicion= cellRequisicion.innerHTML;
-					cellRequisicion.innerHTML='<input id="editreqno'+ idrequisicion +'" type="text" value="'+ requisicion +'">';
-					var cellSurtir = divRequisicion.children[0].children[1].children[5];
+					cellRequisicion.innerHTML='<input id="editreqno'+ idrequisicion +'" type="text" value="'+ requisicion +'" onkeyup="appTextSaveEditarImpresa(event, '+ idrequisicion +');">';
+					//var cellSurtir = divRequisicion.children[0].children[1].children[5];
+					//cellSurtir.innerHTML='<input id="editfecha'+ idrequisicion +'" type="date">'
 					
-					cellSurtir.innerHTML='<input id="editfecha'+ idrequisicion +'" type="date">'
 					// elChildren= divRequisicion.children[0].children[1].children;
 					// for (var i=0; i < elChildren.length; i++) {
 						// console.log(i);

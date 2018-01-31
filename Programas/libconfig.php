@@ -13,5 +13,5 @@ $db_database = "requisiciones";
 $db_user = "root";
 
 // Y ahora la contraseña:
-$db_pass = "password";
+$db_pass = "manttocl";
 ?>

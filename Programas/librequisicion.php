@@ -361,6 +361,13 @@
 		while ($row = $res->fetch()) {
 			$comentario= $row[3];
 		}
+		if ( strlen($comentario) == 0 ) {
+			$res = $db->prepare("SELECT comentario FROM comentariospartidas INNER JOIN partidas ON (comentariospartidas.idpartida=partidas.id) WHERE (comentariospartidas.idusuario=". $solicitante ." OR comentariospartidas.idusuario=". $idusuario .") AND partidas.activo=1 AND partidas.idrequisicion=". $idrequisicion ." LIMIT 1;");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				$comentario= $row[0];
+			}	
+		}
 		if ($pdf->MeassureRows($comentario,170,5) > 10) {
 			while ( strlen($comentario) && $pdf->MeassureRows($comentario ."...",170,5) > 10 ) {
 				$comentario = substr($comentario,0,-1);
@@ -368,7 +375,7 @@
 			$comentario .= "...";
 		}
 		
-		$pdf->PutRows(30,112,$comentario,170,5);
+		$pdf->PutRows(40,105,$comentario,170,5);
 	}
 	function ImprimirRequisicion($pdf, $idrequisicion) {	
 		ImprimirPartidas($pdf, $idrequisicion);		
@@ -381,24 +388,22 @@
 		$res->execute();
 	
 		while ($row = $res->fetch()) {
-			$req = "[" . $idrequisicion . "]";
+			$pdf->PutRows(35,30,ObtenerDescripcionDesdeID("departamentos",$row[9],"departamento"),60);
 			
-			$pdf->PutRows(30,30,ObtenerDescripcionDesdeID("departamentos",$row[6],"departamento"),60);
+			$pdf->PutRows(35,35,ObtenerDescripcionDesdeID("areas",$row[10],"area"),60);
 			
-			$pdf->PutRows(30,35,ObtenerDescripcionDesdeID("areas",$row[7],"area"),60);
-			
-			$pdf->PutRows(190,25,$req);
+			$pdf->PutRows(190,25,"[" . $idrequisicion . "]");
 			
 			$pdf->PutRows(146,35,date("d"));
 			$pdf->PutRows(155,35,date("m"));
 			$pdf->PutRows(163,35,date("Y"));
 			
-			$pdf->PutRows(5,125,ObtenerDescripcionDesdeID("usuarios",$row[9],"nombre") ." (". ObtenerDescripcionDesdeID("usuarios",$row[9],"numero") .")",70);
+			$pdf->PutRows(15,118,ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre") ." (". ObtenerDescripcionDesdeID("usuarios",$row[13],"numero") .")",70);
 		}
 	}
 	function ImprimirPartidas($pdf, $idrequisicion) {
 		global $db;
-		$y=50;
+		$y=47;
 		$cr="";
 		ImprimirEncabezados($pdf, $idrequisicion);
 		ImprimirComentarios($pdf, $idrequisicion);
@@ -408,7 +413,7 @@
 			$cr = ObtenerDescripcionDesdeID("centroscostos",$row[9],"numero");
 			
 			if ( $y + $pdf->MeassureRows($row[4] ,135,5) > 105 ) {
-				$y=50;
+				$y=47;
 				$pdf->AddPage();
 				ImprimirEncabezados($pdf, $idrequisicion);
 				ImprimirComentarios($pdf, $idrequisicion);
@@ -570,11 +575,12 @@
 			
 			$resultado .= '<button onClick="appCopiaRequisicion('. $idrequisicion .');">Copiar</button>';
 			
+		}
+		if ( RequisicionEsMia($idrequisicion) || usuarioEsSuper() ) {
 			if ( !(RequisicionEsSurtida($idrequisicion)) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
 				$resultado .= '<button onClick="appSurteRequisicion('. $idrequisicion .');">Surtida</button>';
 			}
-		}
-		if ( RequisicionEsMia($idrequisicion) || usuarioEsSuper() ) {
+
 			if ( !RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
 				$resultado .= '<button onClick="appImprimeRequisicion('. $idrequisicion .');">Imprimir</button>';
 			}

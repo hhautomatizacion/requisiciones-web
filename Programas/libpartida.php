@@ -4,6 +4,24 @@
 	require_once("libphp.php");
 	require_once("librequisicion.php");
 
+	if ( isset($_POST["partida"]) ) {
+		$idpartida=$_POST["partida"];
+		$uploaddir="uploads/";
+		$rutaupload=$uploaddir ."p". $idpartida;
+		if (!is_writeable($rutaupload)) {
+			mkdir($rutaupload);
+		}
+		$nombrearchivo = $_FILES["archivo"]["name"];
+		$rutatemp = $_FILES["archivo"]["tmp_name"];
+		$longitudarchivo=$_FILES["archivo"]["size"];
+		$rutadestino=$rutaupload ."/". $nombrearchivo;
+		if (move_uploaded_file($rutatemp,$rutadestino)) {
+			$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0,". $idpartida .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
+			$res->execute();
+			echo "OK";
+		}
+		
+	}
 	if ( isset($_GET["id"]) ) {
 		$idpartida=$_GET["id"];
 		switch ($_GET["action"]) {
@@ -82,14 +100,22 @@
 		}
 		return $resultado;
 	}
-
+	function AgregarAdjuntosPartida($idpartida) {
+		$resultado="";
+		if ( usuarioEsLogeado() ) {
+			$resultado="<input type = \"button\" value=\"Agregar\" onclick=\"addAdjuntoPart(". $idpartida .");\">";
+		}else{
+			$resultado="<small>Acciones</small>";
+		}
+		return $resultado;
+	}
 	function MostrarAdjuntosPartida($idpartida) {
 		global $db;
 		$resultado="";
 		$res = $db->prepare("SELECT * FROM adjuntospartidas WHERE idpartida=". $idpartida .";");
 		$res->execute();
-		$resultado .= "<table>";
-		$resultado .= "<tr><td width=\"50%\"><small>Archivo</small></td><td width=\"10%\"><small>Tama&ntilde;o</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\"><small>Accion</small></td></tr>";
+		$resultado .= "<table id=\"tablaadjuntospart". $idpartida ."\">";
+		$resultado .= "<tr><td width=\"50%\"><small>Archivo</small></td><td width=\"10%\"><small>Tama&ntilde;o</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\"><small>". AgregarAdjuntosPartida($idpartida) ."</small></td></tr>";
 		while ($row = $res->fetch()) {
 			$rutaarchivo = "uploads/p". $idpartida ."/". $row[2];
 			$resultado .= "<tr><td>". $row[2] ."</td><td>". formatBytes($row[3]) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td><button onClick=\"window.open('". $rutaarchivo ."');\">Abrir</button></td></tr>";
