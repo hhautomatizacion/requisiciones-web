@@ -28,5 +28,6 @@
 		echo "<select width='15%' id='usuariosrequisiciones' onchange=\"appActualizaVista();\" onfocus=\"populateUsersCombo(this,'usuarios','nombre');\"><option value=0>Todos</option></select>";
 		echo "<input width='15%' type='text' id='busquedarequisiciones' placeholder='Buscar' onkeyup='appTextBusqueda(event);'></input>";
 		echo "<button onClick=\"event.preventDefault();appBusqueda();\">Buscar</button>";
+		echo "<progress id=\"estado\" value=\"0\"></progress>";
 	}
 ?>

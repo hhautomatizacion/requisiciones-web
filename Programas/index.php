@@ -125,19 +125,26 @@
 			#busquedarequisiciones {
 				width: 15%;
 			}
+			#estado {
+				width: 15%;
+				height: 20px;
+				float: right;
+			}
 			.req {background: lightgray;}
 			.printed {background: #FFC040;}
 			.supplied {background: #C0C080;}
       		.req {	opacity: 0.9;}
 			.owner {opacity: 1;}
-			.deleted {opacity: 0.4;}
+			.deleted {opacity: 0.5;}
 			.partsupplied {background: #C0C080;}
-			.partdeleted {opacity: 0.4;}
+			.partdeleted {opacity: 0.5;}
 		</style>
 		<script language="JavaScript" type="text/javascript">
 			var ocupado=false;
-			var item=0;
-			var busqueda="";
+			var item=0;  // borrar borrar tambien de librequisicion.php
+			var requisiciones = [];
+			var requisicion = 0;
+			var busquedarequisiciones="";
 			function formatBytes(bytes) {
 				if (typeof bytes !== 'number') {
 					return '';
@@ -148,7 +155,10 @@
 				if (bytes >= 1024*1024) {
 					return (bytes / (1024*1024)).toFixed(2) + ' MB';
 				}
-				return (bytes / 1024).toFixed(2) + ' KB';
+				if (bytes >= 1024) {
+					return (bytes / 1024).toFixed(2) + ' KB';
+				}
+				return bytes + ' B';
 			}
 			function GetFileSizeAdjuntoNewReq(fileID) {
 				var zTextFields = document.getElementsByTagName("input");
@@ -189,15 +199,18 @@
 				}
 			}
 			function GetFileSizeAdjunto(el, tableID, fileID) {
-				console.log(el.id);
 				thesize=formatBytes(el.files.item(0).size);
+				var table = document.getElementById(tableID);
 				if (el.files.item(0).size >  100 * 1024 * 1024 ) {
 					alert("El archivo es demasiado grande.\n\nFile: " + el.files.item(0).name + "\nSize: " + thesize);
-					var table = document.getElementById(tableID);
 					table.rows[fileID].cells[1].innerHTML='<b>'+ thesize +'</b>';
 				}else{
-					var table = document.getElementById(tableID);
-					table.rows[fileID].cells[1].innerHTML=thesize;
+					if (el.files.item(0).size == 0 ) {
+						alert("El archivo esta vacio.\n\nFile: " + el.files.item(0).name + "\nSize: " + thesize);
+						table.rows[fileID].cells[1].innerHTML='<b>'+ thesize +'</b>';
+					}else{
+						table.rows[fileID].cells[1].innerHTML=thesize;
+					}
 				}
 			}
 			function elementoMostrar(idelemento) {
@@ -263,6 +276,7 @@
 				}
 			}
 			function appBusqueda() {
+				
 				txtBusqueda= document.getElementById("busquedarequisiciones");
 				busquedarequisiciones=txtBusqueda.value;
 				appActualizaVista();
@@ -344,9 +358,9 @@
 				xmlhttp.send(new FormData(document.getElementById("lostpasswordform")));
 			}
 			
-			window.onscroll = yHandler;
+			//window.onscroll = yHandler;
 			
-			var t = setInterval(clock,500);
+			//var t = setInterval(clock,500);
 			
 			function clock() {
 				var divHeader = document.getElementById("header");
@@ -401,15 +415,112 @@
 				}
 			}
 			
-			function appActualizaVista() {
-				if (t) {
+			
+			window.onload = function () {
+				
+				appHeader();
+				
+				appMenu();
+				
+				appActualizaVista();
+			}
+			
+			function tik() {
+				var divContenido = document.getElementById("contenido");
+				var estado = document.getElementById("estado");
+				estado.max=requisiciones.length;
+									
+				
+				var div = document.createElement('div');
+				div.id=requisiciones[requisicion];
+				divContenido.appendChild(div);
+				estado.value = requisicion + 1;
+				appActualizaRequisicion(requisiciones[requisicion]);
+				
+				requisicion++;
+				
+				
+				if ( requisicion >= requisiciones.length ) {
 					clearInterval(t);
+					estado.value = 0;
+				}
+									
+									
+			}
+			//appHeader();
+			//appMenu();
+			//appActualizaVista();
+			
+			function appActualizaVista() {
+				var mostrarusuarios = 0;
+				var mostrarvista =0;
+				var usuarios='';
+				var busqueda='';
+				
+				requisicion = 0;
+				requisiciones = [];
+				//if (t) {
+				//	clearInterval(t);
+				//}
+				
+				
+				//item=0;  
+				//divContenido.innerHTML="";
+				
+				
+				if ( document.getElementById("mostrarrequisiciones") ) {
+					mostrarvista = document.getElementById("mostrarrequisiciones").value;
+				}
+				if ( document.getElementById("usuariosrequisiciones") ) {
+					mostrarusuarios = document.getElementById("usuariosrequisiciones").value;
+				}
+				if ( document.getElementById("busquedarequisiciones") ) {
+					document.getElementById("busquedarequisiciones").value = busquedarequisiciones;
 				}
 				var divContenido = document.getElementById("contenido");
-				item=0;
-				divContenido.innerHTML="";
-				yHandler();
-				t = setInterval(clock,1000);
+					
+					if ( !ocupado) {
+						ocupado=true;	
+						divContenido.innerHTML = "Espere...";
+						if (window.XMLHttpRequest) {
+							xmlhttp = new XMLHttpRequest();
+						} else {
+							xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+						}
+						xmlhttp.onreadystatechange = function() {
+							if (this.readyState == 4 && this.status == 200) {
+								
+								divContenido.innerHTML="";
+								if ( this.responseText.length > 0 ) {
+									
+									
+									requisiciones = this.responseText.split(" ");
+									console.log(requisiciones);
+									t = setInterval(tik, 100);
+									
+									
+									
+									
+									
+									//estado.value=0;
+								}else{
+									
+									divContenido.innerHTML = "No hay resultados";
+								}
+								ocupado=false;
+							}
+						};
+						if ( mostrarusuarios ) {
+							usuarios='&user='+ mostrarusuarios;
+						}
+						if ( busquedarequisiciones.length > 0 ) {
+							busqueda='&q='+ busquedarequisiciones;
+						}
+						xmlhttp.open("GET","librequisicion.php?action=show"+ usuarios +"&view="+ mostrarvista +"&item="+ item + busqueda ,true);
+						xmlhttp.send();
+					}
+				//yHandler();
+				//t = setInterval(clock,1000);
 			}
 			function appLostpassword() {
 				appLostpasswordForm();
@@ -660,6 +771,45 @@
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"15%\"><small>Cantidad</small></td><td width=\"15%\"><small>Unidad</small></td><td width=\"50%\"><small>Descripcion</small></td><td width=\"20%\"><small>C.R.</small></td></tr><tr><td><input type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select name = 'unidad["+newRow+"]' onfocus=\"populateCombo(this,'unidades','unidad');\"></select></td><td><input type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select name = 'centrocostos["+newRow+"]' onfocus=\"populateCombo(this, 'centroscostos','descripcion')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\"tablapartidas\","+ newRow +");'>";
 			}
+			
+			function addAdjuntoReq(idrequisicion) {
+				var table = document.getElementById('tablaadjuntosreq'+ idrequisicion);
+				var newRow = table.rows.length;
+				var row = table.insertRow(newRow);
+				var fecha = new Date().toISOString().replace("T"," ").slice(0,19);
+				row.insertCell(0).innerHTML = "<input type='file' id='adjuntosrequisicion"+ idrequisicion +"["+ newRow +"]' onchange='GetFileSizeAdjunto(this, \"tablaadjuntosreq"+ idrequisicion +"\", "+ newRow +");' />";
+				row.insertCell(1).innerHTML = "";
+				row.insertCell(2).innerHTML = fecha;
+				row.insertCell(3).innerHTML = "";
+				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoReq("+  idrequisicion +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntosreq"+  idrequisicion +"\","+ newRow +");'>";
+			}
+			function saveAdjuntoReq(idrequisicion, adjunto) {
+				
+				var input = document.getElementById("adjuntosrequisicion"+ idrequisicion +"["+ adjunto +"]");
+				var file = input.files.item(0);
+				var celdas = document.getElementById('tablaadjuntosreq'+ idrequisicion).rows[adjunto].cells;
+				
+				celdas[4].innerHTML="";
+				xmlhttp = new XMLHttpRequest();
+					
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							celdas[0].innerHTML= file.name;
+							celdas[4].innerHTML= "<button onClick=\"window.open('uploads/r"+ idrequisicion +"/"+ file.name +"');\">Abrir</button>";
+						}
+					}
+				};
+				var formdata = new FormData();
+				formdata.append("accion", "agregaradjuntoreq");
+				formdata.append("requisicion", idrequisicion);
+				formdata.append("archivo", file);
+				xmlhttp.open("POST","librequisicion.php");
+				xmlhttp.send(formdata);
+			
+			}
+			
+			
 			function addAdjuntoPart(idpartida) {
 				var table = document.getElementById('tablaadjuntospart'+ idpartida);
 				var newRow = table.rows.length;
@@ -677,8 +827,6 @@
 				var file = input.files.item(0);
 				var celdas = document.getElementById('tablaadjuntospart'+ idpartida).rows[adjunto].cells;
 				
-				console.log(file.name);
-				console.log(file.size);
 				celdas[4].innerHTML="";
 				xmlhttp = new XMLHttpRequest();
 					
@@ -691,6 +839,7 @@
 					}
 				};
 				var formdata = new FormData();
+				formdata.append("accion", "agregaradjuntopart");
 				formdata.append("partida", idpartida);
 				formdata.append("archivo", file);
 				xmlhttp.open("POST","libpartida.php");

@@ -4,7 +4,7 @@
 	require_once("libphp.php");
 	require_once("librequisicion.php");
 
-	if ( isset($_POST["partida"]) ) {
+	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntopart" ) {
 		$idpartida=$_POST["partida"];
 		$uploaddir="uploads/";
 		$rutaupload=$uploaddir ."p". $idpartida;

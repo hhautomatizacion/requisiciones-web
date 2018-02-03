@@ -6,6 +6,25 @@
 	require_once("libpdf.php");
 	require_once("libuser.php");
 
+	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntoreq" ) {
+		$idrequisicion=$_POST["requisicion"];
+		$uploaddir="uploads/";
+		$rutaupload=$uploaddir ."r". $idrequisicion;
+		if (!is_writeable($rutaupload)) {
+			mkdir($rutaupload);
+		}
+		$nombrearchivo = $_FILES["archivo"]["name"];
+		$rutatemp = $_FILES["archivo"]["tmp_name"];
+		$longitudarchivo=$_FILES["archivo"]["size"];
+		$rutadestino=$rutaupload ."/". $nombrearchivo;
+		if (move_uploaded_file($rutatemp,$rutadestino)) {
+			//writelog("INSERT INTO adjuntosrequisiciones VALUES (0,". $idrequisicion .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
+			$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0,". $idrequisicion .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
+			$res->execute();
+			echo "OK";
+		}
+		
+	}
 	if (isset($_REQUEST["posted"])) {
 		
 		$departamento=$_REQUEST["departamento"];
@@ -132,15 +151,19 @@
 				$usuario="AND (idsolicitante=". $_GET["user"] ." OR idusuario=". $_GET["user"] .")";
 			}
 			
-			$sql="SELECT DISTINCT(id) FROM requisiciones WHERE ". $vista ." ". $busqueda ." ". $usuario ." LIMIT ". $item .",1";
-			
+			$sql="SELECT DISTINCT(id) FROM requisiciones WHERE ". $vista ." ". $busqueda ." ". $usuario .";"; //." LIMIT ". $item .",1";
+			//writelog($sql);
 			$res = $db->prepare($sql);
 			$res->execute();
 			while ($row = $res->fetch()) {
-				$resultado .="<div id=". $row[0] ." ondblclick=\"editar(". $row[0] .");\">";
-				$resultado .=MostrarMarcoRequisicion($row[0]);
-				$resultado .="</div>";
+				//$resultado .="<div id=". $row[0] ." ondblclick=\"editar(". $row[0] .");\">";
+				//$resultado .=MostrarMarcoRequisicion($row[0]);
+				//$resultado .="</div>";
+				$resultado = $resultado ." ". $row[0];
+				//writelog($row[0]);
+				//writelog($resultado);
 			}
+			$resultado = trim($resultado, " ");
 			print $resultado;
 		}
 	}
@@ -448,14 +471,22 @@
 		$resultado .= "</table>";
 		return $resultado;
 	}
-	
+	function AgregarAdjuntosRequisicion($idrequisicion) {
+		$resultado="";
+		if ( usuarioEsLogeado() ) {
+			$resultado="<input type = \"button\" value=\"Agregar\" onclick=\"addAdjuntoReq(". $idrequisicion .");\">";
+		}else{
+			$resultado="<small>Acciones</small>";
+		}
+		return $resultado;
+	}	
 	function MostrarAdjuntosRequisicion($idrequisicion) {
 		global $db;
 		$resultado="";
 		$res = $db->prepare("SELECT * FROM adjuntosrequisiciones WHERE idrequisicion=". $idrequisicion .";");
 		$res->execute();
-		$resultado .= "<table>";
-		$resultado .= "<tr><td width=\"50%\"><small>Archivo</small></td><td width=\"10%\"><small>Tama&ntilde;o</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\"><small>Accion</small></td></tr>";
+		$resultado .= "<table id=\"tablaadjuntosreq". $idrequisicion ."\">";
+		$resultado .= "<tr><td width=\"50%\"><small>Archivo</small></td><td width=\"10%\"><small>Tama&ntilde;o</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\">". AgregarAdjuntosRequisicion($idrequisicion) ."</td></tr>";
 		while ($row = $res->fetch()) {
 			$rutaarchivo = "uploads/r". $idrequisicion ."/". $row[2];
 			$resultado .= "<tr><td>". $row[2] ."</td><td>". formatBytes($row[3]) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td><button onClick=\"window.open('". $rutaarchivo ."');\">Abrir</button></td></tr>";
