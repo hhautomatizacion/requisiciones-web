@@ -9,7 +9,16 @@
 		if ( isset($_GET["idreq"]) ) {
 			$idrequisicion=$_GET["idreq"];
 			$comentario=$_GET["comentario"];
-			$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0,". $idrequisicion .",'". $comentario ."',". $_COOKIE["usuario"] .",NOW(),1);");
+			$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0,". $idrequisicion .",0,'". $comentario ."',". $_COOKIE["usuario"] .",NOW(),1);");
+			$res->execute();
+			echo "OK";
+		}
+		if ( isset($_GET["idpart"]) ) {
+			$idpartida=$_GET["idpart"];
+			$comentario=$_GET["comentario"];
+			$sql = "INSERT INTO comentariospartidas VALUES (0,". $idpartida .",0,'". $comentario ."',". $_COOKIE["usuario"] .",NOW(),1);";
+			
+			$res = $db->prepare($sql);
 			$res->execute();
 			echo "OK";
 		}

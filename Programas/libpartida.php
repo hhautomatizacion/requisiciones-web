@@ -123,14 +123,22 @@
 		$resultado .= "</table>";
 		return $resultado;
 	}
-	
+	function AgregarComentariosPartida($idpartida) {
+		$resultado="";
+		if ( usuarioEsLogeado() ) {
+			$resultado="<input type = \"button\" value=\"Agregar\" onclick=\"addComentarioPart(". $idpartida .");\">";
+		}else{
+			$resultado="<small>Acciones</small>";
+		}
+		return $resultado;
+	}
 	function MostrarComentariosPartida($idpartida) {
 		global $db;	
 		$resultado="";
 		$res = $db->prepare("SELECT * FROM comentariospartidas WHERE idpartida=". $idpartida .";");
 		$res->execute();
-		$resultado .= "<table>";
-		$resultado .= "<tr><td width=\"60%\"><small>Comentario</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\"><small>Acciones</small></td></tr>";
+		$resultado .= "<table id=\"tablacomentariospart". $idpartida ."\">";
+		$resultado .= "<tr><td width=\"60%\"><small>Comentario</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\">". AgregarComentariosPartida($idpartida) ."</td></tr>";
 		while ($row = $res->fetch()) {
 			$resultado .= "<tr><td>". $row[3] ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>Acciones com</td></tr>";
 		}

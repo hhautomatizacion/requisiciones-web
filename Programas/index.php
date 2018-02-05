@@ -856,6 +856,38 @@
 				row.insertCell(2).innerHTML = "";
 				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioReq(\""+  tableID +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
+			
+			function addComentarioPart(idpartida) {
+				var table = document.getElementById('tablacomentariospart'+ idpartida);
+				var newRow = table.rows.length;
+				var row = table.insertRow(newRow);
+				var fecha = new Date().toISOString().replace("T"," ").slice(0,19);
+				row.insertCell(0).innerHTML = "<input type='text' id='comentariospartida"+ idpartida +"["+ newRow +"]' />";
+				row.insertCell(1).innerHTML = fecha;
+				row.insertCell(2).innerHTML = "";
+				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioPart(\""+  idpartida +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablacomentriospart"+ idpartida +"\","+ newRow +");'>";
+				
+			}
+			function saveComentarioPart(idpartida, renglon){
+				var comentario = document.getElementById("comentariospartida"+ idpartida +"["+ renglon +"]");
+				
+				var celdas = document.getElementById('tablacomentariospart'+ idpartida).rows[renglon].cells;
+				
+				celdas[3].innerHTML="";
+				xmlhttp = new XMLHttpRequest();
+					
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							celdas[0].innerHTML= comentario.value;
+							celdas[3].innerHTML= "";
+						}
+					}
+				};
+				xmlhttp.open("GET","libcomentario.php?action=add&idpart="+ idpartida +"&comentario="+ comentario.value,true);
+				xmlhttp.send();		
+			}
+			
 			function addComentarioPartidaNewReq(tableID) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
