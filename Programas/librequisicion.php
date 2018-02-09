@@ -176,12 +176,7 @@
 					$req=$_GET["reqno"];
 					$res = $db->prepare("UPDATE requisiciones SET requisicion='". $req ."' WHERE id=". $idrequisicion .";");
 					$res->execute();
-				}
-				if ( isset($_GET["surtir"]) ) {
-					$surtir=$_GET["surtir"];
-					$res = $db->prepare("UPDATE requisiciones SET fechasurtir='". $surtir ."' WHERE id=". $idrequisicion .";");
-					$res->execute();
-				}			
+				}		
 				echo "OK";
 				break;
 			case "show":
@@ -202,6 +197,13 @@
 				$pdf->Output();
 				$res = $db->prepare("UPDATE requisiciones SET impresa=1 WHERE id=". $idrequisicion .";");
 				$res->execute();
+				break;
+			case "tobesupplied":
+				$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
+				$res->execute();		
+				$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id=". $idrequisicion .";");
+				$res->execute();
+				echo "OK";
 				break;
 			case "supplied":
 				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
@@ -452,21 +454,75 @@
 	function AgregarComentariosRequisicion($idrequisicion) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
-			$resultado="<input type = \"button\" value=\"Agregar\" onclick=\"addComentarioReq('tablacomentariosreq". $idrequisicion ."');\">";
+			$resultado="<input type=\"button\" value=\"Agregar\" onclick=\"addComentarioReq('tablacomentariosreq". $idrequisicion ."');\">";
 		}else{
 			$resultado="<small>Acciones</small>";
+		}
+		return $resultado;
+	}
+	function ComentarioReqEsActivo($idcomentario) {
+		global $db;
+		$resultado=false;
+		$res = $db->prepare("SELECT activo FROM comentariosrequisiciones WHERE id=". $idcomentario .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			if ( $row[0] == 1 ) {
+				$resultado=true;
+			}
+		}
+		return $resultado;
+	}
+	function ComentarioReqEsMio($idcomentario) {
+		global $db;
+		$resultado=false;
+		if ( usuarioEsLogeado() ) {
+			$res = $db->prepare("SELECT id FROM comentariosrequisiciones WHERE id=". $idcomentario ." AND idusuario=". $_COOKIE["usuario"] .";");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				if ( $row[0] == $idcomentario ) {
+					$resultado=true;
+				}
+			}
+		}
+		return $resultado;
+	}
+	function AccionesComentarioRequisicion($idcomentario) {
+		$resultado="";
+		if ( usuarioEsLogeado() ) {
+			if ( ComentarioReqEsMio($idcomentario) || usuarioEsSuper() ) {
+				if ( ComentarioReqEsActivo($idcomentario) ) {
+					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioReq(". $idcomentario .");\">";
+				}
+			}
+			
+				if ( ComentarioReqEsActivo($idcomentario) ) {
+					$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioReq(". $idcomentario .");\">";
+				}
+			
+			if ( !ComentarioReqEsActivo($idcomentario) && usuarioEsSuper() ) {
+				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioReq(". $idcomentario .");\">";
+			}
 		}
 		return $resultado;
 	}
 	function MostrarComentariosRequisicion($idrequisicion) {
 		global $db;
 		$resultado="";
+		
 		$res = $db->prepare("SELECT * FROM comentariosrequisiciones WHERE idrequisicion=". $idrequisicion .";");
 		$res->execute();
+		
 		$resultado .= "<table id=\"tablacomentariosreq". $idrequisicion ."\">";
 		$resultado .= "<tr><td width=\"60%\"><small>Comentario</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\">". AgregarComentariosRequisicion($idrequisicion) ."</td></tr>";
 		while ($row = $res->fetch()) {
-			$resultado .= "<tr><td>". $row[3] ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>Accviones com</td></tr>";
+			$clase="com";
+			if ( ComentarioReqEsMio($row[0]) ) {
+				$clase .= " comowner";
+			}
+			if ( !ComentarioReqEsActivo($row[0]) ) {
+				$clase .= " comdeleted";
+			}
+			$resultado .= "<tr class=\"". $clase ."\"><td>". $row[3] ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>". AccionesComentarioRequisicion($row[0]) ."</td></tr>";
 		}
 		$resultado .= "</table>";
 		return $resultado;

@@ -25,6 +25,13 @@
 	if ( isset($_GET["id"]) ) {
 		$idpartida=$_GET["id"];
 		switch ($_GET["action"]) {
+			case "parttobesupplied":
+				$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE id=". $idpartida .";");
+				$res->execute();
+				$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id IN (SELECT idrequisicion FROM partidas WHERE id=". $idpartida .");");
+				$res->execute();
+				echo "OK";
+				break;
 			case "partsupplied":
 				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE id=". $idpartida .";");
 				$res->execute();
@@ -77,12 +84,14 @@
 		while ($row = $res->fetch()) {
 			$idrequisicion=$row[0];
 		}
-		if ( usuarioEsLogeado() ) {
-			if ( !(PartidaEsSurtida($idpartida)) && (PartidaEsActiva($idpartida)) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
+		//if ( usuarioEsLogeado() ) {
+			//if ( !(PartidaEsSurtida($idpartida)) && (PartidaEsActiva($idpartida)) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
+			//}
+		//}
+		if ( RequisicionEsMia($idrequisicion) || usuarioEsSuper() ) {
+			if ( !PartidaEsSurtida($idpartida) && PartidaEsActiva($idpartida) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
 				$resultado .= "<button onClick=\"appSurtePartida(". $idpartida .",". $idrequisicion .");\">Surtida</button>";
 			}
-		}
-		if ( RequisicionEsMia($idrequisicion) ) {
 			if ( RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && !PartidaEsSurtida($idpartida) ) {
 				$resultado .= "<button onClick=\"appBorraPartida(". $idpartida .",". $idrequisicion .");\">Eliminar</button>";
 			}
@@ -90,9 +99,6 @@
 		if ( usuarioEsSuper() ) {
 			if ( RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && PartidaEsSurtida($idpartida) ) {
 				$resultado .= "<button onClick=\"appPorsurtirPartida(". $idpartida .",". $idrequisicion .");\">Por surtir</button>";
-			}
-			if ( !RequisicionEsMia($idrequisicion) && RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && !PartidaEsSurtida($idpartida) ) {
-				$resultado .= "<button onClick=\"appBorraPartida(". $idpartida .",". $idrequisicion .");\">Eliminar</button>";
 			}
 			if ( !PartidaEsActiva($idpartida) && RequisicionEsActiva($idrequisicion) ) {	
 				$resultado .= "<button onClick=\"appRestauraPartida(". $idpartida .",". $idrequisicion .");\">Restaurar</button>";
@@ -132,6 +138,51 @@
 		}
 		return $resultado;
 	}
+	function ComentarioPartEsActivo($idcomentario) {
+		global $db;
+		$resultado=false;
+		$res = $db->prepare("SELECT activo FROM comentariospartidas WHERE id=". $idcomentario .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			if ( $row[0] == 1 ) {
+				$resultado=true;
+			}
+		}
+		return $resultado;
+	}
+	function ComentarioPartEsMio($idcomentario) {
+		global $db;
+		$resultado=false;
+		if ( usuarioEsLogeado() ) {
+			$res = $db->prepare("SELECT id FROM comentariospartidas WHERE id=". $idcomentario ." AND idusuario=". $_COOKIE["usuario"] .";");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				if ( $row[0] == $idcomentario ) {
+					$resultado=true;
+				}
+			}
+		}
+		return $resultado;
+	}
+	function AccionesComentarioPartida($idcomentario) {
+		$resultado="";
+		if ( usuarioEsLogeado() ) {
+			if ( ComentarioPartEsMio($idcomentario) || usuarioEsSuper() ) {
+				if ( comentarioPartEsActivo($idcomentario) ) {
+					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioPart(". $idcomentario .");\">";
+				}
+			}
+			
+				if ( ComentarioPartEsActivo($idcomentario) ) {
+					$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioPart(". $idcomentario .");\">";
+				}
+			
+			if ( !ComentarioPartEsActivo($idcomentario) && usuarioEsSuper() ) {
+				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioPart(". $idcomentario .");\">";
+			}
+		}
+		return $resultado;
+	}
 	function MostrarComentariosPartida($idpartida) {
 		global $db;	
 		$resultado="";
@@ -140,7 +191,14 @@
 		$resultado .= "<table id=\"tablacomentariospart". $idpartida ."\">";
 		$resultado .= "<tr><td width=\"60%\"><small>Comentario</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\">". AgregarComentariosPartida($idpartida) ."</td></tr>";
 		while ($row = $res->fetch()) {
-			$resultado .= "<tr><td>". $row[3] ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>Acciones com</td></tr>";
+			$clase = "com";
+				if ( ComentarioPartEsMio($row[0]) ) {
+				$clase .= " comowner";
+			}
+			if ( !ComentarioPartEsActivo($row[0]) ) {
+				$clase .= " comdeleted";
+			}
+			$resultado .= "<tr class=\"". $clase ."\"><td>". $row[3] ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>". AccionesComentarioPartida($row[0]) ."</td></tr>";
 		}
 		$resultado .= "</table>";
 		return $resultado;

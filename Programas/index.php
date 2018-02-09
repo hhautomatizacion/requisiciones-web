@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<style type="text/css">
+			
 			* {
 				font-family: "arial";
 				font-size: 15px;
@@ -23,21 +24,32 @@
 			td {
 				border-bottom: 1px solid gray;
 			}
-		
+			tr:last-child>td {
+				border-bottom: 0px;
+			}
 			small {
 				font-size: 10px;
 			}
 			select {
 				font-size: 20px;
+				
 				width: 100%;
 				box-sizing: border-box;
 				-moz-box-sizing: border-box;
+				height: 26px;
+				vertical-align: -moz-middle-with-baseline;
+				vertical-align: middle;
 			}
 			button {
 				font-size: 20px;
+				height: 28px;
+				vertical-align: middle;
 			}
 			input[type="button"] {
 				font-size: 20px;
+				height: 28px;
+				vertical-align: middle;
+				margin-bottom: 0px;
 			}
 			input[type="submit"] {
 				font-size: 20px;
@@ -124,11 +136,16 @@
 			}
 			#busquedarequisiciones {
 				width: 15%;
+				height: 26px;
+				vertical-align: -moz-middle-with-baseline;
+				vertical-align: middle;
 			}
 			#estado {
 				width: 15%;
-				height: 20px;
 				float: right;
+				height: 26px;
+				vertical-align: -moz-middle-with-baseline;
+				vertical-align: middle;
 			}
 			.req {background: lightgray;}
 			.printed {background: #FFC040;}
@@ -138,6 +155,10 @@
 			.deleted {opacity: 0.5;}
 			.partsupplied {background: #C0C080;}
 			.partdeleted {opacity: 0.5;}
+			.com {	opacity: 0.9;}
+			.comowner {opacity: 1;}
+			.comdeleted {opacity: 0.5;}
+		
 		</style>
 		<script language="JavaScript" type="text/javascript">
 			var ocupado=false;
@@ -215,60 +236,9 @@
 			}
 			function elementoMostrar(idelemento) {
 				document.getElementById(idelemento).style.visibility="visible";
-				
 			}
 			function elementoOcultar(idelemento) {
-				document.getElementById(idelemento).style.visibility="hidden"; 
-				
-			}
-			function yHandler() {
-				var divContenido = document.getElementById("contenido");
-				var mostrarvista = document.getElementById("mostrarrequisiciones").value;
-				var mostrarusuarios = document.getElementById("usuariosrequisiciones").value;
-				
-				var contentHeight = divContenido.scrollHeight;
-				var yOffset = window.pageYOffset;
-				var y = yOffset + window.innerHeight;
-				
-				var usuarios='';
-				var busqueda='';
-				
-				if ( y >= contentHeight && !ocupado) {
-					ocupado=true;	
-					if (window.XMLHttpRequest) {
-						xmlhttp = new XMLHttpRequest();
-					} else {
-						xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-					}
-					xmlhttp.onreadystatechange = function() {
-						if (this.readyState == 4 && this.status == 200) {
-							if ( this.responseText.length > 0 ) {
-								var div = document.createElement('div');
-								div.innerHTML= this.responseText;
-								divContenido.appendChild(div);
-								item = item+ 1;
-								
-							}else{
-								if ( item == 0 ) {
-									//divContenido.innerHTML ='<div><p><b>No hay resultados.</b></p></div>';
-									console.log("No hay resultados");
-								}
-							}
-							ocupado=false;
-							if ( item > 0 ) {
-								yHandler();
-							}
-						}
-					};
-					if ( mostrarusuarios ) {
-						usuarios='&user='+ mostrarusuarios;
-					}
-					if ( busquedarequisiciones.length > 0 ) {
-						busqueda='&q='+ busquedarequisiciones;
-					}
-					xmlhttp.open("GET","librequisicion.php?action=show"+ usuarios +"&view="+ mostrarvista +"&item="+ item + busqueda ,true);
-					xmlhttp.send();
-				}
+				document.getElementById(idelemento).style.visibility="hidden"; 	
 			}
 			function appTextBusqueda(e) {
 				if ( e.key == 'Enter' ) {
@@ -276,7 +246,6 @@
 				}
 			}
 			function appBusqueda() {
-				
 				txtBusqueda= document.getElementById("busquedarequisiciones");
 				busquedarequisiciones=txtBusqueda.value;
 				appActualizaVista();
@@ -358,63 +327,6 @@
 				xmlhttp.send(new FormData(document.getElementById("lostpasswordform")));
 			}
 			
-			//window.onscroll = yHandler;
-			
-			//var t = setInterval(clock,500);
-			
-			function clock() {
-				var divHeader = document.getElementById("header");
-				var divMenu = document.getElementById("menu");
-				var divContenido = document.getElementById("contenido");
-				if ( divHeader.innerHTML.length == 0 ) {
-					appHeader();
-				}
-				if ( divMenu.innerHTML.length == 0 ) {
-					appMenu();
-				}
-				
-				if ( document.getElementById("contenido") && document.getElementById("mostrarrequisiciones") && document.getElementById("usuariosrequisiciones") ) {
-					
-					var mostrarvista = document.getElementById("mostrarrequisiciones").value;
-					var mostrarusuarios = document.getElementById("usuariosrequisiciones").value;
-					var usuarios='';
-					var busqueda='';
-					
-					if ( !ocupado) {
-						ocupado=true;	
-						if (window.XMLHttpRequest) {
-							xmlhttp = new XMLHttpRequest();
-						} else {
-							xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-						}
-						xmlhttp.onreadystatechange = function() {
-							if (this.readyState == 4 && this.status == 200) {
-								if ( this.responseText.length > 0 ) {
-									var div = document.createElement('div');
-									div.innerHTML= this.responseText;
-									divContenido.appendChild(div);
-									item = item+ 1;
-								}else{
-									clearInterval(t);
-									if ( item == 0 ) {
-										console.log("No hay resultados");
-									}
-								}
-								ocupado=false;
-							}
-						};
-						if ( mostrarusuarios ) {
-							usuarios='&user='+ mostrarusuarios;
-						}
-						if ( busquedarequisiciones.length > 0 ) {
-							busqueda='&q='+ busquedarequisiciones;
-						}
-						xmlhttp.open("GET","librequisicion.php?action=show"+ usuarios +"&view="+ mostrarvista +"&item="+ item + busqueda ,true);
-						xmlhttp.send();
-					}
-				}
-			}
-			
 			
 			window.onload = function () {
 				
@@ -429,14 +341,11 @@
 				var divContenido = document.getElementById("contenido");
 				var estado = document.getElementById("estado");
 				estado.max=requisiciones.length;
-									
-				
 				var div = document.createElement('div');
 				div.id=requisiciones[requisicion];
 				divContenido.appendChild(div);
-				estado.value = requisicion + 1;
 				appActualizaRequisicion(requisiciones[requisicion]);
-				
+				estado.value = requisicion + 1;
 				requisicion++;
 				
 				
@@ -447,9 +356,6 @@
 									
 									
 			}
-			//appHeader();
-			//appMenu();
-			//appActualizaVista();
 			
 			function appActualizaVista() {
 				var mostrarusuarios = 0;
@@ -459,14 +365,9 @@
 				
 				requisicion = 0;
 				requisiciones = [];
-				//if (t) {
-				//	clearInterval(t);
+				//if ( t ) {
+				//	console.log("cancelar timer");
 				//}
-				
-				
-				//item=0;  
-				//divContenido.innerHTML="";
-				
 				
 				if ( document.getElementById("mostrarrequisiciones") ) {
 					mostrarvista = document.getElementById("mostrarrequisiciones").value;
@@ -477,50 +378,37 @@
 				if ( document.getElementById("busquedarequisiciones") ) {
 					document.getElementById("busquedarequisiciones").value = busquedarequisiciones;
 				}
-				var divContenido = document.getElementById("contenido");
-					
-					if ( !ocupado) {
-						ocupado=true;	
-						divContenido.innerHTML = "Espere...";
-						if (window.XMLHttpRequest) {
-							xmlhttp = new XMLHttpRequest();
-						} else {
-							xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-						}
-						xmlhttp.onreadystatechange = function() {
-							if (this.readyState == 4 && this.status == 200) {
-								
-								divContenido.innerHTML="";
-								if ( this.responseText.length > 0 ) {
-									
-									
-									requisiciones = this.responseText.split(" ");
-									console.log(requisiciones);
-									t = setInterval(tik, 100);
-									
-									
-									
-									
-									
-									//estado.value=0;
-								}else{
-									
-									divContenido.innerHTML = "No hay resultados";
-								}
-								ocupado=false;
-							}
-						};
-						if ( mostrarusuarios ) {
-							usuarios='&user='+ mostrarusuarios;
-						}
-						if ( busquedarequisiciones.length > 0 ) {
-							busqueda='&q='+ busquedarequisiciones;
-						}
-						xmlhttp.open("GET","librequisicion.php?action=show"+ usuarios +"&view="+ mostrarvista +"&item="+ item + busqueda ,true);
-						xmlhttp.send();
+				var divContenido = document.getElementById("contenido");	
+				if ( !ocupado) {
+					ocupado=true;	
+					divContenido.innerHTML = "Espere...";
+					if (window.XMLHttpRequest) {
+						xmlhttp = new XMLHttpRequest();
+					} else {
+						xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
 					}
-				//yHandler();
-				//t = setInterval(clock,1000);
+					xmlhttp.onreadystatechange = function() {
+						if (this.readyState == 4 && this.status == 200) {
+							divContenido.innerHTML="";
+							if ( this.responseText.length > 0 ) {
+								requisiciones = this.responseText.split(" ");
+								console.log(requisiciones);
+								t = setInterval(tik, 100);
+							}else{
+								divContenido.innerHTML = "No hay resultados";
+							}
+							ocupado=false;
+						}
+					};
+					if ( mostrarusuarios ) {
+						usuarios='&user='+ mostrarusuarios;
+					}
+					if ( busquedarequisiciones.length > 0 ) {
+						busqueda='&q='+ busquedarequisiciones;
+					}
+					xmlhttp.open("GET","librequisicion.php?action=show"+ usuarios +"&view="+ mostrarvista +"&item="+ item + busqueda ,true);
+					xmlhttp.send();
+				}			
 			}
 			function appLostpassword() {
 				appLostpasswordForm();
@@ -1062,7 +950,22 @@
 				xmlhttp.open("GET","libpartida.php?action=partsupplied&id="+idpartida,true);
 				xmlhttp.send();
 			}
-			
+			function appPorsurtirPartida(idpartida, idrequisicion) {
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText = "OK" ) {
+							appActualizaRequisicion(idrequisicion);
+						}
+					}
+				};
+				xmlhttp.open("GET","libpartida.php?action=parttobesupplied&id="+idpartida,true);
+				xmlhttp.send();
+			}	
 			function appImprimeRequisicion(idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1086,6 +989,22 @@
 				};
 				xmlhttp.responseType="blob";
 				xmlhttp.open("GET","librequisicion.php?action=print&id="+idrequisicion,true);
+				xmlhttp.send();
+			}
+			function appPorsurtirRequisicion(idrequisicion) {
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText = "OK" ) {
+							appActualizaRequisicion(idrequisicion);
+						}
+					}
+				};
+				xmlhttp.open("GET","librequisicion.php?action=tobesupplied&id="+idrequisicion,true);
 				xmlhttp.send();
 			}
 			function appSurteRequisicion(idrequisicion) {
