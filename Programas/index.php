@@ -329,32 +329,27 @@
 			
 			
 			window.onload = function () {
-				
 				appHeader();
-				
 				appMenu();
-				
 				appActualizaVista();
 			}
 			
 			function tik() {
 				var divContenido = document.getElementById("contenido");
 				var estado = document.getElementById("estado");
-				estado.max=requisiciones.length;
 				var div = document.createElement('div');
-				div.id=requisiciones[requisicion];
-				divContenido.appendChild(div);
-				appActualizaRequisicion(requisiciones[requisicion]);
-				estado.value = requisicion + 1;
-				requisicion++;
-				
-				
+				if ( !ocupado ) {
+					estado.max=requisiciones.length;
+					div.id=requisiciones[requisicion];
+					divContenido.appendChild(div);
+					estado.value = requisicion + 1;
+					appActualizaRequisicion(requisiciones[requisicion]);
+					requisicion++;
+				}
 				if ( requisicion >= requisiciones.length ) {
 					clearInterval(t);
 					estado.value = 0;
-				}
-									
-									
+				}							
 			}
 			
 			function appActualizaVista() {
@@ -365,10 +360,7 @@
 				
 				requisicion = 0;
 				requisiciones = [];
-				//if ( t ) {
-				//	console.log("cancelar timer");
-				//}
-				
+
 				if ( document.getElementById("mostrarrequisiciones") ) {
 					mostrarvista = document.getElementById("mostrarrequisiciones").value;
 				}
@@ -381,6 +373,7 @@
 				var divContenido = document.getElementById("contenido");	
 				if ( !ocupado) {
 					ocupado=true;	
+					document.title = "Requisiciones - Buscando..."; 
 					divContenido.innerHTML = "Espere...";
 					if (window.XMLHttpRequest) {
 						xmlhttp = new XMLHttpRequest();
@@ -392,10 +385,12 @@
 							divContenido.innerHTML="";
 							if ( this.responseText.length > 0 ) {
 								requisiciones = this.responseText.split(" ");
+								document.title = "Requisiciones - "+ requisiciones.length +" mostradas"; 
 								console.log(requisiciones);
 								t = setInterval(tik, 100);
 							}else{
-								divContenido.innerHTML = "No hay resultados";
+								document.title = "Requisiciones";
+								divContenido.innerHTML = "No hay resultados. Intente cambiando el alcance de la busqueda.";
 							}
 							ocupado=false;
 						}

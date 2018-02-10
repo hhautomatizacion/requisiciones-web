@@ -18,15 +18,12 @@
 		$longitudarchivo=$_FILES["archivo"]["size"];
 		$rutadestino=$rutaupload ."/". $nombrearchivo;
 		if (move_uploaded_file($rutatemp,$rutadestino)) {
-			//writelog("INSERT INTO adjuntosrequisiciones VALUES (0,". $idrequisicion .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
 			$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0,". $idrequisicion .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
 			$res->execute();
 			echo "OK";
-		}
-		
+		}	
 	}
 	if (isset($_REQUEST["posted"])) {
-		
 		$departamento=$_REQUEST["departamento"];
 		$area=$_REQUEST["area"];
 		$solicitante=$_REQUEST["solicitante"];
@@ -98,10 +95,8 @@
 		}
 		echo "OK";
 	}
-	
 	if ( isset($_GET["action"]) && $_GET["action"] == "showreqform" ) {
 		$resultado="";
-		
 		if ( usuarioEsLogeado() ) {
 		
 			$resultado = formNewReqForm();
@@ -109,7 +104,6 @@
 		
 			$resultado = formLoginForm();
 		}
-		
 		echo $resultado;
 	}
 	if ( isset($_GET["item"]) ) {
@@ -143,25 +137,18 @@
 			}else	{
 				$vista = " activo=1 AND impresa=1 AND surtida=0";
 			}
-			
 			if ( isset($_GET["q"]) ) {
-				$busqueda="AND id IN (SELECT id FROM requisiciones WHERE requisicion like '%". $_GET["q"] ."%' union select idrequisicion as id from partidas where descripcion like '%". $_GET["q"] ."%' union select idrequisicion as id from comentariosrequisiciones where comentario like '%". $_GET["q"] ."%')";
+				$busqueda=" AND id IN (SELECT id FROM requisiciones WHERE requisicion LIKE '%". $_GET["q"] ."%' UNION SELECT idrequisicion AS id FROM partidas WHERE descripcion LIKE '%". $_GET["q"] ."%' UNION SELECT idrequisicion AS id FROM comentariosrequisiciones WHERE comentario LIKE '%". $_GET["q"] ."%' UNION SELECT partidas.idrequisicion AS id FROM partidas, comentariospartidas WHERE partidas.id=comentariospartidas.idpartida AND comentariospartidas.comentario LIKE '%". $_GET["q"] ."%' UNION SELECT partidas.idrequisicion AS id FROM partidas, adjuntospartidas WHERE partidas.id=adjuntospartidas.idpartida AND adjuntospartidas.nombre LIKE '%". $_GET["q"] ."%')";
 			}
 			if ( isset($_GET["user"]) && intval($_GET["user"]) > 0 ) {
-				$usuario="AND (idsolicitante=". $_GET["user"] ." OR idusuario=". $_GET["user"] .")";
-			}
-			
-			$sql="SELECT DISTINCT(id) FROM requisiciones WHERE ". $vista ." ". $busqueda ." ". $usuario .";"; //." LIMIT ". $item .",1";
-			//writelog($sql);
+				$usuario=" AND (idsolicitante=". $_GET["user"] ." OR idusuario=". $_GET["user"] .")";
+			}			
+			$sql="SELECT DISTINCT(id) FROM requisiciones WHERE". $vista . $busqueda . $usuario .";"; 
+			writelog($sql);
 			$res = $db->prepare($sql);
 			$res->execute();
 			while ($row = $res->fetch()) {
-				//$resultado .="<div id=". $row[0] ." ondblclick=\"editar(". $row[0] .");\">";
-				//$resultado .=MostrarMarcoRequisicion($row[0]);
-				//$resultado .="</div>";
 				$resultado = $resultado ." ". $row[0];
-				//writelog($row[0]);
-				//writelog($resultado);
 			}
 			$resultado = trim($resultado, " ");
 			print $resultado;
@@ -265,17 +252,12 @@
 			$res2= $db->prepare("SELECT * FROM adjuntospartidas WHERE activo=1 AND idpartida=". $row[0]);
 			$res2->execute();
 			while ($row2 = $res2->fetch()) {
-				
 				$totalpartadjuntos[$iter][$iter2]=$iter2;
 				$partadjuntoid[$iter][$iter2]=$row[0];
 				$partadjunto[$iter][$iter2]=$row2[2];
 				$partadjuntolongitud[$iter][$iter2]=$row2[3];
 				$partadjuntoautor[$iter][$iter2]=$row2[4];
 				$partadjuntofecha[$iter][$iter2]=$row2[5];
-				
-				//writelog("adjuntoid ". $partadjuntoid[$iter][$iter2]);
-				//writelog("ajuntonombre ". $partadjunto[$iter][$iter2]);
-				
 				$iter2=$iter2+1;
 			}
 			$iter=$iter+1;
@@ -306,14 +288,10 @@
 					}
 					$rutaorigen=$uploaddir ."p". $partadjuntoid[$item][$item2] ."/". $partadjunto[$item][$item2];
 					$rutadestino=$uploaddir ."p". $ultimoidpart ."/". $partadjunto[$item][$item2];
-					writelog("o ". $rutaorigen );
-					writelog("d ". $rutadestino );
-					if (copy($rutaorigen,$rutadestino)) {
+					if ( copy($rutaorigen,$rutadestino) ) {
 						$sql="INSERT INTO adjuntospartidas VALUES (0,". $ultimoidpart .",'". $partadjunto[$item][$item2] ."',". $partadjuntolongitud[$item][$item2] .",". $partadjuntoautor[$item][$item2] .",'". $partadjuntofecha[$item][$item2] ."',1);";
 						$res = $db->prepare($sql);
 						$res->execute();
-					}else{
-						writelog("no se pudo copiar ". $rutaorigen ." a ". $rutadestino ."");
 					}
 				}				
 			}
@@ -326,8 +304,6 @@
 			$comentarioreq[$iter]=$row[3];
 			$comentarioreqautor[$iter]=$row[4];
 			$comentarioreqfecha[$iter]=$row[5];
-			//writelog("comentario ". $comentarioreq[$iter]);
-			//writelog("autor ". $comentarioreqautor[$iter]);
 			$iter=$iter+1;
 		}	
 		if ( isset($totalreqcomentarios) ) {
@@ -354,20 +330,14 @@
 			}
 			$rutaorigen=$uploaddir ."r". $idrequisicion ."/". $nombrearchivo[$item];
 			$rutadestino=$uploaddir ."r". $ultimoidreq ."/". $nombrearchivo[$item];
-			//writelog("o ". $rutaorigen );
-			//writelog("d ". $rutadestino );
-			if (copy($rutaorigen,$rutadestino)) {
+			if ( copy($rutaorigen,$rutadestino) ) {
 				$sql="INSERT INTO adjuntosrequisiciones VALUES (0,". $ultimoidreq .",'". $nombrearchivo[$item] ."',". $longitudarchivo[$item] .",". $autor[$item] .",'". $fecha[$item] ."',1);";
 				$res = $db->prepare($sql);
 				$res->execute();
-			}else{
-				//writelog("no se pudo copiar ". $rutaorigen ." a ". $rutadestino ."");
 			}
 		}
-	
 		$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0,". $ultimoidreq .",0,'Copia de la requisicion Id=". $idrequisicion ."',". $_COOKIE["usuario"] .",NOW(),1);");
 		$res->execute();
-		
 		return "OK";
 	}
 	function ImprimirComentarios($pdf, $idrequisicion) {
@@ -494,11 +464,9 @@
 					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioReq(". $idcomentario .");\">";
 				}
 			}
-			
-				if ( ComentarioReqEsActivo($idcomentario) ) {
-					$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioReq(". $idcomentario .");\">";
-				}
-			
+			if ( ComentarioReqEsActivo($idcomentario) ) {
+				$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioReq(". $idcomentario .");\">";
+			}
 			if ( !ComentarioReqEsActivo($idcomentario) && usuarioEsSuper() ) {
 				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioReq(". $idcomentario .");\">";
 			}

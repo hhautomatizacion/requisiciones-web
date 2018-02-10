@@ -84,10 +84,6 @@
 		while ($row = $res->fetch()) {
 			$idrequisicion=$row[0];
 		}
-		//if ( usuarioEsLogeado() ) {
-			//if ( !(PartidaEsSurtida($idpartida)) && (PartidaEsActiva($idpartida)) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
-			//}
-		//}
 		if ( RequisicionEsMia($idrequisicion) || usuarioEsSuper() ) {
 			if ( !PartidaEsSurtida($idpartida) && PartidaEsActiva($idpartida) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
 				$resultado .= "<button onClick=\"appSurtePartida(". $idpartida .",". $idrequisicion .");\">Surtida</button>";
@@ -172,11 +168,9 @@
 					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioPart(". $idcomentario .");\">";
 				}
 			}
-			
-				if ( ComentarioPartEsActivo($idcomentario) ) {
-					$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioPart(". $idcomentario .");\">";
-				}
-			
+			if ( ComentarioPartEsActivo($idcomentario) ) {
+				$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioPart(". $idcomentario .");\">";
+			}
 			if ( !ComentarioPartEsActivo($idcomentario) && usuarioEsSuper() ) {
 				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioPart(". $idcomentario .");\">";
 			}
@@ -192,7 +186,7 @@
 		$resultado .= "<tr><td width=\"60%\"><small>Comentario</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\">". AgregarComentariosPartida($idpartida) ."</td></tr>";
 		while ($row = $res->fetch()) {
 			$clase = "com";
-				if ( ComentarioPartEsMio($row[0]) ) {
+			if ( ComentarioPartEsMio($row[0]) ) {
 				$clase .= " comowner";
 			}
 			if ( !ComentarioPartEsActivo($row[0]) ) {
