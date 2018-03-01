@@ -598,7 +598,41 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","libcomentario.php?action=add&idreq="+ idrequisicion +"&comentario="+ comentario.value,true);
+				xmlhttp.open("GET","libcomentario.php?action=comadd&type=comreq&idreq="+ idrequisicion +"&comentario="+ comentario.value,true);
+				xmlhttp.send();		
+			}
+			function deleteComentarioReq(el, idcomentario){
+				var cell = el.parentElement;
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							cell.innerHTML = "";
+						}
+					}
+				};
+				xmlhttp.open("GET","libcomentario.php?action=comdelete&type=comreq&idcom="+ idcomentario,true);
+				xmlhttp.send();		
+			}
+			function undeleteComentarioReq(el, idcomentario){
+				var cell = el.parentElement;
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							cell.innerHTML = "";
+						}
+					}
+				};
+				xmlhttp.open("GET","libcomentario.php?action=comundelete&type=comreq&idcom="+ idcomentario,true);
 				xmlhttp.send();		
 			}
 			function removeRow(tableID, rowID){
@@ -767,7 +801,7 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","libcomentario.php?action=add&idpart="+ idpartida +"&comentario="+ comentario.value,true);
+				xmlhttp.open("GET","libcomentario.php?action=comadd&type=compart&idpart="+ idpartida +"&comentario="+ comentario.value,true);
 				xmlhttp.send();		
 			}
 			
@@ -783,7 +817,6 @@
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-				
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalreqcomentarios[]' value='"+ newRow +"'><input type='text' name='reqcomentarios["+ newRow +"]' />";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
@@ -819,7 +852,6 @@
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-
 				row.insertCell(0).innerHTML = "<input type='hidden' name='total"+ tableID +"[]' value='"+ newRow +"'>";
 				row.insertCell(1).innerHTML = '<input type = "number" id = "'+ tableID +'numero'+ newRow +'" />';
 				row.insertCell(2).innerHTML = '<input type = "text" id = "'+ tableID +'descripcion'+ newRow +'" />';
@@ -891,11 +923,8 @@
 					}
 				};
 				xmlhttp.open("GET","libdb.php?action=addsetting&setting="+ setting + descripcion + numero,true);
-				xmlhttp.send();
-				
-				
+				xmlhttp.send();	
 			}
-			
 			function appRestauraPartida(idpartida, idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -961,6 +990,48 @@
 				xmlhttp.open("GET","libpartida.php?action=parttobesupplied&id="+idpartida,true);
 				xmlhttp.send();
 			}	
+			function appExportar() {
+				var mostrarusuarios = 0;
+				var mostrarvista =0;
+				var usuarios='';
+				var busqueda='';
+				
+				if ( document.getElementById("mostrarrequisiciones") ) {
+					mostrarvista = document.getElementById("mostrarrequisiciones").value;
+				}
+				if ( document.getElementById("usuariosrequisiciones") ) {
+					mostrarusuarios = document.getElementById("usuariosrequisiciones").value;
+				}
+				if ( document.getElementById("busquedarequisiciones") ) {
+					document.getElementById("busquedarequisiciones").value = busquedarequisiciones;
+				}
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					var a;
+					if (this.readyState == 4 && this.status == 200) {
+						var fecha = new Date().toISOString().replace("T"," ").slice(0,19);
+						console.log('fecha '+ fecha);
+						a = document.createElement("a");
+						a.href=window.URL.createObjectURL(this.response);
+						a.download="req "+ fecha +".pdf";
+						document.body.appendChild(a);
+						a.click();
+					}
+				};
+				if ( mostrarusuarios ) {
+					usuarios='&user='+ mostrarusuarios;
+					}
+				if ( busquedarequisiciones.length > 0 ) {
+					busqueda='&q='+ busquedarequisiciones;
+				}
+				xmlhttp.responseType="blob";
+				xmlhttp.open("GET","librequisicion.php?action=export"+ usuarios +"&view="+ mostrarvista + busqueda ,true);
+				xmlhttp.send();
+			}
 			function appImprimeRequisicion(idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -970,16 +1041,12 @@
 				xmlhttp.onreadystatechange = function() {
 					var a;
 					if (this.readyState == 4 && this.status == 200) {
-
-						
-							a = document.createElement("a");
-							a.href=window.URL.createObjectURL(this.response);
-							a.download="id"+ idrequisicion +".pdf";
-							//a.style.display="none";
-							document.body.appendChild(a);
-							a.click();
-							appActualizaRequisicion(idrequisicion);
-
+						a = document.createElement("a");
+						a.href=window.URL.createObjectURL(this.response);
+						a.download="id"+ idrequisicion +".pdf";
+						document.body.appendChild(a);
+						a.click();
+						appActualizaRequisicion(idrequisicion);
 					}
 				};
 				xmlhttp.responseType="blob";
@@ -1121,26 +1188,13 @@
 			function appEditarImpresa(el,idrequisicion) {
 				var divRequisicion=document.getElementById('mostrarrequisicion'+ idrequisicion);
 				if ( !document.getElementById('editreqno'+ idrequisicion) ) {
-					
 					var cellRequisicion = divRequisicion.children[0].children[0].children[3];
 					var requisicion= cellRequisicion.innerHTML;
 					cellRequisicion.innerHTML='<input id="editreqno'+ idrequisicion +'" type="text" value="'+ requisicion +'" onkeyup="appTextSaveEditarImpresa(event, '+ idrequisicion +');">';
-					//var cellSurtir = divRequisicion.children[0].children[1].children[5];
-					//cellSurtir.innerHTML='<input id="editfecha'+ idrequisicion +'" type="date">'
-					
-					// elChildren= divRequisicion.children[0].children[1].children;
-					// for (var i=0; i < elChildren.length; i++) {
-						// console.log(i);
-						// console.log(elChildren[i].innerHTML);
-					// }
-					
 				}
-				el.parentElement.innerHTML='<button onClick="appSaveEditarImpresa('+ idrequisicion +');">Guardar</button><button onClick="appActualizaRequisicion('+ idrequisicion +');">Cancelar</button>';
-				
-				
+				el.parentElement.innerHTML='<button onClick="appSaveEditarImpresa('+ idrequisicion +');">Guardar</button><button onClick="appActualizaRequisicion('+ idrequisicion +');">Cancelar</button>';				
 			}
 		</script>
-		
 		<title>Requisiciones</title>
 	</head>
 	<body>

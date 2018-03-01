@@ -97,17 +97,15 @@
 	}
 	if ( isset($_GET["action"]) && $_GET["action"] == "showreqform" ) {
 		$resultado="";
-		if ( usuarioEsLogeado() ) {
-		
+		if ( usuarioEsLogeado() ) {		
 			$resultado = formNewReqForm();
 		}else{
-		
 			$resultado = formLoginForm();
 		}
 		echo $resultado;
 	}
 	if ( isset($_GET["item"]) ) {
-		if ( isset($_GET["action"]) && $_GET["action"]=="show" ) {
+		if ( isset($_GET["action"]) && $_GET["action"] == "show" ) {
 			$resultado="";
 			$usuario="";
 			$busqueda="";
@@ -144,7 +142,6 @@
 				$usuario=" AND (idsolicitante=". $_GET["user"] ." OR idusuario=". $_GET["user"] .")";
 			}			
 			$sql="SELECT DISTINCT(id) FROM requisiciones WHERE". $vista . $busqueda . $usuario .";"; 
-			writelog($sql);
 			$res = $db->prepare($sql);
 			$res->execute();
 			while ($row = $res->fetch()) {
@@ -154,7 +151,54 @@
 			print $resultado;
 		}
 	}
-	
+	if ( isset($_GET["action"]) && $_GET["action"] == "export" ) {
+		$resultado="";
+		$usuario="";
+		$busqueda="";
+		$vista="";
+		
+		if ( isset($_GET["view"]) && intval($_GET["view"]) >= 0 && intval($_GET["view"]) < 6 ) {
+			switch ($_GET["view"]) {
+				case "0":
+					$vista = " activo=1 AND impresa=1 AND surtida=0";
+					break;
+				case "1":
+					$vista = " activo=1 AND impresa=1 AND surtida=1";
+					break;
+				case "2":
+					$vista = " activo=1 AND impresa=0";
+					break;
+				case "3":
+					$vista = " activo=1 AND impresa=1";
+					break;	
+				case "4":
+					$vista = " activo=0";
+					break;		
+				case "5":
+					$vista = " id>0";
+					break;
+			}
+		}else	{
+			$vista = " activo=1 AND impresa=1 AND surtida=0";
+		}
+		if ( isset($_GET["q"]) ) {
+			$busqueda=" AND id IN (SELECT id FROM requisiciones WHERE requisicion LIKE '%". $_GET["q"] ."%' UNION SELECT idrequisicion AS id FROM partidas WHERE descripcion LIKE '%". $_GET["q"] ."%' UNION SELECT idrequisicion AS id FROM comentariosrequisiciones WHERE comentario LIKE '%". $_GET["q"] ."%' UNION SELECT partidas.idrequisicion AS id FROM partidas, comentariospartidas WHERE partidas.id=comentariospartidas.idpartida AND comentariospartidas.comentario LIKE '%". $_GET["q"] ."%' UNION SELECT partidas.idrequisicion AS id FROM partidas, adjuntospartidas WHERE partidas.id=adjuntospartidas.idpartida AND adjuntospartidas.nombre LIKE '%". $_GET["q"] ."%')";
+		}
+		if ( isset($_GET["user"]) && intval($_GET["user"]) > 0 ) {
+			$usuario=" AND (idsolicitante=". $_GET["user"] ." OR idusuario=". $_GET["user"] .")";
+		}			
+		$sql="SELECT DISTINCT(id) FROM requisiciones WHERE". $vista . $busqueda . $usuario .";"; 
+		$pdf = new PDF("L");
+		$pdf->SetFont('Arial','',6);
+		$pdf->AddPage();
+		ExportarEncabezados($pdf);
+		$res = $db->prepare($sql);
+		$res->execute();
+		while ($row = $res->fetch()) {
+			ExportarRequisicion($pdf, $row[0]);	
+		}
+		$pdf->Output();
+	}
 	if ( isset($_GET["id"]) ) {
 		$idrequisicion=$_GET["id"];
 		switch ($_GET["action"]) {
@@ -340,6 +384,62 @@
 		$res->execute();
 		return "OK";
 	}
+	function ExportarRequisicion($pdf, $idrequisicion) {
+		global $db;
+		$y=$pdf->LastY();
+		$req="";
+		$fecha="";
+		$solicitante="";
+		$estado="";
+		$res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$fecha=$row[1];
+			$req=$row[2];
+			$solicitante=ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre");
+		}
+		$res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion=". $idrequisicion .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$estado="";
+			if ( $y + $pdf->MeassureRows($row[4] ,115,5) > 200 ) {
+				$pdf->AddPage();
+				ExportarEncabezados($pdf);
+				$y=10;
+			}
+			if ( strval($row[6]) == 1 ) {
+				$estado .= "Surtida";
+			}
+			if ( strval($row[5]) == 0 ) {
+				$estado .= "Eliminada";
+			}
+			$pdf->PutRows(5,$y,$idrequisicion);
+			$pdf->PutRows(19,$y,$req);
+			$pdf->PutRows(33,$y,$fecha);
+			$pdf->PutRows(61,$y,(float)$row[2]);
+			$pdf->PutRows(75,$y,ObtenerDescripcionDesdeID("unidades",$row[3],"unidad"));
+			$pdf->PutRows(229,$y,$estado);
+			$pdf->PutRows(257,$y,$solicitante);
+			$pdf->PutRows(89,$y,$row[4] ,115,5);
+			$y=$y+ ($pdf->MeassureRows($row[4] ,115,5));	
+			$pdf->SetLineWidth(0.20);
+			$pdf->Line(4,$y-4,280,$y-4);
+		}
+		$pdf->SetLineWidth(0.40);
+		$pdf->Line(2,$y-4,285,$y-4);
+	}
+	function ExportarEncabezados($pdf) {
+		$y=5;
+		$pdf->PutRows(5,$y,"Id");
+		$pdf->PutRows(19,$y,"Req");
+		$pdf->PutRows(33,$y,"Fecha");
+		$pdf->PutRows(61,$y,"Cant");
+		$pdf->PutRows(75,$y,"Unidad");
+		$pdf->PutRows(89,$y,"Descripcion");
+		$pdf->PutRows(229,$y,"Estado");
+		$pdf->PutRows(257,$y,"Solicitante");
+		$pdf->PutRows(5,10,"");
+	}
 	function ImprimirComentarios($pdf, $idrequisicion) {
 		global $db;
 		$comentario="";
@@ -373,7 +473,9 @@
 		$pdf->PutRows(40,105,$comentario,170,5);
 	}
 	function ImprimirRequisicion($pdf, $idrequisicion) {	
+		ImprimirEncabezados($pdf, $idrequisicion);
 		ImprimirPartidas($pdf, $idrequisicion);		
+		ImprimirComentarios($pdf, $idrequisicion);
 	}
 	
 	function ImprimirEncabezados($pdf, $idrequisicion) {
@@ -400,8 +502,7 @@
 		global $db;
 		$y=47;
 		$cr="";
-		ImprimirEncabezados($pdf, $idrequisicion);
-		ImprimirComentarios($pdf, $idrequisicion);
+		
 		$res = $db->prepare("SELECT * FROM partidas WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -420,7 +521,6 @@
 		}
 		$pdf->PutRows(110,30,$cr);	
 	}
-
 	function AgregarComentariosRequisicion($idrequisicion) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
@@ -461,14 +561,14 @@
 		if ( usuarioEsLogeado() ) {
 			if ( ComentarioReqEsMio($idcomentario) || usuarioEsSuper() ) {
 				if ( ComentarioReqEsActivo($idcomentario) ) {
-					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioReq(". $idcomentario .");\">";
+					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioReq(this, ". $idcomentario .");\">";
 				}
 			}
 			if ( ComentarioReqEsActivo($idcomentario) ) {
 				$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioReq(". $idcomentario .");\">";
 			}
 			if ( !ComentarioReqEsActivo($idcomentario) && usuarioEsSuper() ) {
-				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioReq(". $idcomentario .");\">";
+				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioReq(this, ". $idcomentario .");\">";
 			}
 		}
 		return $resultado;
@@ -732,7 +832,7 @@
 		$resultado.="			<div>";
 		$resultado.="			<table>";
 		$resultado.="			<tr>";
-		$resultado.="			<td width=\"80%\">";
+		$resultado.="			<td width=\"90%\">";
 		$resultado.="			<table>";
 		$resultado.="				<tr>";
 		$resultado.="					<td><small>Departamento:</small></td><td><select name = \"departamento\">". ObtenerOpcionesSelect("departamentos","departamento") ."</select></td>";
@@ -747,8 +847,8 @@
 		$resultado.="					<td colspan=2>";
 		$resultado.="					<table id=\"tablapartidas\">";
 		$resultado.="						<tr>";
-		$resultado.="							<td width=\"80%\"><small>Partidas</small></td>";
-		$resultado.="							<td width=\"20%\"><input type = \"button\" value=\"Agregar\" onclick=\"addPartidaNewReq('tablapartidas');\"></td>";
+		$resultado.="							<td width=\"90%\"><small>Partidas</small></td>";
+		$resultado.="							<td width=\"10%\"><input type = \"button\" value=\"Agregar\" onclick=\"addPartidaNewReq('tablapartidas');\"></td>";
 		$resultado.="						</tr>";
 		$resultado.="					</table>";
 		$resultado.="					</td>";
@@ -757,8 +857,8 @@
 		$resultado.="					<td colspan=2>";
 		$resultado.="					<table id=\"tablacomentariosreq\">";
 		$resultado.="						<tr>";
-		$resultado.="							<td width=\"80%\"><small>Comentarios</small></td>";
-		$resultado.="							<td width=\"20%\"><input type = \"button\" value=\"Agregar\" onclick=\"addComentarioNewReq('tablacomentariosreq');\"></td>";
+		$resultado.="							<td width=\"90%\"><small>Comentarios</small></td>";
+		$resultado.="							<td width=\"10%\"><input type = \"button\" value=\"Agregar\" onclick=\"addComentarioNewReq('tablacomentariosreq');\"></td>";
 		$resultado.="						</tr>";
 		$resultado.="					</table>";
 		$resultado.="					";
@@ -768,9 +868,9 @@
 		$resultado.="					<td colspan=2>";
 		$resultado.="					<table id=\"tablaadjuntosreq\">";
 		$resultado.="						<tr>";
-		$resultado.="							<td width=\"60%\"><small>Adjuntos</small></td>";
-		$resultado.="							<td width=\"20%\"><small>Tama&ntilde;o</small></td>";
-		$resultado.="							<td width=\"20%\"><input type = \"button\" value=\"Agregar\" onclick=\"addAdjuntoNewReq('tablaadjuntosreq');\"></td>";
+		$resultado.="							<td width=\"80%\"><small>Adjuntos</small></td>";
+		$resultado.="							<td width=\"10%\"><small>Tama&ntilde;o</small></td>";
+		$resultado.="							<td width=\"10%\"><input type = \"button\" value=\"Agregar\" onclick=\"addAdjuntoNewReq('tablaadjuntosreq');\"></td>";
 		$resultado.="						</tr>";
 		$resultado.="					</table>";
 		$resultado.="					";
@@ -781,8 +881,7 @@
 		$resultado.="				</tr>";
 		$resultado.="			</table>";
 		$resultado.="			</td>";
-		$resultado.="			<td width=\"20%\">";
-		//$resultado.="				<input type = \"submit\" value=\"Guardar\">";
+		$resultado.="			<td width=\"10%\">";
 		$resultado .="						<button onClick=\"event.preventDefault();appEnviarNewReq();\">Guardar</button>";
 		$resultado.="			</td>";
 		$resultado.="			</tr>";

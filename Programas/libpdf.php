@@ -1,8 +1,15 @@
 <?php
 	require_once('fpdf.php');
+	require_once('libphp.php');
 	
 	class PDF extends FPDF
 	{
+		public $ultimoY=0;
+		function LastY()
+		{
+			
+			return $this->ultimoY;
+		}
 		function MeassureRows($text,$maxwidth,$rowheight)
 		{
 			return $this->PutRows(0,0,$text,$maxwidth,$rowheight,0);
@@ -10,14 +17,13 @@
 		function PutRows($x,$y,$text,$maxwidth=0,$rowheight=0, $display=1)
 		{
 			$text = trim($text);
-			//if ($text==='')
-			//	return 0;
 			if ($maxwidth==0)
 				$maxwidth=1000;
 			$space = $this->GetStringWidth(' ');
 			$line = $text;
 			$text = '';
 			$incremento = 0;
+			$nuevoy=$y;
 			
 			$words = preg_split('/ +/', $line);
 			$width = 0;
@@ -40,10 +46,10 @@
 						{
 							$width = $wordwidth;
 							if ($display==1) {
-								$this->Text($x,$y,$text);
+								$this->Text($x,$nuevoy,$text);
 							}
 							$text = substr($word, $i, 1);
-							$y=$y+$rowheight;
+							$nuevoy=$nuevoy+$rowheight;
 							$incremento = $incremento + $rowheight;
 						}
 					}
@@ -57,21 +63,19 @@
 				{
 					$width = $wordwidth + $space;
 					if ($display==1) {
-						$this->Text($x,$y,$text);
+						$this->Text($x,$nuevoy,$text);
 					}
 					$text = $word.' ';
-					$y = $y + $rowheight;
+					$nuevoy = $nuevoy + $rowheight;
 					$incremento = $incremento + $rowheight;
 				}
 			}
-			if ($display==1) {
-				$this->Text($x,$y,$text);
-			}
 			$incremento = $incremento + $rowheight;
-			
+			if ($display==1) {
+				$this->Text($x,$nuevoy,$text);
+				$this->ultimoY = $y + $incremento;
+			}
 			return $incremento;
-		}
-		
-		
+		}	
 	}
 ?>

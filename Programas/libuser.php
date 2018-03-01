@@ -13,7 +13,6 @@
 		echo $resultado;
 	}
 	
-	
 	if ( isset($_GET["action"]) && $_GET["action"] == "showloginform" ) {
 		$resultado= formLoginForm();
 		echo $resultado;
@@ -138,47 +137,45 @@
 	}
 	
 	function formSigninForm() {
-		$resultado="";
-				
-		$resultado .="		<form id=\"signinform\" method = \"POST\">";
-		$resultado .="			<input type=\"hidden\" name=\"action\" value=\"signin\"/>";
-		$resultado .="			<table>";
-		$resultado .="				<tr>";
-		$resultado .="					<td width=\"80%\">";
-		$resultado .="						<table>	";
-		$resultado .="							<tr>";
-		$resultado .="								<td width=\"20%\"><small>Numero de empleado:</small></td>";
-		$resultado .="								<td width=\"80%\"><input type = \"number\" min=\"0\" name = \"numero\" /></td>";
-		$resultado .="							</tr>";
-		$resultado .="							<tr>";
-		$resultado .="								<td width=\"20%\"><small>Nombre:</small></td>";
-		$resultado .="								<td width=\"80%\"><input type = \"text\" name = \"nombre\" /></td>";
-		$resultado .="							</tr>";
-		$resultado .="							<tr>";
-		$resultado .="								<td width=\"20%\"><small>Usuario:</small></td>";
-		$resultado .="								<td width=\"80%\"><input type = \"text\" name = \"usuario\" /></td>";
-		$resultado .="							</tr>";
-		$resultado .="							<tr>";
-		$resultado .="								<td width=\"20%\"><small>Email:</small></td>";
-		$resultado .="								<td width=\"80%\"><input type = \"email\" name = \"email\" /></td>";
-		$resultado .="							</tr>";
-		$resultado .="							<tr>";
-		$resultado .="								<td width=\"20%\"><small>Password:</small></td>";
-		$resultado .="								<td width=\"80%\"><input type = \"password\" name = \"password1\" /></td>";
-		$resultado .="							</tr>";
-		$resultado .="							<tr>";
-		$resultado .="								<td width=\"20%\"><small>Repetir password:</small></td>";
-		$resultado .="								<td width=\"80%\"><input type = \"password\" name = \"password2\" /></td>";
-		$resultado .="							</tr>";
-		$resultado .="						</table>";
-		$resultado .="					</td>";
-		$resultado .="					<td width=\"20%\">";
-		$resultado .="						<button onClick=\"event.preventDefault();appEnviarSignin();\">Registrar</button>";
-		$resultado .="					</td>";
-		$resultado .="				</tr>";
-		$resultado .="			</table>";
-		$resultado .="		</form>";
-			
+		$resultado="";		
+		$resultado .="<form id=\"signinform\" method = \"POST\">";
+		$resultado .="	<input type=\"hidden\" name=\"action\" value=\"signin\"/>";
+		$resultado .="	<table>";
+		$resultado .="		<tr>";
+		$resultado .="			<td width=\"80%\">";
+		$resultado .="				<table>	";
+		$resultado .="					<tr>";
+		$resultado .="						<td width=\"20%\"><small>Numero de empleado:</small></td>";
+		$resultado .="						<td width=\"80%\"><input type = \"number\" min=\"0\" name = \"numero\" /></td>";
+		$resultado .="					</tr>";
+		$resultado .="					<tr>";
+		$resultado .="						<td width=\"20%\"><small>Nombre:</small></td>";
+		$resultado .="						<td width=\"80%\"><input type = \"text\" name = \"nombre\" /></td>";
+		$resultado .="					</tr>";
+		$resultado .="					<tr>";
+		$resultado .="						<td width=\"20%\"><small>Usuario:</small></td>";
+		$resultado .="						<td width=\"80%\"><input type = \"text\" name = \"usuario\" /></td>";
+		$resultado .="					</tr>";
+		$resultado .="					<tr>";
+		$resultado .="						<td width=\"20%\"><small>Email:</small></td>";
+		$resultado .="						<td width=\"80%\"><input type = \"email\" name = \"email\" /></td>";
+		$resultado .="					</tr>";
+		$resultado .="					<tr>";
+		$resultado .="						<td width=\"20%\"><small>Password:</small></td>";
+		$resultado .="						<td width=\"80%\"><input type = \"password\" name = \"password1\" /></td>";
+		$resultado .="					</tr>";
+		$resultado .="					<tr>";
+		$resultado .="						<td width=\"20%\"><small>Repetir password:</small></td>";
+		$resultado .="						<td width=\"80%\"><input type = \"password\" name = \"password2\" /></td>";
+		$resultado .="					</tr>";
+		$resultado .="				</table>";
+		$resultado .="			</td>";
+		$resultado .="			<td width=\"20%\">";
+		$resultado .="				<button onClick=\"event.preventDefault();appEnviarSignin();\">Registrar</button>";
+		$resultado .="			</td>";
+		$resultado .="		</tr>";
+		$resultado .="	</table>";
+		$resultado .="</form>";	
 		return $resultado;
 	}
 	function usuarioVerificarCredenciales($name, $password) {
