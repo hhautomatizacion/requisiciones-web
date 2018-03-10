@@ -8,6 +8,7 @@
 
 	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntoreq" ) {
 		$idrequisicion=$_POST["requisicion"];
+		$cntarchivoduplicado=0;
 		$uploaddir="uploads/";
 		$rutaupload=$uploaddir ."r". $idrequisicion;
 		if (!is_writeable($rutaupload)) {
@@ -17,6 +18,14 @@
 		$rutatemp = $_FILES["archivo"]["tmp_name"];
 		$longitudarchivo=$_FILES["archivo"]["size"];
 		$rutadestino=$rutaupload ."/". $nombrearchivo;
+		$nombrearchivooriginal = $nombrearchivo;
+		while(file_exists($rutadestino)) {
+			$cntarchivoduplicado = $cntarchivoduplicado + 1;
+			list($name, $ext) = explode(".", $nombrearchivooriginal);
+			$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
+			$rutadestino=$rutaupload ."/". $nombrearchivo;
+			writelog("Nueva ruta destino ". $rutadestino);
+		}
 		if (move_uploaded_file($rutatemp,$rutadestino)) {
 			$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0,". $idrequisicion .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
 			$res->execute();
@@ -263,7 +272,7 @@
 		$res= $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion);
 		$res->execute();
 		while ($row = $res->fetch()) {
-			$requisicion=$row[2];
+			$requisicion="";
 			$departamento=$row[9];
 			$area=$row[10];
 			$solicitante=$row[13];

@@ -386,7 +386,7 @@
 							if ( this.responseText.length > 0 ) {
 								requisiciones = this.responseText.split(" ");
 								document.title = "Requisiciones - "+ requisiciones.length +" mostradas"; 
-								console.log(requisiciones);
+								//console.log(requisiciones);
 								t = setInterval(tik, 100);
 							}else{
 								document.title = "Requisiciones";

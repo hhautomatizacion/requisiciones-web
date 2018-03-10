@@ -1,0 +1,1822 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<title>__construct</title>
+<link href="../fpdf.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<a name="1_"></a>
+
+<h1>__construct</h1>
+<code>__construct([<b>string</b> orientation [, <b>string</b> unit [, <b>mixed</b> size]]])</code>
+<h2>Description</h2>
+This is the class constructor. It allows to set up the page size, the orientation and the
+unit of measure used in all methods (except for font sizes).
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>orientation</code></dt>
+<dd>
+Default page orientation. Possible values are (case insensitive):
+<ul>
+<li><code>P</code> or <code>Portrait</code></li>
+<li><code>L</code> or <code>Landscape</code></li>
+</ul>
+Default value is <code>P</code>.
+</dd>
+<dt><code>unit</code></dt>
+<dd>
+User unit. Possible values are:
+<ul>
+<li><code>pt</code>: point</li>
+<li><code>mm</code>: millimeter</li>
+<li><code>cm</code>: centimeter</li>
+<li><code>in</code>: inch</li>
+</ul>
+A point equals 1/72 of inch, that is to say about 0.35 mm (an inch being 2.54 cm). This
+is a very common unit in typography; font sizes are expressed in that unit.
+<br/>
+<br/>
+Default value is <code>mm</code>.
+</dd>
+<dt><code>size</code></dt>
+<dd>
+The size used for pages. It can be either one of the following values (case insensitive):
+<ul>
+<li><code>A3</code></li>
+<li><code>A4</code></li>
+<li><code>A5</code></li>
+<li><code>Letter</code></li>
+<li><code>Legal</code></li>
+</ul>
+or an array containing the width and the height (expressed in the unit given by <code>unit</code>).<br/>
+<br/>
+Default value is <code>A4</code>.
+</dd>
+</dl>
+<h2>Example</h2>
+Example with a custom 100x150 mm page size:
+<div class="doc-source">
+<pre><code>$pdf = new FPDF(&apos;P&apos;,&apos;mm&apos;,array(100,150));</code></pre>
+</div>
+
+
+<hr/>
+
+
+
+
+
+<a name="2_"></a>
+
+<h1>AcceptPageBreak</h1>
+<code><b>boolean</b> AcceptPageBreak()</code>
+<h2>Description</h2>
+Whenever a page break condition is met, the method is called, and the break is issued or not
+depending on the returned value. The default implementation returns a value according to the
+mode selected by SetAutoPageBreak().
+<br/>
+This method is called automatically and should not be called directly by the application.
+<h2>Example</h2>
+The method is overriden in an inherited class in order to obtain a 3 column layout:
+<div class="doc-source">
+<pre><code>class PDF extends FPDF
+{
+var $col = 0;
+
+function SetCol($col)
+{
+    // Move position to a column
+    $this-&gt;col = $col;
+    $x = 10+$col*65;
+    $this-&gt;SetLeftMargin($x);
+    $this-&gt;SetX($x);
+}
+
+function AcceptPageBreak()
+{
+    if($this-&gt;col&lt;2)
+    {
+        // Go to next column
+        $this-&gt;SetCol($this-&gt;col+1);
+        $this-&gt;SetY(10);
+        return false;
+    }
+    else
+    {
+        // Go back to first column and issue page break
+        $this-&gt;SetCol(0);
+        return true;
+    }
+}
+}
+
+$pdf = new PDF();
+$pdf-&gt;AddPage();
+$pdf-&gt;SetFont(&apos;Arial&apos;,&apos;&apos;,12);
+for($i=1;$i&lt;=300;$i++)
+    $pdf-&gt;Cell(0,5,&quot;Line $i&quot;,0,1);
+$pdf-&gt;Output();</code></pre>
+</div>
+<h2>See also</h2>
+<a href="#3_">SetAutoPageBreak</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="4_"></a>
+
+<h1>AddFont</h1>
+<code>AddFont(<b>string</b> family [, <b>string</b> style [, <b>string</b> file]])</code>
+<h2>Description</h2>
+Imports a TrueType, OpenType or Type1 font and makes it available. It is necessary to generate a font
+definition file first with the MakeFont utility.
+<br/>
+The definition file (and the font file itself when embedding) must be present in the font directory.
+If it is not found, the error &quot;Could not include font definition file&quot; is raised.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>family</code></dt>
+<dd>
+Font family. The name can be chosen arbitrarily. If it is a standard family name, it will
+override the corresponding font.
+</dd>
+<dt><code>style</code></dt>
+<dd>
+Font style. Possible values are (case insensitive):
+<ul>
+<li>empty string: regular</li>
+<li><code>B</code>: bold</li>
+<li><code>I</code>: italic</li>
+<li><code>BI</code> or <code>IB</code>: bold italic</li>
+</ul>
+The default value is regular.
+</dd>
+<dt><code>file</code></dt>
+<dd>
+The font definition file.
+<br/>
+By default, the name is built from the family and style, in lower case with no space.
+</dd>
+</dl>
+<h2>Example</h2>
+<div class="doc-source">
+<pre><code>$pdf-&gt;AddFont(&apos;Comic&apos;,&apos;I&apos;);</code></pre>
+</div>
+is equivalent to:
+<div class="doc-source">
+<pre><code>$pdf-&gt;AddFont(&apos;Comic&apos;,&apos;I&apos;,&apos;comici.php&apos;);</code></pre>
+</div>
+<h2>See also</h2>
+<a href="#5_">SetFont</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="6_"></a>
+
+<h1>AddLink</h1>
+<code><b>int</b> AddLink()</code>
+<h2>Description</h2>
+Creates a new internal link and returns its identifier. An internal link is a clickable area
+which directs to another place within the document.
+<br/>
+The identifier can then be passed to Cell(), Write(), Image() or Link(). The destination is
+defined with SetLink().
+<h2>See also</h2>
+<a href="#7_">Cell</a>,
+<a href="#8_">Write</a>,
+<a href="#9_">Image</a>,
+<a href="#10_">Link</a>,
+<a href="#11_">SetLink</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="12_"></a>
+
+<h1>AddPage</h1>
+<code>AddPage([<b>string</b> orientation [, <b>mixed</b> size [, <b>int</b> rotation]]])</code>
+<h2>Description</h2>
+Adds a new page to the document. If a page is already present, the Footer() method is called
+first to output the footer. Then the page is added, the current position set to the top-left
+corner according to the left and top margins, and Header() is called to display the header.
+<br/>
+The font which was set before calling is automatically restored. There is no need to call
+SetFont() again if you want to continue with the same font. The same is true for colors and
+line width.
+<br/>
+The origin of the coordinate system is at the top-left corner and increasing ordinates go
+downwards.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>orientation</code></dt>
+<dd>
+Page orientation. Possible values are (case insensitive):
+<ul>
+<li><code>P</code> or <code>Portrait</code></li>
+<li><code>L</code> or <code>Landscape</code></li>
+</ul>
+The default value is the one passed to the constructor.
+</dd>
+<dt><code>size</code></dt>
+<dd>
+Page size. It can be either one of the following values (case insensitive):
+<ul>
+<li><code>A3</code></li>
+<li><code>A4</code></li>
+<li><code>A5</code></li>
+<li><code>Letter</code></li>
+<li><code>Legal</code></li>
+</ul>
+or an array containing the width and the height (expressed in user unit).<br/>
+<br/>
+The default value is the one passed to the constructor.
+</dd>
+<dt><code>rotation</code></dt>
+<dd>
+Angle by which to rotate the page. It must be a multiple of 90; positive values
+mean clockwise rotation. The default value is <code>0</code>.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#1_">__construct</a>,
+<a href="#13_">Header</a>,
+<a href="#14_">Footer</a>,
+<a href="#15_">SetMargins</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="16_"></a>
+
+<h1>AliasNbPages</h1>
+<code>AliasNbPages([<b>string</b> alias])</code>
+<h2>Description</h2>
+Defines an alias for the total number of pages. It will be substituted as the document is
+closed.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>alias</code></dt>
+<dd>
+The alias. Default value: <code>{nb}</code>.
+</dd>
+</dl>
+<h2>Example</h2>
+<div class="doc-source">
+<pre><code>class PDF extends FPDF
+{
+function Footer()
+{
+    // Go to 1.5 cm from bottom
+    $this-&gt;SetY(-15);
+    // Select Arial italic 8
+    $this-&gt;SetFont(&apos;Arial&apos;,&apos;I&apos;,8);
+    // Print current and total page numbers
+    $this-&gt;Cell(0,10,&apos;Page &apos;.$this-&gt;PageNo().&apos;/{nb}&apos;,0,0,&apos;C&apos;);
+}
+}
+
+$pdf = new PDF();
+$pdf-&gt;AliasNbPages();</code></pre>
+</div>
+<h2>See also</h2>
+<a href="#17_">PageNo</a>,
+<a href="#14_">Footer</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="7_"></a>
+
+<h1>Cell</h1>
+<code>Cell(<b>float</b> w [, <b>float</b> h [, <b>string</b> txt [, <b>mixed</b> border [, <b>int</b> ln [, <b>string</b> align [, <b>boolean</b> fill [, <b>mixed</b> link]]]]]]])</code>
+<h2>Description</h2>
+Prints a cell (rectangular area) with optional borders, background color and character string.
+The upper-left corner of the cell corresponds to the current position. The text can be aligned
+or centered. After the call, the current position moves to the right or to the next line. It is
+possible to put a link on the text.
+<br/>
+If automatic page breaking is enabled and the cell goes beyond the limit, a page break is
+done before outputting.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>w</code></dt>
+<dd>
+Cell width. If <code>0</code>, the cell extends up to the right margin.
+</dd>
+<dt><code>h</code></dt>
+<dd>
+Cell height.
+Default value: <code>0</code>.
+</dd>
+<dt><code>txt</code></dt>
+<dd>
+String to print.
+Default value: empty string.
+</dd>
+<dt><code>border</code></dt>
+<dd>
+Indicates if borders must be drawn around the cell. The value can be either a number:
+<ul>
+<li><code>0</code>: no border</li>
+<li><code>1</code>: frame</li>
+</ul>
+or a string containing some or all of the following characters (in any order):
+<ul>
+<li><code>L</code>: left</li>
+<li><code>T</code>: top</li>
+<li><code>R</code>: right</li>
+<li><code>B</code>: bottom</li>
+</ul>
+Default value: <code>0</code>.
+</dd>
+<dt><code>ln</code></dt>
+<dd>
+Indicates where the current position should go after the call. Possible values are:
+<ul>
+<li><code>0</code>: to the right</li>
+<li><code>1</code>: to the beginning of the next line</li>
+<li><code>2</code>: below</li>
+</ul>
+Putting <code>1</code> is equivalent to putting <code>0</code> and calling Ln() just after.
+Default value: <code>0</code>.
+</dd>
+<dt><code>align</code></dt>
+<dd>
+Allows to center or align the text. Possible values are:
+<ul>
+<li><code>L</code> or empty string: left align (default value)</li>
+<li><code>C</code>: center</li>
+<li><code>R</code>: right align</li>
+</ul>
+</dd>
+<dt><code>fill</code></dt>
+<dd>
+Indicates if the cell background must be painted (<code>true</code>) or transparent (<code>false</code>).
+Default value: <code>false</code>.
+</dd>
+<dt><code>link</code></dt>
+<dd>
+URL or identifier returned by AddLink().
+</dd>
+</dl>
+<h2>Example</h2>
+<div class="doc-source">
+<pre><code>// Set font
+$pdf-&gt;SetFont(&apos;Arial&apos;,&apos;B&apos;,16);
+// Move to 8 cm to the right
+$pdf-&gt;Cell(80);
+// Centered text in a framed 20*10 mm cell and line break
+$pdf-&gt;Cell(20,10,&apos;Title&apos;,1,1,&apos;C&apos;);</code></pre>
+</div>
+<h2>See also</h2>
+<a href="#5_">SetFont</a>,
+<a href="#18_">SetDrawColor</a>,
+<a href="#19_">SetFillColor</a>,
+<a href="#20_">SetTextColor</a>,
+<a href="#21_">SetLineWidth</a>,
+<a href="#6_">AddLink</a>,
+<a href="#22_">Ln</a>,
+<a href="#23_">MultiCell</a>,
+<a href="#8_">Write</a>,
+<a href="#3_">SetAutoPageBreak</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="24_"></a>
+
+<h1>Close</h1>
+<code>Close()</code>
+<h2>Description</h2>
+Terminates the PDF document. It is not necessary to call this method explicitly because Output()
+does it automatically.
+<br/>
+If the document contains no page, AddPage() is called to prevent from getting an invalid document.
+<h2>See also</h2>
+<a href="#25_">Output</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="26_"></a>
+
+<h1>Error</h1>
+<code>Error(<b>string</b> msg)</code>
+<h2>Description</h2>
+This method is automatically called in case of a fatal error; it simply throws an exception
+with the provided message.<br/>
+An inherited class may override it to customize the error handling but the method should
+never return, otherwise the resulting document would probably be invalid.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>msg</code></dt>
+<dd>
+The error message.
+</dd>
+</dl>
+
+
+<hr/>
+
+
+
+
+
+<a name="14_"></a>
+
+<h1>Footer</h1>
+<code>Footer()</code>
+<h2>Description</h2>
+This method is used to render the page footer. It is automatically called by AddPage() and
+Close() and should not be called directly by the application. The implementation in FPDF is
+empty, so you have to subclass it and override the method if you want a specific processing.
+<h2>Example</h2>
+<div class="doc-source">
+<pre><code>class PDF extends FPDF
+{
+function Footer()
+{
+    // Go to 1.5 cm from bottom
+    $this-&gt;SetY(-15);
+    // Select Arial italic 8
+    $this-&gt;SetFont(&apos;Arial&apos;,&apos;I&apos;,8);
+    // Print centered page number
+    $this-&gt;Cell(0,10,&apos;Page &apos;.$this-&gt;PageNo(),0,0,&apos;C&apos;);
+}
+}</code></pre>
+</div>
+<h2>See also</h2>
+<a href="#13_">Header</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="27_"></a>
+
+<h1>GetPageHeight</h1>
+<code><b>float</b> GetPageHeight()</code>
+<h2>Description</h2>
+Returns the current page height.
+<h2>See also</h2>
+<a href="#28_">GetPageWidth</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="28_"></a>
+
+<h1>GetPageWidth</h1>
+<code><b>float</b> GetPageWidth()</code>
+<h2>Description</h2>
+Returns the current page width.
+<h2>See also</h2>
+<a href="#27_">GetPageHeight</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="29_"></a>
+
+<h1>GetStringWidth</h1>
+<code><b>float</b> GetStringWidth(<b>string</b> s)</code>
+<h2>Description</h2>
+Returns the length of a string in user unit. A font must be selected.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>s</code></dt>
+<dd>
+The string whose length is to be computed.
+</dd>
+</dl>
+
+
+<hr/>
+
+
+
+
+
+<a name="30_"></a>
+
+<h1>GetX</h1>
+<code><b>float</b> GetX()</code>
+<h2>Description</h2>
+Returns the abscissa of the current position.
+<h2>See also</h2>
+<a href="#31_">SetX</a>,
+<a href="#32_">GetY</a>,
+<a href="#33_">SetY</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="32_"></a>
+
+<h1>GetY</h1>
+<code><b>float</b> GetY()</code>
+<h2>Description</h2>
+Returns the ordinate of the current position.
+<h2>See also</h2>
+<a href="#33_">SetY</a>,
+<a href="#30_">GetX</a>,
+<a href="#31_">SetX</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="13_"></a>
+
+<h1>Header</h1>
+<code>Header()</code>
+<h2>Description</h2>
+This method is used to render the page header. It is automatically called by AddPage() and
+should not be called directly by the application. The implementation in FPDF is empty, so
+you have to subclass it and override the method if you want a specific processing.
+<h2>Example</h2>
+<div class="doc-source">
+<pre><code>class PDF extends FPDF
+{
+function Header()
+{
+    // Select Arial bold 15
+    $this-&gt;SetFont(&apos;Arial&apos;,&apos;B&apos;,15);
+    // Move to the right
+    $this-&gt;Cell(80);
+    // Framed title
+    $this-&gt;Cell(30,10,&apos;Title&apos;,1,0,&apos;C&apos;);
+    // Line break
+    $this-&gt;Ln(20);
+}
+}</code></pre>
+</div>
+<h2>See also</h2>
+<a href="#14_">Footer</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="9_"></a>
+
+<h1>Image</h1>
+<code>Image(<b>string</b> file [, <b>float</b> x [, <b>float</b> y [, <b>float</b> w [, <b>float</b> h [, <b>string</b> type [, <b>mixed</b> link]]]]]])</code>
+<h2>Description</h2>
+Puts an image. The size it will take on the page can be specified in different ways:
+<ul>
+<li>explicit width and height (expressed in user unit or dpi)</li>
+<li>one explicit dimension, the other being calculated automatically in order to keep the original proportions</li>
+<li>no explicit dimension, in which case the image is put at 96 dpi</li>
+</ul>
+Supported formats are JPEG, PNG and GIF. The GD extension is required for GIF.
+<br/>
+<br/>
+For JPEGs, all flavors are allowed:
+<ul>
+<li>gray scales</li>
+<li>true colors (24 bits)</li>
+<li>CMYK (32 bits)</li>
+</ul>
+For PNGs, are allowed:
+<ul>
+<li>gray scales on at most 8 bits (256 levels)</li>
+<li>indexed colors</li>
+<li>true colors (24 bits)</li>
+</ul>
+For GIFs: in case of an animated GIF, only the first frame is displayed.<br/>
+<br/>
+Transparency is supported.<br/>
+<br/>
+The format can be specified explicitly or inferred from the file extension.<br/>
+<br/>
+It is possible to put a link on the image.<br/>
+<br/>
+Remark: if an image is used several times, only one copy is embedded in the file.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>file</code></dt>
+<dd>
+Path or URL of the image.
+</dd>
+<dt><code>x</code></dt>
+<dd>
+Abscissa of the upper-left corner. If not specified or equal to <code>null</code>, the current abscissa
+is used.
+</dd>
+<dt><code>y</code></dt>
+<dd>
+Ordinate of the upper-left corner. If not specified or equal to <code>null</code>, the current ordinate
+is used; moreover, a page break is triggered first if necessary (in case automatic page breaking is enabled)
+and, after the call, the current ordinate is moved to the bottom of the image.
+</dd>
+<dt><code>w</code></dt>
+<dd>
+Width of the image in the page. There are three cases:
+<ul>
+<li>If the value is positive, it represents the width in user unit</li>
+<li>If the value is negative, the absolute value represents the horizontal resolution in dpi</li>
+<li>If the value is not specified or equal to zero, it is automatically calculated</li>
+</ul>
+</dd>
+<dt><code>h</code></dt>
+<dd>
+Height of the image in the page. There are three cases:
+<ul>
+<li>If the value is positive, it represents the height in user unit</li>
+<li>If the value is negative, the absolute value represents the vertical resolution in dpi</li>
+<li>If the value is not specified or equal to zero, it is automatically calculated</li>
+</ul>
+</dd>
+<dt><code>type</code></dt>
+<dd>
+Image format. Possible values are (case insensitive): <code>JPG</code>, <code>JPEG</code>, <code>PNG</code> and <code>GIF</code>.
+If not specified, the type is inferred from the file extension.
+</dd>
+<dt><code>link</code></dt>
+<dd>
+URL or identifier returned by AddLink().
+</dd>
+</dl>
+<h2>Example</h2>
+<div class="doc-source">
+<pre><code>// Insert a logo in the top-left corner at 300 dpi
+$pdf-&gt;Image(&apos;logo.png&apos;,10,10,-300);
+// Insert a dynamic image from a URL
+$pdf-&gt;Image(&apos;http://chart.googleapis.com/chart?cht=p3&amp;chd=t:60,40&amp;chs=250x100&amp;chl=Hello|World&apos;,60,30,90,0,&apos;PNG&apos;);</code></pre>
+</div>
+<h2>See also</h2>
+<a href="#6_">AddLink</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="34_"></a>
+
+<h1>Line</h1>
+<code>Line(<b>float</b> x1, <b>float</b> y1, <b>float</b> x2, <b>float</b> y2)</code>
+<h2>Description</h2>
+Draws a line between two points.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>x1</code></dt>
+<dd>
+Abscissa of first point.
+</dd>
+<dt><code>y1</code></dt>
+<dd>
+Ordinate of first point.
+</dd>
+<dt><code>x2</code></dt>
+<dd>
+Abscissa of second point.
+</dd>
+<dt><code>y2</code></dt>
+<dd>
+Ordinate of second point.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#21_">SetLineWidth</a>,
+<a href="#18_">SetDrawColor</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="10_"></a>
+
+<h1>Link</h1>
+<code>Link(<b>float</b> x, <b>float</b> y, <b>float</b> w, <b>float</b> h, <b>mixed</b> link)</code>
+<h2>Description</h2>
+Puts a link on a rectangular area of the page. Text or image links are generally put via Cell(),
+Write() or Image(), but this method can be useful for instance to define a clickable area inside
+an image.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>x</code></dt>
+<dd>
+Abscissa of the upper-left corner of the rectangle.
+</dd>
+<dt><code>y</code></dt>
+<dd>
+Ordinate of the upper-left corner of the rectangle.
+</dd>
+<dt><code>w</code></dt>
+<dd>
+Width of the rectangle.
+</dd>
+<dt><code>h</code></dt>
+<dd>
+Height of the rectangle.
+</dd>
+<dt><code>link</code></dt>
+<dd>
+URL or identifier returned by AddLink().
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#6_">AddLink</a>,
+<a href="#7_">Cell</a>,
+<a href="#8_">Write</a>,
+<a href="#9_">Image</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="22_"></a>
+
+<h1>Ln</h1>
+<code>Ln([<b>float</b> h])</code>
+<h2>Description</h2>
+Performs a line break. The current abscissa goes back to the left margin and the ordinate
+increases by the amount passed in parameter.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>h</code></dt>
+<dd>
+The height of the break.
+<br/>
+By default, the value equals the height of the last printed cell.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#7_">Cell</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="23_"></a>
+
+<h1>MultiCell</h1>
+<code>MultiCell(<b>float</b> w, <b>float</b> h, <b>string</b> txt [, <b>mixed</b> border [, <b>string</b> align [, <b>boolean</b> fill]]])</code>
+<h2>Description</h2>
+This method allows printing text with line breaks. They can be automatic (as soon as the
+text reaches the right border of the cell) or explicit (via the \n character). As many cells
+as necessary are output, one below the other.
+<br/>
+Text can be aligned, centered or justified. The cell block can be framed and the background
+painted.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>w</code></dt>
+<dd>
+Width of cells. If <code>0</code>, they extend up to the right margin of the page.
+</dd>
+<dt><code>h</code></dt>
+<dd>
+Height of cells.
+</dd>
+<dt><code>txt</code></dt>
+<dd>
+String to print.
+</dd>
+<dt><code>border</code></dt>
+<dd>
+Indicates if borders must be drawn around the cell block. The value can be either a number:
+<ul>
+<li><code>0</code>: no border</li>
+<li><code>1</code>: frame</li>
+</ul>
+or a string containing some or all of the following characters (in any order):
+<ul>
+<li><code>L</code>: left</li>
+<li><code>T</code>: top</li>
+<li><code>R</code>: right</li>
+<li><code>B</code>: bottom</li>
+</ul>
+Default value: <code>0</code>.
+</dd>
+<dt><code>align</code></dt>
+<dd>
+Sets the text alignment. Possible values are:
+<ul>
+<li><code>L</code>: left alignment</li>
+<li><code>C</code>: center</li>
+<li><code>R</code>: right alignment</li>
+<li><code>J</code>: justification (default value)</li>
+</ul>
+</dd>
+<dt><code>fill</code></dt>
+<dd>
+Indicates if the cell background must be painted (<code>true</code>) or transparent (<code>false</code>).
+Default value: <code>false</code>.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#5_">SetFont</a>,
+<a href="#18_">SetDrawColor</a>,
+<a href="#19_">SetFillColor</a>,
+<a href="#20_">SetTextColor</a>,
+<a href="#21_">SetLineWidth</a>,
+<a href="#7_">Cell</a>,
+<a href="#8_">Write</a>,
+<a href="#3_">SetAutoPageBreak</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="25_"></a>
+
+<h1>Output</h1>
+<code><b>string</b> Output([<b>string</b> dest [, <b>string</b> name [, <b>boolean</b> isUTF8]]])</code>
+<h2>Description</h2>
+Send the document to a given destination: browser, file or string. In the case of a browser, the
+PDF viewer may be used or a download may be forced.
+<br/>
+The method first calls Close() if necessary to terminate the document.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>dest</code></dt>
+<dd>
+Destination where to send the document. It can be one of the following:
+<ul>
+<li><code>I</code>: send the file inline to the browser. The PDF viewer is used if available.</li>
+<li><code>D</code>: send to the browser and force a file download with the name given by <code>name</code>.</li>
+<li><code>F</code>: save to a local file with the name given by <code>name</code> (may include a path).</li>
+<li><code>S</code>: return the document as a string.</li>
+</ul>
+The default value is <code>I</code>.
+</dd>
+<dt><code>name</code></dt>
+<dd>
+The name of the file. It is ignored in case of destination <code>S</code>.<br/>
+The default value is <code>doc.pdf</code>.
+</dd>
+<dt><code>isUTF8</code></dt>
+<dd>
+Indicates if <code>name</code> is encoded in ISO-8859-1 (<code>false</code>) or UTF-8 (<code>true</code>).
+Only used for destinations <code>I</code> and <code>D</code>.<br/>
+The default value is <code>false</code>.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#24_">Close</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="17_"></a>
+
+<h1>PageNo</h1>
+<code><b>int</b> PageNo()</code>
+<h2>Description</h2>
+Returns the current page number.
+<h2>See also</h2>
+<a href="#16_">AliasNbPages</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="35_"></a>
+
+<h1>Rect</h1>
+<code>Rect(<b>float</b> x, <b>float</b> y, <b>float</b> w, <b>float</b> h [, <b>string</b> style])</code>
+<h2>Description</h2>
+Outputs a rectangle. It can be drawn (border only), filled (with no border) or both.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>x</code></dt>
+<dd>
+Abscissa of upper-left corner.
+</dd>
+<dt><code>y</code></dt>
+<dd>
+Ordinate of upper-left corner.
+</dd>
+<dt><code>w</code></dt>
+<dd>
+Width.
+</dd>
+<dt><code>h</code></dt>
+<dd>
+Height.
+</dd>
+<dt><code>style</code></dt>
+<dd>
+Style of rendering. Possible values are:
+<ul>
+<li><code>D</code> or empty string: draw. This is the default value.</li>
+<li><code>F</code>: fill</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill</li>
+</ul>
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#21_">SetLineWidth</a>,
+<a href="#18_">SetDrawColor</a>,
+<a href="#19_">SetFillColor</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="36_"></a>
+
+<h1>SetAuthor</h1>
+<code>SetAuthor(<b>string</b> author [, <b>boolean</b> isUTF8])</code>
+<h2>Description</h2>
+Defines the author of the document.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>author</code></dt>
+<dd>
+The name of the author.
+</dd>
+<dt><code>isUTF8</code></dt>
+<dd>
+Indicates if the string is encoded in ISO-8859-1 (<code>false</code>) or UTF-8 (<code>true</code>).<br/>
+Default value: <code>false</code>.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#37_">SetCreator</a>,
+<a href="#38_">SetKeywords</a>,
+<a href="#39_">SetSubject</a>,
+<a href="#40_">SetTitle</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="3_"></a>
+
+<h1>SetAutoPageBreak</h1>
+<code>SetAutoPageBreak(<b>boolean</b> auto [, <b>float</b> margin])</code>
+<h2>Description</h2>
+Enables or disables the automatic page breaking mode. When enabling, the second parameter is
+the distance from the bottom of the page that defines the triggering limit. By default, the
+mode is on and the margin is 2 cm.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>auto</code></dt>
+<dd>
+Boolean indicating if mode should be on or off.
+</dd>
+<dt><code>margin</code></dt>
+<dd>
+Distance from the bottom of the page.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#7_">Cell</a>,
+<a href="#23_">MultiCell</a>,
+<a href="#2_">AcceptPageBreak</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="41_"></a>
+
+<h1>SetCompression</h1>
+<code>SetCompression(<b>boolean</b> compress)</code>
+<h2>Description</h2>
+Activates or deactivates page compression. When activated, the internal representation of
+each page is compressed, which leads to a compression ratio of about 2 for the resulting
+document.
+<br/>
+Compression is on by default.
+<br/>
+<br/>
+<strong>Note:</strong> the Zlib extension is required for this feature. If not present, compression
+will be turned off.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>compress</code></dt>
+<dd>
+Boolean indicating if compression must be enabled.
+</dd>
+</dl>
+
+
+<hr/>
+
+
+
+
+
+<a name="37_"></a>
+
+<h1>SetCreator</h1>
+<code>SetCreator(<b>string</b> creator [, <b>boolean</b> isUTF8])</code>
+<h2>Description</h2>
+Defines the creator of the document. This is typically the name of the application that
+generates the PDF.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>creator</code></dt>
+<dd>
+The name of the creator.
+</dd>
+<dt><code>isUTF8</code></dt>
+<dd>
+Indicates if the string is encoded in ISO-8859-1 (<code>false</code>) or UTF-8 (<code>true</code>).<br/>
+Default value: <code>false</code>.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#36_">SetAuthor</a>,
+<a href="#38_">SetKeywords</a>,
+<a href="#39_">SetSubject</a>,
+<a href="#40_">SetTitle</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="42_"></a>
+
+<h1>SetDisplayMode</h1>
+<code>SetDisplayMode(<b>mixed</b> zoom [, <b>string</b> layout])</code>
+<h2>Description</h2>
+Defines the way the document is to be displayed by the viewer. The zoom level can be set: pages can be
+displayed entirely on screen, occupy the full width of the window, use real size, be scaled by a
+specific zooming factor or use viewer default (configured in the Preferences menu of Adobe Reader).
+The page layout can be specified too: single at once, continuous display, two columns or viewer
+default.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>zoom</code></dt>
+<dd>
+The zoom to use. It can be one of the following string values:
+<ul>
+<li><code>fullpage</code>: displays the entire page on screen</li>
+<li><code>fullwidth</code>: uses maximum width of window</li>
+<li><code>real</code>: uses real size (equivalent to 100% zoom)</li>
+<li><code>default</code>: uses viewer default mode</li>
+</ul>
+or a number indicating the zooming factor to use.
+</dd>
+<dt><code>layout</code></dt>
+<dd>
+The page layout. Possible values are:
+<ul>
+<li><code>single</code>: displays one page at once</li>
+<li><code>continuous</code>: displays pages continuously</li>
+<li><code>two</code>: displays two pages on two columns</li>
+<li><code>default</code>: uses viewer default mode</li>
+</ul>
+Default value is <code>default</code>.
+</dd>
+</dl>
+
+
+<hr/>
+
+
+
+
+
+<a name="18_"></a>
+
+<h1>SetDrawColor</h1>
+<code>SetDrawColor(<b>int</b> r [, <b>int</b> g, <b>int</b> b])</code>
+<h2>Description</h2>
+Defines the color used for all drawing operations (lines, rectangles and cell borders). It
+can be expressed in RGB components or gray scale. The method can be called before the first
+page is created and the value is retained from page to page.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>r</code></dt>
+<dd>
+If <code>g</code> et <code>b</code> are given, red component; if not, indicates the gray level.
+Value between 0 and 255.
+</dd>
+<dt><code>g</code></dt>
+<dd>
+Green component (between 0 and 255).
+</dd>
+<dt><code>b</code></dt>
+<dd>
+Blue component (between 0 and 255).
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#19_">SetFillColor</a>,
+<a href="#20_">SetTextColor</a>,
+<a href="#34_">Line</a>,
+<a href="#35_">Rect</a>,
+<a href="#7_">Cell</a>,
+<a href="#23_">MultiCell</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="19_"></a>
+
+<h1>SetFillColor</h1>
+<code>SetFillColor(<b>int</b> r [, <b>int</b> g, <b>int</b> b])</code>
+<h2>Description</h2>
+Defines the color used for all filling operations (filled rectangles and cell backgrounds).
+It can be expressed in RGB components or gray scale. The method can be called before the first
+page is created and the value is retained from page to page.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>r</code></dt>
+<dd>
+If <code>g</code> and <code>b</code> are given, red component; if not, indicates the gray level.
+Value between 0 and 255.
+</dd>
+<dt><code>g</code></dt>
+<dd>
+Green component (between 0 and 255).
+</dd>
+<dt><code>b</code></dt>
+<dd>
+Blue component (between 0 and 255).
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#18_">SetDrawColor</a>,
+<a href="#20_">SetTextColor</a>,
+<a href="#35_">Rect</a>,
+<a href="#7_">Cell</a>,
+<a href="#23_">MultiCell</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="5_"></a>
+
+<h1>SetFont</h1>
+<code>SetFont(<b>string</b> family [, <b>string</b> style [, <b>float</b> size]])</code>
+<h2>Description</h2>
+Sets the font used to print character strings. It is mandatory to call this method
+at least once before printing text or the resulting document would not be valid.
+<br/>
+The font can be either a standard one or a font added via the AddFont() method. Standard fonts
+use the Windows encoding cp1252 (Western Europe).
+<br/>
+The method can be called before the first page is created and the font is kept from page
+to page.
+<br/>
+If you just wish to change the current font size, it is simpler to call SetFontSize().
+<br/>
+<br/>
+<strong>Note:</strong> the font definition files must be accessible. They are searched successively in:
+<ul>
+<li>The directory defined by the <code>FPDF_FONTPATH</code> constant (if this constant is defined)</li>
+<li>The <code>font</code> directory located in the same directory as <code>fpdf.php</code> (if it exists)</li>
+<li>The directories accessible through <code>include()</code></li>
+</ul>
+Example using <code>FPDF_FONTPATH</code>:
+<div class="doc-source">
+<pre><code>define(&apos;FPDF_FONTPATH&apos;,&apos;/home/www/font&apos;);
+require(&apos;fpdf.php&apos;);</code></pre>
+</div>
+If the file corresponding to the requested font is not found, the error &quot;Could not include font
+definition file&quot; is raised.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>family</code></dt>
+<dd>
+Family font. It can be either a name defined by AddFont() or one of the standard families (case
+insensitive):
+<ul>
+<li><code>Courier</code> (fixed-width)</li>
+<li><code>Helvetica</code> or <code>Arial</code> (synonymous; sans serif)</li>
+<li><code>Times</code> (serif)</li>
+<li><code>Symbol</code> (symbolic)</li>
+<li><code>ZapfDingbats</code> (symbolic)</li>
+</ul>
+It is also possible to pass an empty string. In that case, the current family is kept.
+</dd>
+<dt><code>style</code></dt>
+<dd>
+Font style. Possible values are (case insensitive):
+<ul>
+<li>empty string: regular</li>
+<li><code>B</code>: bold</li>
+<li><code>I</code>: italic</li>
+<li><code>U</code>: underline</li>
+</ul>
+or any combination. The default value is regular.
+Bold and italic styles do not apply to <code>Symbol</code> and <code>ZapfDingbats</code>.
+</dd>
+<dt><code>size</code></dt>
+<dd>
+Font size in points.
+<br/>
+The default value is the current size. If no size has been specified since the beginning of
+the document, the value taken is 12.
+</dd>
+</dl>
+<h2>Example</h2>
+<div class="doc-source">
+<pre><code>// Times regular 12
+$pdf-&gt;SetFont(&apos;Times&apos;);
+// Arial bold 14
+$pdf-&gt;SetFont(&apos;Arial&apos;,&apos;B&apos;,14);
+// Removes bold
+$pdf-&gt;SetFont(&apos;&apos;);
+// Times bold, italic and underlined 14
+$pdf-&gt;SetFont(&apos;Times&apos;,&apos;BIU&apos;);</code></pre>
+</div>
+<h2>See also</h2>
+<a href="#4_">AddFont</a>,
+<a href="#43_">SetFontSize</a>,
+<a href="#7_">Cell</a>,
+<a href="#23_">MultiCell</a>,
+<a href="#8_">Write</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="43_"></a>
+
+<h1>SetFontSize</h1>
+<code>SetFontSize(<b>float</b> size)</code>
+<h2>Description</h2>
+Defines the size of the current font.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>size</code></dt>
+<dd>
+The size (in points).
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#5_">SetFont</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="38_"></a>
+
+<h1>SetKeywords</h1>
+<code>SetKeywords(<b>string</b> keywords [, <b>boolean</b> isUTF8])</code>
+<h2>Description</h2>
+Associates keywords with the document, generally in the form &apos;keyword1 keyword2 ...&apos;.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>keywords</code></dt>
+<dd>
+The list of keywords.
+</dd>
+<dt><code>isUTF8</code></dt>
+<dd>
+Indicates if the string is encoded in ISO-8859-1 (<code>false</code>) or UTF-8 (<code>true</code>).<br/>
+Default value: <code>false</code>.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#36_">SetAuthor</a>,
+<a href="#37_">SetCreator</a>,
+<a href="#39_">SetSubject</a>,
+<a href="#40_">SetTitle</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="44_"></a>
+
+<h1>SetLeftMargin</h1>
+<code>SetLeftMargin(<b>float</b> margin)</code>
+<h2>Description</h2>
+Defines the left margin. The method can be called before creating the first page.
+<br/>
+If the current abscissa gets out of page, it is brought back to the margin.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>margin</code></dt>
+<dd>
+The margin.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#45_">SetTopMargin</a>,
+<a href="#46_">SetRightMargin</a>,
+<a href="#3_">SetAutoPageBreak</a>,
+<a href="#15_">SetMargins</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="21_"></a>
+
+<h1>SetLineWidth</h1>
+<code>SetLineWidth(<b>float</b> width)</code>
+<h2>Description</h2>
+Defines the line width. By default, the value equals 0.2 mm. The method can be called before
+the first page is created and the value is retained from page to page.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>width</code></dt>
+<dd>
+The width.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#34_">Line</a>,
+<a href="#35_">Rect</a>,
+<a href="#7_">Cell</a>,
+<a href="#23_">MultiCell</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="11_"></a>
+
+<h1>SetLink</h1>
+<code>SetLink(<b>int</b> link [, <b>float</b> y [, <b>int</b> page]])</code>
+<h2>Description</h2>
+Defines the page and position a link points to.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>link</code></dt>
+<dd>
+The link identifier returned by AddLink().
+</dd>
+<dt><code>y</code></dt>
+<dd>
+Ordinate of target position; <code>-1</code> indicates the current position.
+The default value is <code>0</code> (top of page).
+</dd>
+<dt><code>page</code></dt>
+<dd>
+Number of target page; <code>-1</code> indicates the current page. This is the default value.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#6_">AddLink</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="15_"></a>
+
+<h1>SetMargins</h1>
+<code>SetMargins(<b>float</b> left, <b>float</b> top [, <b>float</b> right])</code>
+<h2>Description</h2>
+Defines the left, top and right margins. By default, they equal 1 cm. Call this method to change
+them.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>left</code></dt>
+<dd>
+Left margin.
+</dd>
+<dt><code>top</code></dt>
+<dd>
+Top margin.
+</dd>
+<dt><code>right</code></dt>
+<dd>
+Right margin. Default value is the left one.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#44_">SetLeftMargin</a>,
+<a href="#45_">SetTopMargin</a>,
+<a href="#46_">SetRightMargin</a>,
+<a href="#3_">SetAutoPageBreak</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="46_"></a>
+
+<h1>SetRightMargin</h1>
+<code>SetRightMargin(<b>float</b> margin)</code>
+<h2>Description</h2>
+Defines the right margin. The method can be called before creating the first page.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>margin</code></dt>
+<dd>
+The margin.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#44_">SetLeftMargin</a>,
+<a href="#45_">SetTopMargin</a>,
+<a href="#3_">SetAutoPageBreak</a>,
+<a href="#15_">SetMargins</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="39_"></a>
+
+<h1>SetSubject</h1>
+<code>SetSubject(<b>string</b> subject [, <b>boolean</b> isUTF8])</code>
+<h2>Description</h2>
+Defines the subject of the document.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>subject</code></dt>
+<dd>
+The subject.
+</dd>
+<dt><code>isUTF8</code></dt>
+<dd>
+Indicates if the string is encoded in ISO-8859-1 (<code>false</code>) or UTF-8 (<code>true</code>).<br/>
+Default value: <code>false</code>.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#36_">SetAuthor</a>,
+<a href="#37_">SetCreator</a>,
+<a href="#38_">SetKeywords</a>,
+<a href="#40_">SetTitle</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="20_"></a>
+
+<h1>SetTextColor</h1>
+<code>SetTextColor(<b>int</b> r [, <b>int</b> g, <b>int</b> b])</code>
+<h2>Description</h2>
+Defines the color used for text. It can be expressed in RGB components or gray scale. The
+method can be called before the first page is created and the value is retained from page to
+page.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>r</code></dt>
+<dd>
+If <code>g</code> et <code>b</code> are given, red component; if not, indicates the gray level.
+Value between 0 and 255.
+</dd>
+<dt><code>g</code></dt>
+<dd>
+Green component (between 0 and 255).
+</dd>
+<dt><code>b</code></dt>
+<dd>
+Blue component (between 0 and 255).
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#18_">SetDrawColor</a>,
+<a href="#19_">SetFillColor</a>,
+<a href="#47_">Text</a>,
+<a href="#7_">Cell</a>,
+<a href="#23_">MultiCell</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="40_"></a>
+
+<h1>SetTitle</h1>
+<code>SetTitle(<b>string</b> title [, <b>boolean</b> isUTF8])</code>
+<h2>Description</h2>
+Defines the title of the document.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>title</code></dt>
+<dd>
+The title.
+</dd>
+<dt><code>isUTF8</code></dt>
+<dd>
+Indicates if the string is encoded in ISO-8859-1 (<code>false</code>) or UTF-8 (<code>true</code>).<br/>
+Default value: <code>false</code>.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#36_">SetAuthor</a>,
+<a href="#37_">SetCreator</a>,
+<a href="#38_">SetKeywords</a>,
+<a href="#39_">SetSubject</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="45_"></a>
+
+<h1>SetTopMargin</h1>
+<code>SetTopMargin(<b>float</b> margin)</code>
+<h2>Description</h2>
+Defines the top margin. The method can be called before creating the first page.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>margin</code></dt>
+<dd>
+The margin.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#44_">SetLeftMargin</a>,
+<a href="#46_">SetRightMargin</a>,
+<a href="#3_">SetAutoPageBreak</a>,
+<a href="#15_">SetMargins</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="31_"></a>
+
+<h1>SetX</h1>
+<code>SetX(<b>float</b> x)</code>
+<h2>Description</h2>
+Defines the abscissa of the current position. If the passed value is negative, it is relative
+to the right of the page.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>x</code></dt>
+<dd>
+The value of the abscissa.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#30_">GetX</a>,
+<a href="#32_">GetY</a>,
+<a href="#33_">SetY</a>,
+<a href="#48_">SetXY</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="48_"></a>
+
+<h1>SetXY</h1>
+<code>SetXY(<b>float</b> x, <b>float</b> y)</code>
+<h2>Description</h2>
+Defines the abscissa and ordinate of the current position. If the passed values are negative,
+they are relative respectively to the right and bottom of the page.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>x</code></dt>
+<dd>
+The value of the abscissa.
+</dd>
+<dt><code>y</code></dt>
+<dd>
+The value of the ordinate.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#31_">SetX</a>,
+<a href="#33_">SetY</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="33_"></a>
+
+<h1>SetY</h1>
+<code>SetY(<b>float</b> y [, <b>boolean</b> resetX])</code>
+<h2>Description</h2>
+Sets the ordinate and optionally moves the current abscissa back to the left margin. If the value
+is negative, it is relative to the bottom of the page.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>y</code></dt>
+<dd>
+The value of the ordinate.
+</dd>
+<dt><code>resetX</code></dt>
+<dd>
+Whether to reset the abscissa. Default value: <code>true</code>.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#30_">GetX</a>,
+<a href="#32_">GetY</a>,
+<a href="#31_">SetX</a>,
+<a href="#48_">SetXY</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="47_"></a>
+
+<h1>Text</h1>
+<code>Text(<b>float</b> x, <b>float</b> y, <b>string</b> txt)</code>
+<h2>Description</h2>
+Prints a character string. The origin is on the left of the first character, on the baseline.
+This method allows to place a string precisely on the page, but it is usually easier to use
+Cell(), MultiCell() or Write() which are the standard methods to print text.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>x</code></dt>
+<dd>
+Abscissa of the origin.
+</dd>
+<dt><code>y</code></dt>
+<dd>
+Ordinate of the origin.
+</dd>
+<dt><code>txt</code></dt>
+<dd>
+String to print.
+</dd>
+</dl>
+<h2>See also</h2>
+<a href="#5_">SetFont</a>,
+<a href="#20_">SetTextColor</a>,
+<a href="#7_">Cell</a>,
+<a href="#23_">MultiCell</a>,
+<a href="#8_">Write</a>
+
+
+<hr/>
+
+
+
+
+
+<a name="8_"></a>
+
+<h1>Write</h1>
+<code>Write(<b>float</b> h, <b>string</b> txt [, <b>mixed</b> link])</code>
+<h2>Description</h2>
+This method prints text from the current position. When the right margin is reached (or the \n
+character is met) a line break occurs and text continues from the left margin. Upon method exit,
+the current position is left just at the end of the text.
+<br/>
+It is possible to put a link on the text.
+<h2>Parameters</h2>
+<dl class="param">
+<dt><code>h</code></dt>
+<dd>
+Line height.
+</dd>
+<dt><code>txt</code></dt>
+<dd>
+String to print.
+</dd>
+<dt><code>link</code></dt>
+<dd>
+URL or identifier returned by AddLink().
+</dd>
+</dl>
+<h2>Example</h2>
+<div class="doc-source">
+<pre><code>// Begin with regular font
+$pdf-&gt;SetFont(&apos;Arial&apos;,&apos;&apos;,14);
+$pdf-&gt;Write(5,&apos;Visit &apos;);
+// Then put a blue underlined link
+$pdf-&gt;SetTextColor(0,0,255);
+$pdf-&gt;SetFont(&apos;&apos;,&apos;U&apos;);
+$pdf-&gt;Write(5,&apos;www.fpdf.org&apos;,&apos;http://www.fpdf.org&apos;);</code></pre>
+</div>
+<h2>See also</h2>
+<a href="#5_">SetFont</a>,
+<a href="#20_">SetTextColor</a>,
+<a href="#6_">AddLink</a>,
+<a href="#23_">MultiCell</a>,
+<a href="#3_">SetAutoPageBreak</a>
+</body>
+</html>
