@@ -387,7 +387,7 @@
 								requisiciones = this.responseText.split(" ");
 								document.title = "Requisiciones - "+ requisiciones.length +" mostradas"; 
 								//console.log(requisiciones);
-								t = setInterval(tik, 100);
+								t = setInterval(tik, 20);
 							}else{
 								document.title = "Requisiciones";
 								divContenido.innerHTML = "No hay resultados. Intente cambiando el alcance de la busqueda.";
@@ -616,6 +616,23 @@
 					}
 				};
 				xmlhttp.open("GET","libcomentario.php?action=comdelete&type=comreq&idcom="+ idcomentario,true);
+				xmlhttp.send();		
+			}
+			function deleteComentarioPart(el, idcomentario){
+				var cell = el.parentElement;
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							cell.innerHTML = "";
+						}
+					}
+				};
+				xmlhttp.open("GET","libcomentario.php?action=comdelete&type=compart&idcom="+ idcomentario,true);
 				xmlhttp.send();		
 			}
 			function undeleteComentarioReq(el, idcomentario){

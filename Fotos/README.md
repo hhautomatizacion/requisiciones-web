@@ -11,3 +11,13 @@
 * Fotos
 
 * Capturas de pantalla
+
+---
+![00000071.jpg](/Fotos/00000071.jpg)
+---
+![00001004.jpg](/Fotos/00001004.jpg)
+---
+![00001053.jpg](/Fotos/00001053.jpg)
+---
+![00001055.jpg](/Fotos/00001055.jpg)
+---

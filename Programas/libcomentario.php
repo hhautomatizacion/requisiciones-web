@@ -55,7 +55,6 @@
 			}
 			if ( isset($_GET["type"]) && $_GET["type"] == "comreq" ) {
 				$sql = "UPDATE comentariosrequisiciones SET activo=0 WHERE id=". $idcomentario .";";
-				writelog($sql);
 				$res = $db->prepare($sql);
 				$res->execute();
 				echo "OK";

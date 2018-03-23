@@ -22,7 +22,6 @@
 			list($name, $ext) = explode(".", $nombrearchivooriginal);
 			$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
 			$rutadestino=$rutaupload ."/". $nombrearchivo;
-			writelog("Nueva ruta destino ". $rutadestino);
 		}
 		if (move_uploaded_file($rutatemp,$rutadestino)) {
 			$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0,". $idpartida .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
@@ -173,14 +172,14 @@
 		if ( usuarioEsLogeado() ) {
 			if ( ComentarioPartEsMio($idcomentario) || usuarioEsSuper() ) {
 				if ( comentarioPartEsActivo($idcomentario) ) {
-					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioPart(". $idcomentario .");\">";
+					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioPart(this, ". $idcomentario .");\">";
 				}
 			}
 			if ( ComentarioPartEsActivo($idcomentario) ) {
 				$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioPart(". $idcomentario .");\">";
 			}
 			if ( !ComentarioPartEsActivo($idcomentario) && usuarioEsSuper() ) {
-				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioPart(". $idcomentario .");\">";
+				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioPart(this, ". $idcomentario .");\">";
 			}
 		}
 		return $resultado;

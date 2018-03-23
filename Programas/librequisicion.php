@@ -24,7 +24,6 @@
 			list($name, $ext) = explode(".", $nombrearchivooriginal);
 			$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
 			$rutadestino=$rutaupload ."/". $nombrearchivo;
-			writelog("Nueva ruta destino ". $rutadestino);
 		}
 		if (move_uploaded_file($rutatemp,$rutadestino)) {
 			$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0,". $idrequisicion .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
@@ -32,7 +31,7 @@
 			echo "OK";
 		}	
 	}
-	if (isset($_REQUEST["posted"])) {
+	if ( isset($_REQUEST["posted"]) ) {
 		$departamento=$_REQUEST["departamento"];
 		$area=$_REQUEST["area"];
 		$solicitante=$_REQUEST["solicitante"];
@@ -216,6 +215,7 @@
 					$req=$_GET["reqno"];
 					$res = $db->prepare("UPDATE requisiciones SET requisicion='". $req ."' WHERE id=". $idrequisicion .";");
 					$res->execute();
+					writelog("actualiza la req ". $idrequisicion ." con numero ". $req);
 				}		
 				echo "OK";
 				break;
@@ -237,6 +237,7 @@
 				$pdf->Output();
 				$res = $db->prepare("UPDATE requisiciones SET impresa=1 WHERE id=". $idrequisicion .";");
 				$res->execute();
+				writelog("imprime la req ". $idrequisicion ."");
 				break;
 			case "tobesupplied":
 				$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
@@ -244,6 +245,7 @@
 				$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id=". $idrequisicion .";");
 				$res->execute();
 				echo "OK";
+				writelog("pone como por surtir ". $idrequisicion);
 				break;
 			case "supplied":
 				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
@@ -251,6 +253,7 @@
 				$res = $db->prepare("UPDATE requisiciones SET surtida=1 WHERE id=". $idrequisicion .";");
 				$res->execute();
 				echo "OK";
+				writelog("pone como surtida ". $idrequisicion);
 				break;
 			case "delete":
 				$res = $db->prepare("UPDATE partidas SET activo=0 WHERE surtida=0 AND idrequisicion=". $idrequisicion .";");
@@ -258,11 +261,13 @@
 				$res = $db->prepare("UPDATE requisiciones SET activo=0 WHERE id=". $idrequisicion .";");
 				$res->execute();
 				echo "OK";
+				writelog("borra la req ". $idrequisicion);
 				break;
 			case "undelete":
 				$res = $db->prepare("UPDATE requisiciones SET activo=1 WHERE id=". $idrequisicion .";");
 				$res->execute();
 				echo "OK";
+				writelog("pone como activa ". $idrequisicion);
 				break;
 		}	
 	}	
@@ -287,9 +292,9 @@
 			$cantidad[$iter] = $row[2];
 			$unidad[$iter] = $row[3];
 			$descripcion[$iter] = $row[4];
-			$centrocostos[$iter] = $row[9];
-			$importancia[$iter] = $row[11];
-			$solicitante[$iter] = $row[12];
+			$centrocostospart[$iter] = $row[9];
+			$importanciapart[$iter] = $row[11];
+			$solicitantepart[$iter] = $row[12];
 			$iter2=0;
 			$res2= $db->prepare("SELECT * FROM comentariospartidas WHERE activo=1 AND idpartida=". $row[0]);
 			$res2->execute();
@@ -315,12 +320,11 @@
 			}
 			$iter=$iter+1;
 		}				
-		
 		$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(),'". $requisicion ."',1,0,0,NULL,0,0,". $departamento .",". $area .",". $centrocostos .",". $importancia .",". $solicitante .",". $_COOKIE["usuario"] .");");
 		$res->execute();
 		$ultimoidreq = $db->lastInsertId();
 		foreach( $totalpartidas as $item) {
-			$sql="INSERT INTO partidas VALUES (0,NOW(),". floatval($cantidad[$item]) .",". $unidad[$item] .",'". $descripcion[$item] ."',1,0,0,NULL,". $centrocostos[$item] .",". $ultimoidreq .",". $importancia[$item] .",". $solicitante[$item] .",". $_COOKIE["usuario"] .");";
+			$sql="INSERT INTO partidas VALUES (0,NOW(),". floatval($cantidad[$item]) .",". $unidad[$item] .",'". $descripcion[$item] ."',1,0,0,NULL,". $centrocostospart[$item] .",". $ultimoidreq .",". $importanciapart[$item] .",". $solicitantepart[$item] .",". $_COOKIE["usuario"] .");";
 			$res = $db->prepare($sql);
 			$res->execute();
 			$ultimoidpart = $db->lastInsertId();
@@ -460,16 +464,18 @@
 			$solicitante=$row[0];
 			$idusuario=$row[1];
 		}
-		$res = $db->prepare("SELECT * FROM comentariosrequisiciones WHERE activo=1 AND idrequisicion=". $idrequisicion ." AND (idusuario=". $solicitante ." OR idusuario=". $idusuario .") LIMIT 1;");
+		$res = $db->prepare("SELECT * FROM comentariosrequisiciones WHERE activo=1 AND idrequisicion=". $idrequisicion ." AND (idusuario=". $solicitante ." OR idusuario=". $idusuario .");");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$comentario= $row[3];
 		}
 		if ( strlen($comentario) == 0 ) {
-			$res = $db->prepare("SELECT comentario FROM comentariospartidas INNER JOIN partidas ON (comentariospartidas.idpartida=partidas.id) WHERE (comentariospartidas.idusuario=". $solicitante ." OR comentariospartidas.idusuario=". $idusuario .") AND partidas.activo=1 AND partidas.idrequisicion=". $idrequisicion ." LIMIT 1;");
+			$res = $db->prepare("SELECT comentariospartidas.comentario, comentariospartidas.activo FROM comentariospartidas INNER JOIN partidas ON (comentariospartidas.idpartida=partidas.id) WHERE (comentariospartidas.idusuario=". $solicitante ." OR comentariospartidas.idusuario=". $idusuario .") AND partidas.activo=1 AND partidas.idrequisicion=". $idrequisicion .";");
 			$res->execute();
 			while ($row = $res->fetch()) {
-				$comentario= $row[0];
+				if ( $row[1] == '1' ) {
+					$comentario= $row[0];
+				}
 			}	
 		}
 		if ($pdf->MeassureRows($comentario,170,5) > 10) {
@@ -489,47 +495,42 @@
 	
 	function ImprimirEncabezados($pdf, $idrequisicion) {
 		global $db;
-
 		$res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
 		$res->execute();
-	
 		while ($row = $res->fetch()) {
 			$pdf->PutRows(35,30,ObtenerDescripcionDesdeID("departamentos",$row[9],"departamento"),60);
-			
 			$pdf->PutRows(35,35,ObtenerDescripcionDesdeID("areas",$row[10],"area"),60);
-			
 			$pdf->PutRows(190,25,"[" . $idrequisicion . "]");
-			
 			$pdf->PutRows(146,35,date("d"));
 			$pdf->PutRows(155,35,date("m"));
 			$pdf->PutRows(163,35,date("Y"));
-			
 			$pdf->PutRows(15,118,ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre") ." (". ObtenerDescripcionDesdeID("usuarios",$row[13],"numero") .")",70);
 		}
 	}
+	
 	function ImprimirPartidas($pdf, $idrequisicion) {
 		global $db;
-		$y=47;
-		$cr="";
-		
+		$y = 47;
+		$cr = "";
+		$interlineado = 4.84;
 		$res = $db->prepare("SELECT * FROM partidas WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
-			$cr = ObtenerDescripcionDesdeID("centroscostos",$row[9],"numero");
-			
-			if ( $y + $pdf->MeassureRows($row[4] ,135,5) > 105 ) {
+			$cr = ObtenerDescripcionDesdeID("centroscostos", $row[9], "numero");
+			if ( $y + $pdf->MeassureRows($row[4], 135, $interlineado) > 105 ) {
 				$y=47;
 				$pdf->AddPage();
 				ImprimirEncabezados($pdf, $idrequisicion);
 				ImprimirComentarios($pdf, $idrequisicion);
 			}
-			$pdf->PutRows(15,$y,(float)$row[2]);
-			$pdf->PutRows(40,$y,ObtenerDescripcionDesdeID("unidades",$row[3],"unidad"));
-			$pdf->PutRows(65,$y,$row[4] ,135,5);
-			$y=$y+ ($pdf->MeassureRows($row[4] ,135,5));	
+			$pdf->PutRows(15, $y, (float)$row[2]);
+			$pdf->PutRows(40, $y,ObtenerDescripcionDesdeID("unidades", $row[3], "unidad"));
+			$pdf->PutRows(65, $y, $row[4], 135, $interlineado);
+			$y=$y+ ($pdf->MeassureRows($row[4], 135, $interlineado));
 		}
-		$pdf->PutRows(110,30,$cr);	
+		$pdf->PutRows(110, 30, $cr);	
 	}
+	
 	function AgregarComentariosRequisicion($idrequisicion) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
