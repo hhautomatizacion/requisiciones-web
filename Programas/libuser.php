@@ -3,6 +3,11 @@
 	require_once("libdb.php");
 	require_once("libphp.php");
 	
+	if ( isset($_GET["action"]) && $_GET["action"] == "showpreferencesform" ) {
+		$resultado= formPreferencesForm();
+		echo $resultado;
+	}
+	
 	if ( isset($_GET["action"]) && $_GET["action"] == "showsigninform" ) {
 		$resultado= formSigninForm();
 		echo $resultado;
@@ -80,6 +85,28 @@
 			echo $resultado;
 		}
 	}
+	
+	function formPreferencesForm() {
+		$resultado="";
+		$resultado .="			<form>";
+		$resultado .="				<table>";
+		$resultado .="					<tr>";
+		$resultado .="						<td width=\"80%\">";
+		$resultado .="						<table>";
+		$resultado .="							<tr>";
+		$resultado .="								<td width=\"20%\"><small>Usuario:</small></td>";
+		$resultado .="								<td><input type = \"text\" name = \"name\" /></td>";
+		$resultado .="							</tr>";
+		$resultado .="						</table>";
+		$resultado .="						</td>";
+		$resultado .="						<td width=\"20%\">";
+		$resultado .="						<button onClick=\"event.preventDefault();appPruebaImprimeRequisicion(1895);\">Prueba</button>";
+		$resultado .="						</td>";
+		$resultado .="					</tr>";
+		$resultado .="				</table>";
+		$resultado .="			</form>";
+		return $resultado;
+	}	
 	
 	function formLostpasswordForm() {
 		$resultado="";
@@ -178,6 +205,7 @@
 		$resultado .="</form>";	
 		return $resultado;
 	}
+	
 	function usuarioVerificarCredenciales($name, $password) {
 		global $db;	
 		$resultado="";
@@ -213,8 +241,10 @@
 			if ( $idusuario == "" ) {
 				$idusuario = $_COOKIE["usuario"];
 			}
-			$res = $db->prepare("SELECT id FROM usuarios WHERE id=". $idusuario ." AND su=1 AND activo=1");
-			$res->execute();
+			//$res = $db->prepare("SELECT id FROM usuarios WHERE id=". $idusuario ." AND su=1 AND activo=1");
+			//$res->execute();
+			$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND su=1 AND activo=1");
+			$res->execute([$idusuario]);
 			while ($row = $res->fetch()) {
 				$resultado=true;
 			}
@@ -224,12 +254,16 @@
 	
 	function usuarioDarEntrada($idusuario) {
 		global $db;
-		$res = $db->prepare("SELECT id FROM usuarios WHERE id=". $idusuario ." AND activo=1");
-		$res->execute();
+		//$res = $db->prepare("SELECT id FROM usuarios WHERE id=". $idusuario ." AND activo=1");
+		//$res->execute();
+		$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND activo=1");
+		$res->execute([$idusuario]);
 		while ($row = $res->fetch()) {
 			setcookie("usuario",$row[0]);
-			$res = $db->prepare("UPDATE usuarios SET recovery=0, recoverypw='' WHERE id=". $row[0]);
-			$res->execute();
+			//$res = $db->prepare("UPDATE usuarios SET recovery=0, recoverypw='' WHERE id=". $row[0]);
+			//$res->execute();
+			$res = $db->prepare("UPDATE usuarios SET recovery=0, recoverypw='' WHERE id=?" );
+			$res->execute([$row[0]]);
 		}
 	}
 	
@@ -263,5 +297,45 @@
 				usuarioDarEntrada($userId);
 			}
 		}
+	}
+	
+	function guardarPreferencia($seccion, $clave, $valor) {
+		global $db;
+		$resultado = 0;
+		//$res = $db->prepare("SELECT id FROM opcionesusuarios WHERE idusuario=". $_COOKIE["usuario"] ." AND seccion='". $seccion ."' AND clave='". $clave ."';");
+		//$res->execute();
+		$res = $db->prepare("SELECT id FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
+		$res->execute([$_COOKIE["usuario"], $seccion, $clave]);
+		while ($row = $res->fetch()) {
+			$resultado = $row[0];
+		}
+		//writelog('guardarpreferencia');
+		if ( $resultado > 0 ) {
+			//$res = $db->prepare("UPDATE opcionesusuarios SET valor='". $valor ."' WHERE idusuario=". $_COOKIE["usuario"] ." AND seccion='". $seccion ."' AND clave='". $clave ."';");
+			//$res->execute();
+			$res = $db->prepare("UPDATE opcionesusuarios SET valor= ? WHERE idusuario= ? AND seccion= ? AND clave= ?;");
+			$res->execute([$valor, $_COOKIE["usuario"], $seccion, $clave]);
+		}
+		else
+		{
+			//$res = $db->prepare("INSERT INTO opcionesusuarios VALUES (0, ". $_COOKIE["usuario"] .", '". $seccion ."', '". $clave ."', '". $valor ."');");
+			//$res->execute();
+			$res = $db->prepare("INSERT INTO opcionesusuarios VALUES (0,  ?,  ?,  ?,  ?);");
+			$res->execute([$_COOKIE["usuario"], $seccion, $clave, $valor]);
+		}
+		return $resultado;	
+	}
+	
+	function obtenerPreferencia($seccion, $clave, $default='') {
+		global $db;
+		$resultado = $default;
+		//$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario=". $_COOKIE["usuario"] ." AND seccion='". $seccion ."' AND clave='". $clave ."';");
+		//$res->execute();
+		$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
+		$res->execute([$_COOKIE["usuario"], $seccion, $clave]);
+		while ($row = $res->fetch()) {
+			$resultado = $row[0];
+		}
+		return $resultado;	
 	}
 ?>

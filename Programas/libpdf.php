@@ -16,7 +16,7 @@
 		}
 		function PutRows($x,$y,$text,$maxwidth=0,$rowheight=0, $display=1)
 		{
-			$text = trim($text);
+			$text = trim(mb_convert_encoding($text, 'iso-8859-1', 'utf-8'));
 			if ($maxwidth==0)
 				$maxwidth=1000;
 			$space = $this->GetStringWidth(' ');

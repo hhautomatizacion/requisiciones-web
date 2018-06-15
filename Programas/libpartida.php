@@ -42,10 +42,14 @@
 			case "partsupplied":
 				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE id=". $idpartida .";");
 				$res->execute();
+				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 5,". $idpartida .", ". $_COOKIE["usuario"] .",1)");
+				$res->execute();
 				echo "OK";
 				break;
 			case "partdelete":
 				$res = $db->prepare("UPDATE partidas SET activo=0 WHERE id=". $idpartida .";");
+				$res->execute();
+				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 6,". $idpartida .", ". $_COOKIE["usuario"] .",1)");
 				$res->execute();
 				echo "OK";
 				break;

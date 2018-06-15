@@ -1,10 +1,16 @@
 <html>
 	<head>
-		<style type="text/css">
-			
+		<meta charset="utf-8" />
+		<?php
+			require_once("libconfig.php");
+			require_once("libdb.php");
+			require_once("libphp.php");
+			require_once("libuser.php");
+		?>
+		<style type="text/css">	
 			* {
-				font-family: "arial";
-				font-size: 15px;
+				font-family: <?php echo obtenerPreferencia('pagina', 'FontName', 'Arial'); ?>;
+				font-size: <?php echo obtenerPreferencia('pagina', 'FontSize', '15px'); ?>;
 			}
 			b {
 				border-radius: 5px;
@@ -32,7 +38,6 @@
 			}
 			select {
 				font-size: 20px;
-				
 				width: 100%;
 				box-sizing: border-box;
 				-moz-box-sizing: border-box;
@@ -61,14 +66,12 @@
 				-moz-box-sizing: border-box;
 			}
 			input[type="date"] {
-				
 				font-size: 20px;
 				width: 100%;
 				box-sizing: border-box;
 				-moz-box-sizing: border-box;
 			}
 			input[type="text"] {
-				
 				font-size: 20px;
 				width: 100%;
 				box-sizing: border-box;
@@ -191,11 +194,9 @@
 						if (zTextFields[i].files.item(0).size >  100 * 1024 * 1024 ) {
 							alert("El archivo es demasiado grande.\n\nFile: " + zTextFields[i].files.item(0).name + "\nSize: " + thesize);
 							var table = document.getElementById('tablaadjuntosreq');
-				
 							table.rows[fileID].cells[1].innerHTML='<b>'+ thesize +'</b>';
 						}else{
 							var table = document.getElementById('tablaadjuntosreq');
-				
 							table.rows[fileID].cells[1].innerHTML=thesize ;
 						}
 					}
@@ -260,9 +261,12 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if (this.responseText.length > 0) {
-							alert(this.responseText);
+							requisiciones[requisiciones.length] = this.responseText;
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
+							document.title = "Requisiciones - "+ requisiciones.length +" mostradas"; 
+							window.scrollTo(0, window.scrollHeight);
+							t = setInterval(tik, 20);
 						}
 					}
 				};
@@ -327,11 +331,26 @@
 				xmlhttp.send(new FormData(document.getElementById("lostpasswordform")));
 			}
 			
-			
 			window.onload = function () {
 				appHeader();
 				appMenu();
 				appActualizaVista();
+				f = setInterval(tok, 60000);
+			}
+			
+			function tok() {
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+			
+					}
+				};
+				xmlhttp.open("GET", "libnotificaciones.php", true);
+				xmlhttp.send();
 			}
 			
 			function tik() {
@@ -339,8 +358,8 @@
 				var estado = document.getElementById("estado");
 				var div = document.createElement('div');
 				if ( !ocupado ) {
-					estado.max=requisiciones.length;
-					div.id=requisiciones[requisicion];
+					estado.max = requisiciones.length;
+					div.id = requisiciones[requisicion];
 					divContenido.appendChild(div);
 					estado.value = requisicion + 1;
 					appActualizaRequisicion(requisiciones[requisicion]);
@@ -354,9 +373,9 @@
 			
 			function appActualizaVista() {
 				var mostrarusuarios = 0;
-				var mostrarvista =0;
-				var usuarios='';
-				var busqueda='';
+				var mostrarvista = 0;
+				var usuarios = '';
+				var busqueda = '';
 				
 				requisicion = 0;
 				requisiciones = [];
@@ -372,7 +391,7 @@
 				}
 				var divContenido = document.getElementById("contenido");	
 				if ( !ocupado) {
-					ocupado=true;	
+					ocupado = true;	
 					document.title = "Requisiciones - Buscando..."; 
 					divContenido.innerHTML = "Espere...";
 					if (window.XMLHttpRequest) {
@@ -386,20 +405,19 @@
 							if ( this.responseText.length > 0 ) {
 								requisiciones = this.responseText.split(" ");
 								document.title = "Requisiciones - "+ requisiciones.length +" mostradas"; 
-								//console.log(requisiciones);
 								t = setInterval(tik, 20);
 							}else{
 								document.title = "Requisiciones";
 								divContenido.innerHTML = "No hay resultados. Intente cambiando el alcance de la busqueda.";
 							}
-							ocupado=false;
+							ocupado = false;
 						}
 					};
 					if ( mostrarusuarios ) {
-						usuarios='&user='+ mostrarusuarios;
+						usuarios = '&user='+ mostrarusuarios;
 					}
 					if ( busquedarequisiciones.length > 0 ) {
-						busqueda='&q='+ busquedarequisiciones;
+						busqueda = '&q='+ busquedarequisiciones;
 					}
 					xmlhttp.open("GET","librequisicion.php?action=show"+ usuarios +"&view="+ mostrarvista +"&item="+ item + busqueda ,true);
 					xmlhttp.send();
@@ -523,6 +541,23 @@
 				xmlhttp.open("GET","libdb.php?action=showsettingsform",true);
 				xmlhttp.send();
 			}
+			function appPreferencesForm() {
+				var divFormulario = document.getElementById("formulario");
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText.length > 0 ) {
+							divFormulario.innerHTML = this.responseText;
+						}
+					}
+				};
+				xmlhttp.open("GET","libuser.php?action=showpreferencesform",true);
+				xmlhttp.send();
+			}
 			function appLogout() {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -581,6 +616,15 @@
 				appHeader();
 				appActualizaVista();
 			}
+			function appPrefereces() {
+				//document.getElementById("busquedarequisiciones").value="";
+				//busquedarequisiciones="";
+				elementoOcultar("contenido");
+				appPreferencesForm();
+				elementoMostrar("formulario");	
+				//appHeader();
+				//appActualizaVista();
+			}
 			function saveComentarioReq(tableID, rowID){
 				var table = document.getElementById(tableID);
 				var comentario= table.rows[rowID].cells[0].lastChild;
@@ -593,8 +637,8 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
-							table.rows[rowID].cells[0].innerHTML=comentario.value;
-							table.rows[rowID].cells[3].innerHTML='';
+							table.rows[rowID].cells[0].innerHTML = comentario.value;
+							table.rows[rowID].cells[3].innerHTML = '';
 						}
 					}
 				};
@@ -729,8 +773,8 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
-							celdas[0].innerHTML= file.name;
-							celdas[4].innerHTML= "<button onClick=\"window.open('uploads/r"+ idrequisicion +"/"+ file.name +"');\">Abrir</button>";
+							celdas[0].innerHTML = file.name;
+							celdas[4].innerHTML = "<button onClick=\"window.open('uploads/r"+ idrequisicion +"/"+ file.name +"');\">Abrir</button>";
 						}
 					}
 				};
@@ -740,10 +784,7 @@
 				formdata.append("archivo", file);
 				xmlhttp.open("POST","librequisicion.php");
 				xmlhttp.send(formdata);
-			
 			}
-			
-			
 			function addAdjuntoPart(idpartida) {
 				var table = document.getElementById('tablaadjuntospart'+ idpartida);
 				var newRow = table.rows.length;
@@ -767,8 +808,8 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
-							celdas[0].innerHTML= file.name;
-							celdas[4].innerHTML= "<button onClick=\"window.open('uploads/p"+ idpartida +"/"+ file.name +"');\">Abrir</button>";
+							celdas[0].innerHTML = file.name;
+							celdas[4].innerHTML = "<button onClick=\"window.open('uploads/p"+ idpartida +"/"+ file.name +"');\">Abrir</button>";
 						}
 					}
 				};
@@ -912,14 +953,14 @@
 			}
 			function appSaveSetting(setting, row) {
 				if ( document.getElementById(setting +"numero"+ row) ) {
-					numero="&number="+ document.getElementById(setting +"numero"+ row).value;
+					numero = "&number="+ document.getElementById(setting +"numero"+ row).value;
 				}else{
-					numero="";
+					numero = "";
 				}
 				if ( document.getElementById(setting +"descripcion"+ row) ) {
-					descripcion="&description="+ document.getElementById(setting +"descripcion"+ row).value;
+					descripcion = "&description="+ document.getElementById(setting +"descripcion"+ row).value;
 				}else{
-					descripcion="";
+					descripcion = "";
 				}
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1009,9 +1050,9 @@
 			}	
 			function appExportar() {
 				var mostrarusuarios = 0;
-				var mostrarvista =0;
-				var usuarios='';
-				var busqueda='';
+				var mostrarvista = 0;
+				var usuarios = '';
+				var busqueda = '';
 				
 				if ( document.getElementById("mostrarrequisiciones") ) {
 					mostrarvista = document.getElementById("mostrarrequisiciones").value;
@@ -1047,6 +1088,27 @@
 				}
 				xmlhttp.responseType="blob";
 				xmlhttp.open("GET","librequisicion.php?action=export"+ usuarios +"&view="+ mostrarvista + busqueda ,true);
+				xmlhttp.send();
+			}
+			function appPruebaImprimeRequisicion(idrequisicion) {
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					var a;
+					if (this.readyState == 4 && this.status == 200) {
+						a = document.createElement("a");
+						a.href=window.URL.createObjectURL(this.response);
+						a.download="prueba.pdf";
+						document.body.appendChild(a);
+						a.click();
+						//appActualizaRequisicion(idrequisicion);
+					}
+				};
+				xmlhttp.responseType="blob";
+				xmlhttp.open("GET","librequisicion.php?action=testprint&id="+idrequisicion,true);
 				xmlhttp.send();
 			}
 			function appImprimeRequisicion(idrequisicion) {
@@ -1181,8 +1243,8 @@
 						}
 					}
 				};
-				var reqno='';
-				var fecha='';
+				var reqno = '';
+				var fecha = '';
 				if ( document.getElementById('editreqno'+ idrequisicion) ) {
 					if ( document.getElementById('editreqno'+ idrequisicion).value.length > 0 ) {
 						reqno='&reqno='+ document.getElementById('editreqno'+ idrequisicion).value;
