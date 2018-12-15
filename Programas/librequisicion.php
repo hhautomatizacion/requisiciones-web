@@ -452,7 +452,7 @@
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$estado="";
-			if ( $y + $pdf->MeassureRows($row[4] ,115,5) > 200 ) {
+			if ( $y + $pdf->MeassureRows($row[4] ,115,5) > 210 ) {
 				$pdf->AddPage();
 				ExportarEncabezados($pdf);
 				$y=10;
@@ -915,6 +915,91 @@
 		return $resultado;
 	}
 	
+	function ResumenRequisicion($idrequisicion) {
+		global $db;
+		$resultado="";
+		$res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$status="";
+			$clase="req";
+			// if ( RequisicionEsMia($idrequisicion) ) {
+				// $clase .= " owner";
+			// }
+			if ( RequisicionEsImpresa($idrequisicion) ) {
+				$clase .= " printed";
+			}
+			if ( RequisicionEsSurtida($idrequisicion) ) {
+				$clase .= " supplied";
+			}
+			if ( !RequisicionEsActiva($idrequisicion) ) {
+				$clase .= " deleted";
+			}
+
+			// if ( RequisicionEsMia($idrequisicion) ) {
+				// $status .= "M";
+			// }
+			if ( RequisicionEsImpresa($idrequisicion) ) {
+				$status .= "I";
+			}
+			if ( RequisicionEsSurtida($idrequisicion) ) {
+				$status .= "S";
+			}
+			if ( !RequisicionEsActiva($idrequisicion) ) {
+				$status .= "E";
+			}
+			$resultado .="<table id=\"mostrarrequisicion". $idrequisicion ."\"  class=\"". $clase ."\">";
+			$resultado .= "<tr><td width=\"10%\"><small>Id:</small></td><td width=\"15%\">". $row[0] ."</td><td width=\"10%\"><small>Requisicion:</small></td><td width=\"15%\">". $row[2] ."</td><td width=\"10%\"><small>Fecha:</small></td><td width=\"15%\">". $row[1] ."</td><td width=\"10%\"><small>Importancia:</small></td><td width=\"15%\">TODO</td></tr>";
+			$resultado .= "<tr><td width=\"10%\"><small>Departamento:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("departamentos",$row[9],"departamento") ."</td><td width=\"10%\"><small>Area:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("areas",$row[10],"area") ."</td><td width=\"10%\"><small>Surtir:</small></td><td width=\"15%\">TODO</td><td width=\"10%\"><small>Estado:</small></td><td width=\"15%\">". $status ."</td></tr>";
+			$resultado .="<tr><td colspan=8>";
+			//$resultado .= MostrarPartidas($idrequisicion);
+			$resultado .= ResumenPartidas($idrequisicion);
+			$resultado .="</td></tr>";
+			$resultado .="<tr><td colspan=8>";
+			$resultado .=MostrarComentariosRequisicion($idrequisicion);
+			$resultado .="</td></tr>";
+			$resultado .="<tr><td colspan=8>";
+			$resultado .=MostrarAdjuntosRequisicion($idrequisicion);
+			$resultado .="</td></tr>";
+			$resultado .="<tr><td width=\"10%\"><small>Surtida:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[7],"nombre") ."</td><td width=\"10%\"><small>Imprime:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[8],"nombre") ."</td><td width=\"10%\"><small>Solicitante:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre") ."</td><td width=\"10%\"><small>Autor:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[14],"nombre") ."</td></tr>";
+			$resultado .="</table>";
+		}
+		return $resultado;
+	}
+	
+	function ResumenPartidas($idrequisicion) {
+		global $db;
+		$resultado="";	
+		$res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion=". $idrequisicion .";");
+		$res->execute();
+		$resultado .= "<table>";
+		$resultado .= "<tr><td width=\"90%\"><small>Partida</small></td><td width=\"10%\"><small>Acciones</small></td></tr>";
+		while ($row = $res->fetch()) {
+			$clase="part";
+			if ( strval($row[7]) == 1 ) {
+				$clase .= " partprinted";
+			}
+			if ( strval($row[6]) == 1 ) {
+				$clase .= " partsupplied";
+			}
+			if ( strval($row[5]) == 0 ) {
+				$clase .= " partdeleted";
+			}
+			$resultado .= "<tr class=\"". $clase ."\"><td>";
+			$resultado .= "<table >";
+			$resultado .= "<tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr>";
+			$resultado .= "<tr><td>". (float)$row[2] ."</td><td>". ObtenerDescripcionDesdeID("unidades",$row[3],"unidad") ."</td><td>". $row[4] ."</td><td>". ObtenerDescripcionDesdeID("centroscostos",$row[9],"descripcion") ."</td></tr>";
+			$resultado .= "</table>";
+			$resultado .= MostrarComentariosPartida($row[0]);
+			$resultado .= MostrarAdjuntosPartida($row[0]);
+			$resultado .= "</td><td>";
+			//$resultado .= AccionesPartida($row[0]);
+			$resultado .= "</td></tr>";
+		}
+		$resultado .= "</table>";	
+		return $resultado;
+	}
+	
 	function MostrarRequisicion($idrequisicion) {
 		global $db;
 		$resultado="";
@@ -958,7 +1043,7 @@
 		$resultado.="			<div>";
 		$resultado.="			<table>";
 		$resultado.="			<tr>";
-		$resultado.="			<td width=\"90%\">";
+		$resultado.="			<td width=\"100%\">";
 		$resultado.="			<table>";
 		$resultado.="				<tr>";
 		$resultado.="					<td><small>Departamento:</small></td><td><select name = \"departamento\">". ObtenerOpcionesSelect("departamentos","departamento") ."</select></td>";

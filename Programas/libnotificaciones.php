@@ -1,4 +1,8 @@
 <?php
+	use PHPMailer\PHPMailer\PHPMailer;
+	
+	require_once("PHPMailer.php");
+	require_once("SMTP.php");
 	require_once("libconfig.php");
 	require_once("libdb.php");
 	require_once("libphp.php");
@@ -42,7 +46,7 @@
 		$idusuario=0;
 		$idsolicitante=0;
 		$destinatarios=array();
-		writelog('enviar notif '. $idnotificacion .' de la req '. $idrequisicion);
+		//writelog('enviar notif '. $idnotificacion .' de la req '. $idrequisicion);
 		$res= $db->prepare("SELECT idusuario, clave FROM notificacionesrequisiciones WHERE id=". $idnotificacion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -83,102 +87,12 @@
 	}
 	
 	function enviarRequisicionPorCorreo($idrequisicion, $direccion, $asunto, $mensaje) {
-		// $filename = 'req'. $idrequisicion .'.pdf';
-		// //$path = 'your path goes here';
-		// //$file = $path . "/" . $filename;
-
-		// //$direccion = 'mail@mail.com';
-		// //$asunto = 'Subject';
-		// //$mensaje = 'My message';
-	
-		// $pdf = new PDF("L");
-		// $pdf->SetFont('Arial','',6);
-		// $pdf->AddPage();
-	
-		// ExportarEncabezados($pdf);
-	
-		// ExportarRequisicion($pdf, $idrequisicion);	
-	
-		// $content = $pdf->Output("","S");
-	
-		// $content = chunk_split(base64_encode($content));
-	
-
-		// // carriage return type (RFC)
-		// $eol = "\r\n";
-
-		// // main header (multipart mandatory)
-		// // $headers = "From: MantenimientoCL <mttocl@cualquierlavado.com.mx>" . $eol;
-		// // $headers .= "MIME-Version: 1.0" . $eol;
-		// // $headers .= "Content-Type: multipart/mixed; boundary=\"" . $separator . "\"" . $eol;
-		// // $headers .= "Content-Transfer-Encoding: 7bit" . $eol;
-		// // $headers .= "This is a MIME encoded message." . $eol;
-
-		// $uid = md5(uniqid(time()));
-		// //$name = basename($file);
-
-		// // header
-		// $header = "From: MantenimientoCL <mttocl@cualquierlavado.com.mx>\r\n";
-		// //$header .= "Reply-To: ".$replyto."\r\n";
-		// $header .= "MIME-Version: 1.0\r\n";
-		// $header .= "Content-Type: multipart/mixed; boundary=\"".$uid."\"\r\n\r\n";
-
-		// // // message
-		// // $body = "--" . $separator . $eol;
-		// // $body .= "Content-Type: text/plain; charset=\"iso-8859-1\"" . $eol;
-		// // $body .= "Content-Transfer-Encoding: 8bit" . $eol;
-		// // $body .= $mensaje . $eol;
-
-		// // // attachment
-		// // $body .= "--" . $separator . $eol;
-		// // $body .= "Content-Type: application/pdf; name=\"" . $filename . "\"" . $eol;
-		// // $body .= "Content-Transfer-Encoding: base64" . $eol;
-		// // $body .= "Content-Disposition: attachment" . $eol;
-		// // $body .= $content . $eol;
-		// // $body .= "--" . $separator . "--";
-
-		// $message = "--".$uid."\r\n";
-		// $message .= "Content-type:text/plain; charset=iso-8859-1\r\n";
-		// $message .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
-		// $message .= $mensaje."\r\n\r\n";
-		// $message .= "--".$uid."\r\n";
-		// $message .= "Content-Type: application/octet-stream; name=\"".$filename."\"\r\n";
-		// $message .= "Content-Transfer-Encoding: base64\r\n";
-		// $message .= "Content-Disposition: attachment; filename=\"".$filename."\"\r\n\r\n";
-		// $message .= $content."\r\n\r\n";
-		// $message .= "--".$uid."--";
-		
-		// //SEND Mail
-		// if ( mail($direccion, $asunto, $message, $header) ) {
-			// writelog('notificaicon enviada '. $asunto);
-		// }
-		$to = $direccion;
-
-		$subject = $asunto;
-
-		$from = 'mttocl@cualquierlavado.com.mx';
-
-		 
-
-		// To send HTML mail, the Content-type header must be set
-
-		$headers  = 'MIME-Version: 1.0' . "\r\n";
-
-		$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-
-		 
-
-		// Create email headers
-
-		$headers .= 'From: '.$from."\r\n".
-
-			'Reply-To: '.$from."\r\n" .
-
-			'X-Mailer: PHP/' . phpversion();
-
-		 
-
-		// Compose a simple HTML email message
+		global $mail_server;
+		global $mail_port;
+		global $mail_user;
+		global $mail_pass;
+		global $mail_fromaddress;
+		global $mail_fromname;
 
 		$message = '<html>';
 		$message .= '<head>';
@@ -188,6 +102,12 @@
 		$message .= 'border: 2px solid gray;';
 		$message .= 'width:100%;';
 		$message .= 'margin-bottom: 1px;';
+		$message .= '}';
+		$message .= 'td {';
+		$message .= 'border-bottom: 1px solid gray;';
+		$message .= '}';
+		$message .= 'tr:last-child>td {';
+		$message .= 'border-bottom: 0px;';
 		$message .= '}';
 		$message .= '.req {background: lightgray;}';
 		$message .= '.printed {background: #FFC040;}';
@@ -200,30 +120,38 @@
 		$message .= '.com {	opacity: 0.9;}';
 		$message .= '.comowner {opacity: 1;}';
 		$message .= '.comdeleted {opacity: 0.5;}';
-	
 		$message .= '</style>';
 		$message .= '</head>';
 		$message .= '<body>';
-
-		
-
-		$message .= MostrarMarcoRequisicion($idrequisicion);
-
+		$message .= ResumenRequisicion($idrequisicion);
 		$message .= '</body>';
 		$message .= '</html>';
+	 
+		$mail = new PHPMailer(true);
 
-		 
+		try 
+		{
+			$mail->IsSMTP();
+			$mail->Host = $mail_server;
+			$mail->SMTPAuth = true;
+			$mail->Username = $mail_user;
+			$mail->Password = $mail_pass;
+			$mail->SMTPSecure = 'tls';
+			$mail->port = $mail_port;
 
-		// Sending email
+			$mail->setFrom($mail_fromaddress,$mail_fromname);
+			$mail->addAddress($direccion);
 
-		if(mail($to, $subject, $message, $headers)){
+			$mail->IsHTML(true);
+			$mail->CharSet = 'utf-8';
+			$mail->Subject=$asunto;
+			$mail->Body=$message;
 
-			writelog( 'Your mail has been sent successfully.');
-
-		} else{
-
-			writelog( 'Unable to send email. Please try again.');
-
+			$mail->send();
+		}
+		catch (Exception $e)
+		{
+			writelog('Error al enviar correo: '. $asunto . ' a '. $direccion);
 		}
 		
 	}
@@ -245,7 +173,6 @@
 			while ($row = $res->fetch()) {
 				$req = $row[0];
 				if ( !in_array($req, $requisiciones) ) {
-					writelog('agrega '. $req);
 					$requisiciones[] = $req;
 				}
 			}	

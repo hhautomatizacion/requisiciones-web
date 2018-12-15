@@ -24,8 +24,10 @@
 			$rutadestino=$rutaupload ."/". $nombrearchivo;
 		}
 		if (move_uploaded_file($rutatemp,$rutadestino)) {
-			$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0,". $idpartida .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
-			$res->execute();
+			//$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0,". $idpartida .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
+			//$res->execute();
+			$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
+			$res->execute([$idpartida, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
 			echo "OK";
 		}	
 	}
@@ -33,29 +35,43 @@
 		$idpartida=$_GET["id"];
 		switch ($_GET["action"]) {
 			case "parttobesupplied":
-				$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE id=". $idpartida .";");
-				$res->execute();
-				$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id IN (SELECT idrequisicion FROM partidas WHERE id=". $idpartida .");");
-				$res->execute();
+				//$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE id=". $idpartida .";");
+				//$res->execute();
+				$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE id= ?;");
+				$res->execute([$idpartida]);
+				//$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id IN (SELECT idrequisicion FROM partidas WHERE id=". $idpartida .");");
+				//$res->execute();
+				$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id IN (SELECT idrequisicion FROM partidas WHERE id= ?);");
+				$res->execute([$idpartida]);
 				echo "OK";
 				break;
 			case "partsupplied":
-				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE id=". $idpartida .";");
-				$res->execute();
-				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 5,". $idpartida .", ". $_COOKIE["usuario"] .",1)");
-				$res->execute();
+				//$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE id=". $idpartida .";");
+				//$res->execute();
+				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE id= ?;");
+				$res->execute([$idpartida]);
+				//$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 5,". $idpartida .", ". $_COOKIE["usuario"] .",1)");
+				//$res->execute();
+				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 5, ?,  ?,1)");
+				$res->execute([$idpartida, $_COOKIE["usuario"]]);
 				echo "OK";
 				break;
 			case "partdelete":
-				$res = $db->prepare("UPDATE partidas SET activo=0 WHERE id=". $idpartida .";");
-				$res->execute();
-				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 6,". $idpartida .", ". $_COOKIE["usuario"] .",1)");
-				$res->execute();
+				//$res = $db->prepare("UPDATE partidas SET activo=0 WHERE id=". $idpartida .";");
+				//$res->execute();
+				$res = $db->prepare("UPDATE partidas SET activo=0 WHERE id= ?;");
+				$res->execute([$idpartida]);
+				//$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 6,". $idpartida .", ". $_COOKIE["usuario"] .",1)");
+				//$res->execute();
+				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 6, ?,  ?,1)");
+				$res->execute([$idpartida, $_COOKIE["usuario"]]);
 				echo "OK";
 				break;
 			case "partundelete":
-				$res = $db->prepare("UPDATE partidas SET activo=1 WHERE id=". $idpartida .";");
-				$res->execute();
+				//$res = $db->prepare("UPDATE partidas SET activo=1 WHERE id=". $idpartida .";");
+				//$res->execute();
+				$res = $db->prepare("UPDATE partidas SET activo=1 WHERE id= ?;");
+				$res->execute([$idpartida]);
 				echo "OK";
 				break;
 		}

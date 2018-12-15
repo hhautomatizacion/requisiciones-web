@@ -1,17 +1,13 @@
 <?php
-// Rellena los espacios ente comillas de abajo con los datos que te da
-// el servidor al activar la base de datos.
-// Este dato de abajo suele ser localhost casi siempre:
-$db_server="localhost";
+	$db_server="localhost";
+	$db_database = "requisiciones";
+	$db_user = "root";
+	$db_pass = "manttocl";
 
-// Aqui abajo escribe el nombre de la base de datos.
-// Si tu servidor tiene cpanel normalmente va primero tu nombre de username,
-// por ejemplo: username_nombredelabasededatos
-$db_database = "requisiciones";
-
-// Aqui abajo el nombre de username de la base de datos para acceder a ella.
-$db_user = "root";
-
-// Y ahora la contraseña:
-$db_pass = "manttocl";
+	$mail_server = "128.128.5.243";
+	$mail_port = 25;
+	$mail_user = "mttocl";
+	$mail_pass = "lcottm";
+	$mail_fromaddress = "mttocl@cualquierlavado.com.mx";
+	$mail_fromname = "MantenimientoCL";
 ?>

@@ -118,10 +118,10 @@
 				margin-bottom: 10px;
 			}
 			#formulario {
-				width: 90%; 
+				width: 98%; 
 				margin: 0; 
-				margin-left: 5%; 
-				margin-right: 5%;
+				margin-left: 1%; 
+				margin-right: 1%;
 				margin-top: 0px; 
 				position: absolute; 
 				top: 70px;
@@ -558,6 +558,57 @@
 				xmlhttp.open("GET","libuser.php?action=showpreferencesform",true);
 				xmlhttp.send();
 			}
+			
+			function appHelp() {
+				appHelpForm();
+				elementoMostrar("formulario");
+				elementoOcultar("contenido");
+				window.scrollTo(0,0);
+			}	
+			
+			function appHelpForm() {
+				var divFormulario = document.getElementById("formulario");
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText.length > 0 ) {
+							divFormulario.innerHTML = this.responseText;
+						}
+					}
+				};
+				xmlhttp.open("GET","libhelp.php?action=showhelp",true);
+				xmlhttp.send();
+			}
+			
+			function appCredits() {
+				appCreditsForm();
+				elementoMostrar("formulario");
+				elementoOcultar("contenido");
+				window.scrollTo(0,0);
+			}	
+			
+			function appCreditsForm() {
+				var divFormulario = document.getElementById("formulario");
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText.length > 0 ) {
+							divFormulario.innerHTML = this.responseText;
+						}
+					}
+				};
+				xmlhttp.open("GET","libhelp.php?action=showcredits",true);
+				xmlhttp.send();
+			}
+			
 			function appLogout() {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -617,14 +668,11 @@
 				appActualizaVista();
 			}
 			function appPrefereces() {
-				//document.getElementById("busquedarequisiciones").value="";
-				//busquedarequisiciones="";
 				elementoOcultar("contenido");
 				appPreferencesForm();
 				elementoMostrar("formulario");	
-				//appHeader();
-				//appActualizaVista();
 			}
+			
 			function saveComentarioReq(tableID, rowID){
 				var table = document.getElementById(tableID);
 				var comentario= table.rows[rowID].cells[0].lastChild;
@@ -642,9 +690,10 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","libcomentario.php?action=comadd&type=comreq&idreq="+ idrequisicion +"&comentario="+ comentario.value,true);
+				xmlhttp.open("GET","libcomentario.php?action=comadd&type=comreq&idreq="+ idrequisicion +"&comentario="+ encodeURIComponent(comentario.value),true);
 				xmlhttp.send();		
 			}
+			
 			function deleteComentarioReq(el, idcomentario){
 				var cell = el.parentElement;
 				if (window.XMLHttpRequest) {
@@ -746,7 +795,7 @@
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
 				
-				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"15%\"><small>Cantidad</small></td><td width=\"15%\"><small>Unidad</small></td><td width=\"50%\"><small>Descripcion</small></td><td width=\"20%\"><small>C.R.</small></td></tr><tr><td><input type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select name = 'unidad["+newRow+"]' onfocus=\"populateCombo(this,'unidades','unidad');\"></select></td><td><input type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select name = 'centrocostos["+newRow+"]' onfocus=\"populateCombo(this, 'centroscostos','descripcion')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
+				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr><tr><td><input type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select name = 'unidad["+newRow+"]' onfocus=\"populateCombo(this,'unidades','unidad');\"></select></td><td><input type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select name = 'centrocostos["+newRow+"]' onfocus=\"populateCombo(this, 'centroscostos','descripcion')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\"tablapartidas\","+ newRow +");'>";
 			}
 			
@@ -761,15 +810,14 @@
 				row.insertCell(3).innerHTML = "";
 				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoReq("+  idrequisicion +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntosreq"+  idrequisicion +"\","+ newRow +");'>";
 			}
+			
 			function saveAdjuntoReq(idrequisicion, adjunto) {
-				
 				var input = document.getElementById("adjuntosrequisicion"+ idrequisicion +"["+ adjunto +"]");
 				var file = input.files.item(0);
 				var celdas = document.getElementById('tablaadjuntosreq'+ idrequisicion).rows[adjunto].cells;
 				
 				celdas[4].innerHTML="";
-				xmlhttp = new XMLHttpRequest();
-					
+				xmlhttp = new XMLHttpRequest();	
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
@@ -785,6 +833,7 @@
 				xmlhttp.open("POST","librequisicion.php");
 				xmlhttp.send(formdata);
 			}
+			
 			function addAdjuntoPart(idpartida) {
 				var table = document.getElementById('tablaadjuntospart'+ idpartida);
 				var newRow = table.rows.length;
@@ -796,15 +845,13 @@
 				row.insertCell(3).innerHTML = "";
 				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoPart("+  idpartida +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntospart"+  idpartida +"\","+ newRow +");'>";
 			}
+			
 			function saveAdjuntoPart(idpartida, adjunto) {
-				
 				var input = document.getElementById("adjuntospartida"+ idpartida +"["+ adjunto +"]");
 				var file = input.files.item(0);
 				var celdas = document.getElementById('tablaadjuntospart'+ idpartida).rows[adjunto].cells;
-				
 				celdas[4].innerHTML="";
 				xmlhttp = new XMLHttpRequest();
-					
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
@@ -843,14 +890,12 @@
 				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioPart(\""+  idpartida +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablacomentriospart"+ idpartida +"\","+ newRow +");'>";
 				
 			}
+			
 			function saveComentarioPart(idpartida, renglon){
 				var comentario = document.getElementById("comentariospartida"+ idpartida +"["+ renglon +"]");
-				
 				var celdas = document.getElementById('tablacomentariospart'+ idpartida).rows[renglon].cells;
-				
 				celdas[3].innerHTML="";
 				xmlhttp = new XMLHttpRequest();
-					
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
@@ -859,7 +904,7 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","libcomentario.php?action=comadd&type=compart&idpart="+ idpartida +"&comentario="+ comentario.value,true);
+				xmlhttp.open("GET","libcomentario.php?action=comadd&type=compart&idpart="+ idpartida +"&comentario="+ encodeURIComponent(comentario.value),true);
 				xmlhttp.send();		
 			}
 			
@@ -1258,12 +1303,14 @@
 				xmlhttp.open("GET","librequisicion.php?action=saveprinted&id="+idrequisicion + reqno + fecha,true);
 				xmlhttp.send();
 			}	
+			
 			function appTextSaveEditarImpresa(e, idrequisicion) {
 				if ( e.key == 'Enter' ) {
 					appSaveEditarImpresa(idrequisicion);
 				}
 				
 			}
+			
 			function appEditarImpresa(el,idrequisicion) {
 				var divRequisicion=document.getElementById('mostrarrequisicion'+ idrequisicion);
 				if ( !document.getElementById('editreqno'+ idrequisicion) ) {

@@ -6,17 +6,20 @@
 
 	
 	if ( isset($_GET["action"]) && $_GET["action"] == "showheader" ) {
-		
-		echo "<button onClick=\"event.preventDefault();appHome();\">Requisiciones</button>";
-		
-		if ( usuarioEsSuper() ) {	
-			echo "<button onClick=\"event.preventDefault();appSettings();\">Configuracion</button>";
-		}
 		if ( usuarioEsLogeado() ) {
+			echo "<button onClick=\"event.preventDefault();appHome();\">Requisiciones</button>";
 			echo "<button onClick=\"event.preventDefault();appPrefereces();\">Preferencias ". usuarioNombre() ."</button>";
+			echo "<button onClick=\"event.preventDefault();appCredits();\">Creditos</button>";
+			if ( usuarioEsSuper() ) {	
+				echo "<button onClick=\"event.preventDefault();appSettings();\">Configuracion</button>";
+			}
+			echo "<button onClick=\"event.preventDefault();appHelp();\">Ayuda</button>";
 			echo "<button onClick=\"event.preventDefault();appLogout();\">Salir</button>";
 		}
 		if ( !usuarioEsLogeado() ) {
+			echo "<button onClick=\"event.preventDefault();appHome();\">Requisiciones</button>";
+			echo "<button onClick=\"event.preventDefault();appCredits();\">Creditos</button>";
+			echo "<button onClick=\"event.preventDefault();appHelp();\">Ayuda</button>";
 			echo "<button onClick=\"event.preventDefault();appSignin();\">Registrarse</button>";
 			echo "<button onClick=\"event.preventDefault();appLogin();\">Acceder</button>";
 		}

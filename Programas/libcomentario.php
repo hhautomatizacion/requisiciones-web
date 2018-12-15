@@ -9,7 +9,7 @@
 		if ( isset($_GET["type"]) && $_GET["type"] == "comreq" ) {
 			if ( isset($_GET["idreq"]) ) {
 				$idrequisicion=$_GET["idreq"];
-				$comentario=$_GET["comentario"];
+				$comentario=urldecode($_GET["comentario"]);
 				//$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0,". $idrequisicion .",0,'". $comentario ."',". $_COOKIE["usuario"] .",NOW(),1);");
 				//$res->execute();
 				$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(),1);");
@@ -20,7 +20,7 @@
 		if ( isset($_GET["type"]) && $_GET["type"] == "compart" ) {
 			if ( isset($_GET["idpart"]) ) {
 				$idpartida=$_GET["idpart"];
-				$comentario=$_GET["comentario"];
+				$comentario=urldecode($_GET["comentario"]);
 				//$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0,". $idpartida .",0,'". $comentario ."',". $_COOKIE["usuario"] .",NOW(),1);");
 				//$res->execute();
 				$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0, ?,0, ?, ?,NOW(),1);");
