@@ -1,34 +1,38 @@
 <?php
+	use PHPMailer\PHPMailer\PHPMailer;
+
+	require_once("PHPMailer.php");
+	require_once("SMTP.php");
 	require_once("libconfig.php");
 	require_once("libdb.php");
 	require_once("libphp.php");
-	
+
 	if ( isset($_GET["action"]) && $_GET["action"] == "showpreferencesform" ) {
 		$resultado= formPreferencesForm();
 		echo $resultado;
 	}
-	
+
 	if ( isset($_GET["action"]) && $_GET["action"] == "showsigninform" ) {
 		$resultado= formSigninForm();
 		echo $resultado;
 	}
-	
+
 	if ( isset($_GET["action"]) && $_GET["action"] == "showlostpasswordform" ) {
 		$resultado= formLostpasswordForm();
 		echo $resultado;
 	}
-	
+
 	if ( isset($_GET["action"]) && $_GET["action"] == "showloginform" ) {
 		$resultado= formLoginForm();
 		echo $resultado;
 	}
-	
+
 	if ( isset($_GET["action"]) && $_GET["action"] == "logout" ) {
 		setcookie("usuario","");
 		usuarioDesactivarToken();
 		echo "OK";
 	}
-	
+
 	if ( isset($_POST["action"]) && $_POST["action"] == "login" ) {
 		if ( $_POST["name"] || $_POST["password"] ) {
 			usuarioDarEntrada(usuarioVerificarCredenciales($_POST["name"], $_POST["password"]));
@@ -39,10 +43,10 @@
 			}
 		}
 	}
-	
+
 	if ( isset($_POST["action"]) && $_POST["action"] == "signin" ) {
-		$errores=array();		
-		if ( intval($_REQUEST["numero"]) == 0 ){
+		$errores=array();
+		if ( intval($_REQUEST["numero"]) <= 0 ){
 			$errores["numero"]="Numero de usuario no valido";
 		}
 		$res = $db->prepare("SELECT * FROM usuarios WHERE numero='" . intval($_REQUEST["numero"]) ."' OR LCASE(nombre)=LCASE('". $_REQUEST["nombre"]."') OR LCASE(usuario)=LCASE('". $_REQUEST["usuario"] ."') OR LCASE(email)=LCASE('". $_REQUEST["usuario"] ."');");
@@ -75,9 +79,9 @@
 					if ( intval($row[2]) ) {
 						$res = $db->prepare("UPDATE usuarios SET recovery=1, recoverypw=SHA1('". $recoverypw ."') WHERE id=". $row[0]);
 						$res->execute();
-						mail($row[1],"Recuperacion de password","Su nuevo password temporal es ". $recoverypw ."\nEste password es valido solo por una ocasion.\nSi usted no ha solicitado esta informacion puede seguir usando su password actual.");
+						enviarPorCorreo($row[1],"Recuperacion de password","Su nuevo password temporal es ". $recoverypw ."\nEste password es valido solo por una ocasion.\nSi usted no ha solicitado esta informacion puede seguir usando su password actual.");
 					}else{
-						mail($row[1],"Su cuenta esta desactivada","Su cuenta de usuario esta desactivada. Pongase en contacto con el administrador del sitio.");
+						enviarPorCorreo($row[1],"Su cuenta esta desactivada","Su cuenta de usuario esta desactivada. Pongase en contacto con el administrador del sitio.");
 					}
 					$resultado="OK";
 				}
@@ -85,7 +89,40 @@
 			echo $resultado;
 		}
 	}
-	
+
+	function enviarPorCorreo($direccion, $asunto, $mensaje) {
+		global $mail_server;
+		global $mail_port;
+		global $mail_user;
+		global $mail_pass;
+		global $mail_fromaddress;
+		global $mail_fromname;
+
+		$mail = new PHPMailer(true);
+		try 
+		{
+			$mail->IsSMTP();
+			$mail->Host = $mail_server;
+			$mail->SMTPAuth = true;
+			$mail->Username = $mail_user;
+			$mail->Password = $mail_pass;
+			$mail->SMTPSecure = 'tls';
+			$mail->port = $mail_port;
+			$mail->setFrom($mail_fromaddress,$mail_fromname);
+			$mail->addAddress($direccion);
+			$mail->IsHTML(true);
+			$mail->CharSet = 'utf-8';
+			$mail->Subject=$asunto;
+			$mail->Body=$mensaje;
+			$mail->send();
+		}
+		catch (Exception $e)
+		{
+			writelog('Error al enviar correo: '. $asunto . ' a '. $direccion);
+		}
+		
+	}
+
 	function formPreferencesForm() {
 		$resultado="";
 		$resultado .="			<form>";
@@ -106,8 +143,8 @@
 		$resultado .="				</table>";
 		$resultado .="			</form>";
 		return $resultado;
-	}	
-	
+	}
+
 	function formLostpasswordForm() {
 		$resultado="";
 		$resultado .="			<form id=\"lostpasswordform\" action=\"libuser.php\" method=\"POST\">";
@@ -130,7 +167,7 @@
 		$resultado .="			</form>";
 		return $resultado;
 	}
-	
+
 	function formLoginForm() {
 		$resultado="";
 		$resultado .="			<form id=\"loginform\" action=\"libuser.php\" method=\"POST\">";
@@ -162,7 +199,7 @@
 		$resultado .="			</form>";
 		return $resultado;
 	}
-	
+
 	function formSigninForm() {
 		$resultado="";		
 		$resultado .="<form id=\"signinform\" method = \"POST\">";
@@ -205,7 +242,7 @@
 		$resultado .="</form>";	
 		return $resultado;
 	}
-	
+
 	function usuarioVerificarCredenciales($name, $password) {
 		global $db;	
 		$resultado="";
@@ -225,15 +262,15 @@
 		}
 		return $resultado;
 	}
-	
+
 	function usuarioNombre() {
 		return ObtenerDescripcionDesdeID("usuarios", $_COOKIE["usuario"] ,"nombre");
 	}
-		
+
 	function usuarioEsLogeado() {
 		return ( isset($_COOKIE["usuario"])  && $_COOKIE["usuario"] != "" );
 	}
-	
+
 	function usuarioEsSuper($idusuario = "") {
 		global $db;
 		$resultado=false;
@@ -241,8 +278,6 @@
 			if ( $idusuario == "" ) {
 				$idusuario = $_COOKIE["usuario"];
 			}
-			//$res = $db->prepare("SELECT id FROM usuarios WHERE id=". $idusuario ." AND su=1 AND activo=1");
-			//$res->execute();
 			$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND su=1 AND activo=1");
 			$res->execute([$idusuario]);
 			while ($row = $res->fetch()) {
@@ -251,28 +286,24 @@
 		}
 		return $resultado;
 	}
-	
+
 	function usuarioDarEntrada($idusuario) {
 		global $db;
-		//$res = $db->prepare("SELECT id FROM usuarios WHERE id=". $idusuario ." AND activo=1");
-		//$res->execute();
 		$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND activo=1");
 		$res->execute([$idusuario]);
 		while ($row = $res->fetch()) {
 			setcookie("usuario",$row[0]);
-			//$res = $db->prepare("UPDATE usuarios SET recovery=0, recoverypw='' WHERE id=". $row[0]);
-			//$res->execute();
 			$res = $db->prepare("UPDATE usuarios SET recovery=0, recoverypw='' WHERE id=?" );
 			$res->execute([$row[0]]);
 		}
 	}
-	
+
 	function usuarioDesactivarToken() {
 		global $db;
 		$db->prepare("DELETE FROM tokensusuarios WHERE cliente=?")->execute([$_SERVER["REMOTE_ADDR"]]);
 		setcookie("token", "");
 	}
-	
+
 	function usuarioActivarToken() {
 		global $db;
 		$tokenNuevo = "";
@@ -280,7 +311,7 @@
 		$db->prepare("INSERT INTO tokensusuarios VALUES (0,?,?,?,DATE_ADD(NOW(), INTERVAL 7 DAY)")->execute([$_COOKIE["usuario"], $_SERVER["REMOTE_ADDR"], $tokenNuevo]);
 		setcookie("token", $tokenNuevo, time()+604800);
 	}
-	
+
 	function userAutoLogin() {
 		global $db;
 		$token = "";
@@ -298,39 +329,30 @@
 			}
 		}
 	}
-	
+
 	function guardarPreferencia($seccion, $clave, $valor) {
 		global $db;
 		$resultado = 0;
-		//$res = $db->prepare("SELECT id FROM opcionesusuarios WHERE idusuario=". $_COOKIE["usuario"] ." AND seccion='". $seccion ."' AND clave='". $clave ."';");
-		//$res->execute();
 		$res = $db->prepare("SELECT id FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
 		$res->execute([$_COOKIE["usuario"], $seccion, $clave]);
 		while ($row = $res->fetch()) {
 			$resultado = $row[0];
 		}
-		//writelog('guardarpreferencia');
 		if ( $resultado > 0 ) {
-			//$res = $db->prepare("UPDATE opcionesusuarios SET valor='". $valor ."' WHERE idusuario=". $_COOKIE["usuario"] ." AND seccion='". $seccion ."' AND clave='". $clave ."';");
-			//$res->execute();
 			$res = $db->prepare("UPDATE opcionesusuarios SET valor= ? WHERE idusuario= ? AND seccion= ? AND clave= ?;");
 			$res->execute([$valor, $_COOKIE["usuario"], $seccion, $clave]);
 		}
 		else
 		{
-			//$res = $db->prepare("INSERT INTO opcionesusuarios VALUES (0, ". $_COOKIE["usuario"] .", '". $seccion ."', '". $clave ."', '". $valor ."');");
-			//$res->execute();
 			$res = $db->prepare("INSERT INTO opcionesusuarios VALUES (0,  ?,  ?,  ?,  ?);");
 			$res->execute([$_COOKIE["usuario"], $seccion, $clave, $valor]);
 		}
 		return $resultado;	
 	}
-	
+
 	function obtenerPreferencia($seccion, $clave, $default='') {
 		global $db;
 		$resultado = $default;
-		//$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario=". $_COOKIE["usuario"] ." AND seccion='". $seccion ."' AND clave='". $clave ."';");
-		//$res->execute();
 		$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
 		$res->execute([$_COOKIE["usuario"], $seccion, $clave]);
 		while ($row = $res->fetch()) {

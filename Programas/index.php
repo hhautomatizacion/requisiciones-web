@@ -408,7 +408,7 @@
 								t = setInterval(tik, 20);
 							}else{
 								document.title = "Requisiciones";
-								divContenido.innerHTML = "No hay resultados. Intente cambiando el alcance de la busqueda.";
+								alert("No hay resultados. Intente cambiando el alcance de la busqueda.");
 							}
 							ocupado = false;
 						}
