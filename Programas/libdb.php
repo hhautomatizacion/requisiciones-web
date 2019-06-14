@@ -8,10 +8,10 @@
 	if ( isset($_GET["action"]) && $_GET["action"] == "showsettingsform" ) {
 		$resultado="";
 		$resultado .= TablaElementos2('usuarios','numero','nombre');
-		$resultado .= TablaElementos('unidades','unidad'); 
-		$resultado .= TablaElementos('departamentos','departamento'); 
-		$resultado .= TablaElementos('areas','area'); 
-		$resultado .= TablaElementos2('centroscostos','numero','descripcion'); 
+		$resultado .= TablaElementos('unidades','unidad');
+		$resultado .= TablaElementos('departamentos','departamento');
+		$resultado .= TablaElementos('areas','area');
+		$resultado .= TablaElementos2('centroscostos','numero','descripcion');
 		echo $resultado;
 	}
 	if ( isset($_GET["action"]) && $_GET["action"] == "activate" ) {
@@ -66,7 +66,6 @@
 			$db = new PDO("mysql:host=". $db_server .";dbname=". $db_database .";charset=utf8", $db_user , $db_pass);
 		}
 		catch (Exception $error) {
-			writelog("Connection failed: ". $error->getMessage());
 			die("Connection failed: ". $error->getMessage());
 		}
 		try {
@@ -74,7 +73,6 @@
 			$res->execute();
 			$encontrado = false;
 			while ($row = $res->fetch()) {
-				writelog("Usario encontrado: ". $row[0]);
 				$encontrado = true;
 			}
 			if ( !$encontrado ) {
@@ -102,7 +100,7 @@
 				$res->execute();
 				$res = $db->prepare("INSERT INTO usuarios VALUES (0,NULL,'root','root','',SHA1('manttocl'),'',0,1,1);");
 				$res->execute();
-			}			
+			}
 		}
 		catch (Exception $error) {
 			writelog("error ". $error->getMessage());

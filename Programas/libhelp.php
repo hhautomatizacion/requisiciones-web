@@ -8,11 +8,12 @@
 		echo "<table>";
 		echo "<tr><td width=\"20%\"><small>Campo</small></td><td width=\"80%\"><small>Valor</small></td></tr>";
 		echo "<tr><td>Descripcion</td><td>Sistema para control de requisiciones</td></tr>";
+		echo "<tr><td>Version</td><td>0.01</td></tr>";
 		echo "<tr><td>Autor</td><td>Emmanuel Castillo</td></tr>";
 		echo "<tr><td>Email</td><td>emmanuel156@gmail.com</td></tr>";
 		echo "</table>";
 	}
-	
+
 	if ( isset($_GET["action"]) && $_GET["action"] == "showhelp" ) {
 		echo "<table>";
 		echo "<tr><td width=\"20%\"><small>Boton</small></td><td width=\"80%\"><small>Accion</small></td></tr>";
@@ -25,7 +26,7 @@
 		echo "<tr><td>Acceder</td><td>Iniciar sesion. El usuario que no ha iniciado sesion no puede hacer modificaciones.</td></tr>";
 		echo "<tr><td>Salir</td><td>Cierra sesion del usuario actual.</td></tr>";
 		echo "</table>";
-		
+
 		echo "<table>";
 		echo "<tr><td width=\"20%\"><small>Boton</small></td><td width=\"80%\"><small>Accion</small></td></tr>";
 		echo "<tr><td>Nueva</td><td>Muestra el formulario para crear una nueva requisicion.</td></tr>";
@@ -35,6 +36,5 @@
 		echo "<tr><td>Buscar</td><td>Realiza la busqueda del texto en las requisiciones filtrando los resultados por el tipo seleccionado y usario seleccionado. Si la busqueda no regresa resultado muestra un mensaje.</td></tr>";
 		echo "<tr><td>Exportar</td><td>Exporta la vista actual en formato de lista a un archivo PDF.</td></tr>";
 		echo "</table>";
-	}	
-	
+	}
 ?>

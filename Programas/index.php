@@ -7,7 +7,7 @@
 			require_once("libphp.php");
 			require_once("libuser.php");
 		?>
-		<style type="text/css">	
+		<style type="text/css">
 			* {
 				font-family: <?php echo obtenerPreferencia('pagina', 'FontName', 'Arial'); ?>;
 				font-size: <?php echo obtenerPreferencia('pagina', 'FontSize', '15px'); ?>;
@@ -17,7 +17,7 @@
 				border: 2px solid white;
 				padding: 3px;
 				width:100%;
-				color:white; 
+				color:white;
 				background:red
 			}
 			table {
@@ -25,7 +25,6 @@
 				border: 2px solid gray;
 				width:100%;
 				margin-bottom: 1px;
-				
 			}
 			td {
 				border-bottom: 1px solid gray;
@@ -118,20 +117,19 @@
 				margin-bottom: 10px;
 			}
 			#formulario {
-				width: 98%; 
-				margin: 0; 
-				margin-left: 1%; 
+				width: 98%;
+				margin: 0;
+				margin-left: 1%;
 				margin-right: 1%;
-				margin-top: 0px; 
-				position: absolute; 
+				margin-top: 0px;
+				position: absolute;
 				top: 70px;
 				left: 0px;
 				background: rgba(128,128,128,0.5);
 				border: none;
-				visibility: hidden; 
+				visibility: hidden;
 			}
 			#mostrarrequisiciones {
-				
 				width: 15%;
 			}
 			#usuariosrequisiciones {
@@ -153,7 +151,7 @@
 			.req {background: lightgray;}
 			.printed {background: #FFC040;}
 			.supplied {background: #C0C080;}
-      		.req {	opacity: 0.9;}
+	      		.req {	opacity: 0.9;}
 			.owner {opacity: 1;}
 			.deleted {opacity: 0.5;}
 			.partsupplied {background: #C0C080;}
@@ -161,7 +159,6 @@
 			.com {	opacity: 0.9;}
 			.comowner {opacity: 1;}
 			.comdeleted {opacity: 0.5;}
-		
 		</style>
 		<script language="JavaScript" type="text/javascript">
 			var ocupado=false;
@@ -239,7 +236,7 @@
 				document.getElementById(idelemento).style.visibility="visible";
 			}
 			function elementoOcultar(idelemento) {
-				document.getElementById(idelemento).style.visibility="hidden"; 	
+				document.getElementById(idelemento).style.visibility="hidden";
 			}
 			function appTextBusqueda(e) {
 				if ( e.key == 'Enter' ) {
@@ -251,7 +248,6 @@
 				busquedarequisiciones=txtBusqueda.value;
 				appActualizaVista();
 			}
-			
 			function appEnviarNewReq() {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -264,9 +260,9 @@
 							requisiciones[requisiciones.length] = this.responseText;
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
-							document.title = "Requisiciones - "+ requisiciones.length +" mostradas"; 
+							document.title = "Requisiciones - "+ requisiciones.length +" mostradas";
 							window.scrollTo(0, window.scrollHeight);
-							t = setInterval(tik, 20);
+							t = setInterval(tik, 10);
 						}
 					}
 				};
@@ -330,14 +326,54 @@
 				xmlhttp.open("POST", "libuser.php", true);
 				xmlhttp.send(new FormData(document.getElementById("lostpasswordform")));
 			}
-			
+
+			function appEnviarEditUser() {
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if (this.responseText == "OK") {
+							elementoOcultar("formulario");
+							elementoMostrar("contenido");
+							appHeader();
+							appActualizaVista();
+						}
+					}
+				};
+				xmlhttp.open("POST", "libuser.php", true);
+				xmlhttp.send(new FormData(document.getElementById("edituserform")));
+			}
+
+			function appEnviarEditPassword() {
+				if (window.XMLHttpRequest) {
+					xmlhttp = new XMLHttpRequest();
+				} else {
+					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				}
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if (this.responseText == "OK") {
+							elementoOcultar("formulario");
+							elementoMostrar("contenido");
+							appHeader();
+							appActualizaVista();
+						}
+					}
+				};
+				xmlhttp.open("POST", "libuser.php", true);
+				xmlhttp.send(new FormData(document.getElementById("editpasswordform")));
+			}
+
 			window.onload = function () {
 				appHeader();
 				appMenu();
 				appActualizaVista();
 				f = setInterval(tok, 60000);
 			}
-			
+
 			function tok() {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -346,13 +382,11 @@
 				}
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
-			
 					}
 				};
 				xmlhttp.open("GET", "libnotificaciones.php", true);
 				xmlhttp.send();
 			}
-			
 			function tik() {
 				var divContenido = document.getElementById("contenido");
 				var estado = document.getElementById("estado");
@@ -368,15 +402,15 @@
 				if ( requisicion >= requisiciones.length ) {
 					clearInterval(t);
 					estado.value = 0;
-				}							
+				}
 			}
-			
+
 			function appActualizaVista() {
 				var mostrarusuarios = 0;
 				var mostrarvista = 0;
 				var usuarios = '';
 				var busqueda = '';
-				
+
 				requisicion = 0;
 				requisiciones = [];
 
@@ -389,10 +423,10 @@
 				if ( document.getElementById("busquedarequisiciones") ) {
 					document.getElementById("busquedarequisiciones").value = busquedarequisiciones;
 				}
-				var divContenido = document.getElementById("contenido");	
+				var divContenido = document.getElementById("contenido");
 				if ( !ocupado) {
-					ocupado = true;	
-					document.title = "Requisiciones - Buscando..."; 
+					ocupado = true;
+					document.title = "Requisiciones - Buscando...";
 					divContenido.innerHTML = "Espere...";
 					if (window.XMLHttpRequest) {
 						xmlhttp = new XMLHttpRequest();
@@ -404,11 +438,11 @@
 							divContenido.innerHTML="";
 							if ( this.responseText.length > 0 ) {
 								requisiciones = this.responseText.split(" ");
-								document.title = "Requisiciones - "+ requisiciones.length +" mostradas"; 
-								t = setInterval(tik, 20);
+								document.title = "Requisiciones - "+ requisiciones.length +" mostradas";
+								t = setInterval(tik, 10);
 							}else{
 								document.title = "Requisiciones";
-								alert("No hay resultados. Intente cambiando el alcance de la busqueda.");
+								divContenido.innerHTML = "No hay resultados. Intente cambiando el alcance de la busqueda.";
 							}
 							ocupado = false;
 						}
@@ -421,7 +455,7 @@
 					}
 					xmlhttp.open("GET","librequisicion.php?action=show"+ usuarios +"&view="+ mostrarvista +"&item="+ item + busqueda ,true);
 					xmlhttp.send();
-				}			
+				}
 			}
 			function appLostpassword() {
 				appLostpasswordForm();
@@ -441,21 +475,20 @@
 				elementoMostrar("formulario");
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
-			}	
-						
+			}
 			function appLogin() {
 				appLoginForm();
 				elementoMostrar("formulario");
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
-			}	
+			}
 			function appNewReq() {
 				appNewReqForm();
 				elementoMostrar("formulario");
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
-			}	
-			
+			}
+
 			function appNewReqForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -558,14 +591,13 @@
 				xmlhttp.open("GET","libuser.php?action=showpreferencesform",true);
 				xmlhttp.send();
 			}
-			
+
 			function appHelp() {
 				appHelpForm();
 				elementoMostrar("formulario");
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
-			}	
-			
+			}
 			function appHelpForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -583,14 +615,13 @@
 				xmlhttp.open("GET","libhelp.php?action=showhelp",true);
 				xmlhttp.send();
 			}
-			
+
 			function appCredits() {
 				appCreditsForm();
 				elementoMostrar("formulario");
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
-			}	
-			
+			}
 			function appCreditsForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -608,7 +639,7 @@
 				xmlhttp.open("GET","libhelp.php?action=showcredits",true);
 				xmlhttp.send();
 			}
-			
+
 			function appLogout() {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -663,16 +694,16 @@
 				document.getElementById("busquedarequisiciones").value="";
 				busquedarequisiciones="";
 				elementoOcultar("formulario");
-				elementoMostrar("contenido");	
+				elementoMostrar("contenido");
 				appHeader();
 				appActualizaVista();
 			}
 			function appPrefereces() {
 				elementoOcultar("contenido");
 				appPreferencesForm();
-				elementoMostrar("formulario");	
+				elementoMostrar("formulario");
 			}
-			
+
 			function saveComentarioReq(tableID, rowID){
 				var table = document.getElementById(tableID);
 				var comentario= table.rows[rowID].cells[0].lastChild;
@@ -691,9 +722,9 @@
 					}
 				};
 				xmlhttp.open("GET","libcomentario.php?action=comadd&type=comreq&idreq="+ idrequisicion +"&comentario="+ encodeURIComponent(comentario.value),true);
-				xmlhttp.send();		
+				xmlhttp.send();
 			}
-			
+
 			function deleteComentarioReq(el, idcomentario){
 				var cell = el.parentElement;
 				if (window.XMLHttpRequest) {
@@ -709,7 +740,7 @@
 					}
 				};
 				xmlhttp.open("GET","libcomentario.php?action=comdelete&type=comreq&idcom="+ idcomentario,true);
-				xmlhttp.send();		
+				xmlhttp.send();
 			}
 			function deleteComentarioPart(el, idcomentario){
 				var cell = el.parentElement;
@@ -726,7 +757,7 @@
 					}
 				};
 				xmlhttp.open("GET","libcomentario.php?action=comdelete&type=compart&idcom="+ idcomentario,true);
-				xmlhttp.send();		
+				xmlhttp.send();
 			}
 			function undeleteComentarioReq(el, idcomentario){
 				var cell = el.parentElement;
@@ -743,13 +774,13 @@
 					}
 				};
 				xmlhttp.open("GET","libcomentario.php?action=comundelete&type=comreq&idcom="+ idcomentario,true);
-				xmlhttp.send();		
+				xmlhttp.send();
 			}
 			function removeRow(tableID, rowID){
 				var table = document.getElementById(tableID);
 				var cols = table.rows[rowID].cells.length;
 				for ( var iter = 0; iter < cols ; iter++ ) {
-					table.rows[rowID].cells[iter].innerHTML='';				
+					table.rows[rowID].cells[iter].innerHTML='';
 				}
 				table.rows[rowID].style.display='none';
 			}
@@ -773,7 +804,7 @@
 			}
 
 			function populateCombo(el,tabla,campo){
-				if ( el.options.length == 0 ) { 
+				if ( el.options.length == 0 ) {
 					if (window.XMLHttpRequest) {
 						xmlhttp = new XMLHttpRequest();
 					} else {
@@ -788,17 +819,17 @@
 					};
 					xmlhttp.open("GET","libdb.php?action=getoptions&table="+ tabla +"&description="+ campo,true);
 					xmlhttp.send();
-				}			
+				}
 			}
 			function addPartidaNewReq(tableID) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-				
+
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr><tr><td><input type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select name = 'unidad["+newRow+"]' onfocus=\"populateCombo(this,'unidades','unidad');\"></select></td><td><input type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select name = 'centrocostos["+newRow+"]' onfocus=\"populateCombo(this, 'centroscostos','descripcion')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\"tablapartidas\","+ newRow +");'>";
 			}
-			
+
 			function addAdjuntoReq(idrequisicion) {
 				var table = document.getElementById('tablaadjuntosreq'+ idrequisicion);
 				var newRow = table.rows.length;
@@ -810,14 +841,14 @@
 				row.insertCell(3).innerHTML = "";
 				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoReq("+  idrequisicion +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntosreq"+  idrequisicion +"\","+ newRow +");'>";
 			}
-			
+
 			function saveAdjuntoReq(idrequisicion, adjunto) {
 				var input = document.getElementById("adjuntosrequisicion"+ idrequisicion +"["+ adjunto +"]");
 				var file = input.files.item(0);
 				var celdas = document.getElementById('tablaadjuntosreq'+ idrequisicion).rows[adjunto].cells;
-				
+
 				celdas[4].innerHTML="";
-				xmlhttp = new XMLHttpRequest();	
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
@@ -833,7 +864,7 @@
 				xmlhttp.open("POST","librequisicion.php");
 				xmlhttp.send(formdata);
 			}
-			
+
 			function addAdjuntoPart(idpartida) {
 				var table = document.getElementById('tablaadjuntospart'+ idpartida);
 				var newRow = table.rows.length;
@@ -845,7 +876,7 @@
 				row.insertCell(3).innerHTML = "";
 				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoPart("+  idpartida +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntospart"+  idpartida +"\","+ newRow +");'>";
 			}
-			
+
 			function saveAdjuntoPart(idpartida, adjunto) {
 				var input = document.getElementById("adjuntospartida"+ idpartida +"["+ adjunto +"]");
 				var file = input.files.item(0);
@@ -866,7 +897,7 @@
 				formdata.append("archivo", file);
 				xmlhttp.open("POST","libpartida.php");
 				xmlhttp.send(formdata);
-			
+
 			}
 			function addComentarioReq(tableID) {
 				var table = document.getElementById(tableID);
@@ -878,7 +909,7 @@
 				row.insertCell(2).innerHTML = "";
 				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioReq(\""+  tableID +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
-			
+
 			function addComentarioPart(idpartida) {
 				var table = document.getElementById('tablacomentariospart'+ idpartida);
 				var newRow = table.rows.length;
@@ -888,9 +919,8 @@
 				row.insertCell(1).innerHTML = fecha;
 				row.insertCell(2).innerHTML = "";
 				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioPart(\""+  idpartida +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablacomentriospart"+ idpartida +"\","+ newRow +");'>";
-				
 			}
-			
+
 			function saveComentarioPart(idpartida, renglon){
 				var comentario = document.getElementById("comentariospartida"+ idpartida +"["+ renglon +"]");
 				var celdas = document.getElementById('tablacomentariospart'+ idpartida).rows[renglon].cells;
@@ -905,9 +935,9 @@
 					}
 				};
 				xmlhttp.open("GET","libcomentario.php?action=comadd&type=compart&idpart="+ idpartida +"&comentario="+ encodeURIComponent(comentario.value),true);
-				xmlhttp.send();		
+				xmlhttp.send();
 			}
-			
+
 			function addComentarioPartidaNewReq(tableID) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
@@ -926,7 +956,7 @@
 			function addAdjuntoPartidaNewReq(tableID) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
-				var row = table.insertRow(newRow);	
+				var row = table.insertRow(newRow);
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartadjuntos["+ tableID +"][]' value='"+ newRow +"'><input type='file' onchange='GetFileSizeAdjuntoPartidaNewReq(\""+ tableID +"\","+ newRow +");' name='partadjuntos"+ tableID +"["+newRow+"]' />";
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
@@ -935,7 +965,7 @@
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-				
+
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalreqadjuntos[]' value='"+ newRow +"'><input type='file' onchange='GetFileSizeAdjuntoNewReq("+ newRow +");' name='reqadjuntos["+ newRow +"]' />";
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
@@ -948,8 +978,6 @@
 				row.insertCell(0).innerHTML = "<input type='hidden' name='total"+ tableID +"[]' value='"+ newRow +"'>";
 				row.insertCell(1).innerHTML = '<input type = "text" id = "'+ tableID +'descripcion'+ newRow +'" />';
 				row.insertCell(2).innerHTML = "<button onClick=\"event.preventDefault();appSaveSetting('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
-				
-			
 			}
 			function addSetting2(tableID,numero,descripcion) {
 				var table = document.getElementById(tableID);
@@ -959,7 +987,6 @@
 				row.insertCell(1).innerHTML = '<input type = "number" id = "'+ tableID +'numero'+ newRow +'" />';
 				row.insertCell(2).innerHTML = '<input type = "text" id = "'+ tableID +'descripcion'+ newRow +'" />';
 				row.insertCell(3).innerHTML = "<button onClick=\"event.preventDefault();appSaveSetting('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
-				
 			}
 			function appActivarSetting(setting, id) {
 				if (window.XMLHttpRequest) {
@@ -1026,7 +1053,7 @@
 					}
 				};
 				xmlhttp.open("GET","libdb.php?action=addsetting&setting="+ setting + descripcion + numero,true);
-				xmlhttp.send();	
+				xmlhttp.send();
 			}
 			function appRestauraPartida(idpartida, idrequisicion) {
 				if (window.XMLHttpRequest) {
@@ -1061,7 +1088,6 @@
 				xmlhttp.send();
 			}
 			function appSurtePartida(idpartida, idrequisicion) {
-				
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
 				} else {
@@ -1092,13 +1118,13 @@
 				};
 				xmlhttp.open("GET","libpartida.php?action=parttobesupplied&id="+idpartida,true);
 				xmlhttp.send();
-			}	
+			}
 			function appExportar() {
 				var mostrarusuarios = 0;
 				var mostrarvista = 0;
 				var usuarios = '';
 				var busqueda = '';
-				
+
 				if ( document.getElementById("mostrarrequisiciones") ) {
 					mostrarvista = document.getElementById("mostrarrequisiciones").value;
 				}
@@ -1135,27 +1161,7 @@
 				xmlhttp.open("GET","librequisicion.php?action=export"+ usuarios +"&view="+ mostrarvista + busqueda ,true);
 				xmlhttp.send();
 			}
-			function appPruebaImprimeRequisicion(idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
-				xmlhttp.onreadystatechange = function() {
-					var a;
-					if (this.readyState == 4 && this.status == 200) {
-						a = document.createElement("a");
-						a.href=window.URL.createObjectURL(this.response);
-						a.download="prueba.pdf";
-						document.body.appendChild(a);
-						a.click();
-						//appActualizaRequisicion(idrequisicion);
-					}
-				};
-				xmlhttp.responseType="blob";
-				xmlhttp.open("GET","librequisicion.php?action=testprint&id="+idrequisicion,true);
-				xmlhttp.send();
-			}
+
 			function appImprimeRequisicion(idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1257,7 +1263,7 @@
 				};
 				xmlhttp.open("GET","librequisicion.php?action=copy&id="+idrequisicion,true);
 				xmlhttp.send();
-			}			
+			}
 			function appActualizaRequisicion(idrequisicion) {
 				var divRequisicion = document.getElementById(idrequisicion);
 				if (window.XMLHttpRequest) {
@@ -1302,15 +1308,14 @@
 				}
 				xmlhttp.open("GET","librequisicion.php?action=saveprinted&id="+idrequisicion + reqno + fecha,true);
 				xmlhttp.send();
-			}	
-			
+			}
+
 			function appTextSaveEditarImpresa(e, idrequisicion) {
 				if ( e.key == 'Enter' ) {
 					appSaveEditarImpresa(idrequisicion);
 				}
-				
 			}
-			
+
 			function appEditarImpresa(el,idrequisicion) {
 				var divRequisicion=document.getElementById('mostrarrequisicion'+ idrequisicion);
 				if ( !document.getElementById('editreqno'+ idrequisicion) ) {
@@ -1318,7 +1323,7 @@
 					var requisicion= cellRequisicion.innerHTML;
 					cellRequisicion.innerHTML='<input id="editreqno'+ idrequisicion +'" type="text" value="'+ requisicion +'" onkeyup="appTextSaveEditarImpresa(event, '+ idrequisicion +');">';
 				}
-				el.parentElement.innerHTML='<button onClick="appSaveEditarImpresa('+ idrequisicion +');">Guardar</button><button onClick="appActualizaRequisicion('+ idrequisicion +');">Cancelar</button>';				
+				el.parentElement.innerHTML='<button onClick="appSaveEditarImpresa('+ idrequisicion +');">Guardar</button><button onClick="appActualizaRequisicion('+ idrequisicion +');">Cancelar</button>';
 			}
 		</script>
 		<title>Requisiciones</title>
