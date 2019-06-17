@@ -1,6 +1,6 @@
 sudo apt-get install apache2 php5 libapache2-mod-php5 php5-mysql php5-gd libssh2-php
 sudo apt-get install mysql-server-5.5
-sudo apt-get install php-fpdf
+sudo apt-get install php-fpdf php-mbstring
 
 sudo usermod -a -G www-data mantenimientocl
 
@@ -55,7 +55,9 @@ Conceder permisos de red al usuario root y crear la base de datos en el servidor
 ----
 
 sudo cd /var/www/html
+sudo mkdir uploads
 sudo chown -R mantenimientocl:www-data *
 sudo chmod -R 775 *
+
 
 

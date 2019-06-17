@@ -10,4 +10,7 @@
 	$mail_pass = "lcottm";
 	$mail_fromaddress = "mttocl@cualquierlavado.com.mx";
 	$mail_fromname = "MantenimientoCL";
+	
+	//writelog("Maximo ". ini_get("upload_max_filesize"));
+	
 ?>

@@ -162,7 +162,6 @@
 		</style>
 		<script language="JavaScript" type="text/javascript">
 			var ocupado=false;
-			var item=0;  // borrar borrar tambien de librequisicion.php
 			var requisiciones = [];
 			var requisicion = 0;
 			var busquedarequisiciones="";
@@ -453,7 +452,7 @@
 					if ( busquedarequisiciones.length > 0 ) {
 						busqueda = '&q='+ busquedarequisiciones;
 					}
-					xmlhttp.open("GET","librequisicion.php?action=show"+ usuarios +"&view="+ mostrarvista +"&item="+ item + busqueda ,true);
+					xmlhttp.open("GET","librequisicion.php?action=list"+ usuarios +"&view="+ mostrarvista + busqueda ,true);
 					xmlhttp.send();
 				}
 			}
@@ -486,6 +485,7 @@
 				appNewReqForm();
 				elementoMostrar("formulario");
 				elementoOcultar("contenido");
+				document.title = "Requisiciones - Nueva";
 				window.scrollTo(0,0);
 			}
 
@@ -1281,6 +1281,7 @@
 				xmlhttp.open("GET","librequisicion.php?action=show&id="+idrequisicion,true);
 				xmlhttp.send();
 			}
+
 			function appSaveEditarImpresa(idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();

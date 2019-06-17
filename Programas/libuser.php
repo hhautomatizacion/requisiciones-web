@@ -82,10 +82,7 @@
 		}
 	}
 
-	//writelog($_POST);
-
 	if ( isset($_POST["action"]) && $_POST["action"] == "edituser" ) {
-		writelog("edituser");
 		$errores=array();
 		if ( intval($_REQUEST["numero"]) <= 0 ){
 			$errores["numero1"]="Numero de usuario no valido";
@@ -101,7 +98,7 @@
 			$errores["numero2"]="Numero de usuario repetido";
 		}
 		$id = $_COOKIE["usuario"];
-		$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["numero"] ."');");
+		$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["nombre"] ."') OR LCASE(usuario)=LCASE('". $_REQUEST["nombre"] ."') OR LCASE(email)=LCASE('". $_REQUEST["nombre"] ."');");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$id=$row[0];
@@ -111,7 +108,7 @@
 			$errores["nombre1"]="Nombre de usuario repetido";
 		}
 		$id = $_COOKIE["usuario"];
-		$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(usuario)=LCASE('". $_REQUEST["usuario"] ."');");
+		$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["usuario"] ."') OR LCASE(usuario)=LCASE('". $_REQUEST["usuario"] ."') OR LCASE(email)=LCASE('". $_REQUEST["usuario"] ."');");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$id=$row[0];
@@ -121,7 +118,7 @@
 			$errores["nombre2"]="Nombre de usuario repetido";
 		}
 		$id = $_COOKIE["usuario"];
-		$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(email)=LCASE('". $_REQUEST["email"] ."');");
+		$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["email"] ."') OR LCASE(usuario)=LCASE('". $_REQUEST["email"] ."') OR LCASE(email)=LCASE('". $_REQUEST["email"] ."');");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$id=$row[0];
@@ -306,8 +303,6 @@
 		//$resultado .="</form>";
 		$resultado .="	</table>";
 		$resultado .="</form>";
-		
-
 		return $resultado;
 	}
 

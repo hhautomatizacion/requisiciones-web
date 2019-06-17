@@ -6,40 +6,38 @@
 	require_once("libpdf.php");
 	require_once("libuser.php");
 
-	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntoreq" ) {
-		$idrequisicion=$_POST["requisicion"];
-		$cntarchivoduplicado=0;
-		$uploaddir="uploads/";
-		$rutaupload=$uploaddir ."r". $idrequisicion;
-		if (!is_writeable($rutaupload)) {
-			mkdir($rutaupload);
-		}
-		$nombrearchivo = $_FILES["archivo"]["name"];
-		$rutatemp = $_FILES["archivo"]["tmp_name"];
-		$longitudarchivo=$_FILES["archivo"]["size"];
-		$rutadestino=$rutaupload ."/". $nombrearchivo;
-		$nombrearchivooriginal = $nombrearchivo;
-		while(file_exists($rutadestino)) {
-			$cntarchivoduplicado = $cntarchivoduplicado + 1;
-			list($name, $ext) = explode(".", $nombrearchivooriginal);
-			$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
-			$rutadestino=$rutaupload ."/". $nombrearchivo;
-		}
-		if (move_uploaded_file($rutatemp,$rutadestino)) {
-			$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
-			$res->execute([$idrequisicion, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
-			echo "OK";
-		}
-	}
 	if ( isset($_REQUEST["posted"]) ) {
+		$errores=array();
 		$departamento=$_REQUEST["departamento"];
 		$area=$_REQUEST["area"];
 		$solicitante=$_REQUEST["solicitante"];
-		$requisicion=$_REQUEST["requisicion"];
 		$centrocostos = 0;
 		$importancia = 5;
-		$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(), ?,1,0,0,NULL,0,0, ?, ?, ?, ?, ?, ?);");
-		$res->execute([$requisicion, $departamento, $area, $centrocostos, $importancia, $solicitante, $_COOKIE["usuario"]]);
+		if ( isset($_REQUEST["totalpartidas"]) ) {
+			foreach( $_REQUEST["totalpartidas"] as $item) {
+				$cantidad = $_REQUEST["cantidad"][$item];
+				$unidad = $_REQUEST["unidad"][$item];
+				$descripcion = $_REQUEST["descripcion"][$item];
+				$centrocostos = $_REQUEST["centrocostos"][$item];
+				if ( (float)$cantidad <= 0 ) {
+					$errores["partidas"] = "Partida ". $item ." cantidad no valida";
+				}
+				if ( strlen($unidad) == 0) {
+					$errores["partidas"] = "Unidades ". $item ." no valida";
+				}
+				if ( strlen($descripcion) == 0) {
+					$errores["partidas"] = "Partida ". $item ." vacia";
+				}
+				if ( strlen($centrocostos) == 0) {
+					$errores["partidas"] = "Centro costos ". $item ." no valida";
+				}
+			}
+		}else{
+			$errores["vacia"]="Requisicion vacia";
+		}
+		if ( count($errores)==0 ) {
+		$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(),'',1,0,0,NULL,0,0, ?, ?, ?, ?, ?, ?);");
+		$res->execute([$departamento, $area, $centrocostos, $importancia, $solicitante, $_COOKIE["usuario"]]);
 		$ultimoidreq = $db->lastInsertId();
 		if ( isset($_REQUEST["totalpartidas"]) ) {
 			foreach( $_REQUEST["totalpartidas"] as $item) {
@@ -101,7 +99,35 @@
 			}
 		}
 		echo $ultimoidreq;
+		}
 	}
+
+	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntoreq" ) {
+		$idrequisicion=$_POST["requisicion"];
+		$cntarchivoduplicado=0;
+		$uploaddir="uploads/";
+		$rutaupload=$uploaddir ."r". $idrequisicion;
+		if (!is_writeable($rutaupload)) {
+			mkdir($rutaupload);
+		}
+		$nombrearchivo = $_FILES["archivo"]["name"];
+		$rutatemp = $_FILES["archivo"]["tmp_name"];
+		$longitudarchivo=$_FILES["archivo"]["size"];
+		$rutadestino=$rutaupload ."/". $nombrearchivo;
+		$nombrearchivooriginal = $nombrearchivo;
+		while(file_exists($rutadestino)) {
+			$cntarchivoduplicado = $cntarchivoduplicado + 1;
+			list($name, $ext) = explode(".", $nombrearchivooriginal);
+			$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
+			$rutadestino=$rutaupload ."/". $nombrearchivo;
+		}
+		if (move_uploaded_file($rutatemp,$rutadestino)) {
+			$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
+			$res->execute([$idrequisicion, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
+			echo "OK";
+		}
+	}
+
 	if ( isset($_GET["action"]) && $_GET["action"] == "showreqform" ) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
@@ -113,9 +139,8 @@
 	}
 	function ListaRequisiciones($view=0, $user=-1, $q="") {
 		global $db;
-			$usuario="";
-			//$busqueda="";
-			$vista="";
+		$usuario="";
+		$vista="";
 		$resultado="";
 
 		$tablatemp="temp". randomString(4);
@@ -151,6 +176,10 @@
 				$res->execute();
 				$res = $db->prepare("CREATE TABLE ". $tablatemp ." (id INT UNSIGNED) ENGINE MEMORY DEFAULT CHARSET utf8;");
 				$res->execute();
+				if ( is_numeric($q) ){
+					$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT id FROM requisiciones WHERE id=". $q .");");
+					$res->execute();
+				}
 				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT id FROM requisiciones WHERE requisicion LIKE '%". $q ."%');");
 				$res->execute();
 				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM partidas WHERE descripcion LIKE '%". $q ."%');");
@@ -177,29 +206,27 @@
 			$resultado = trim($resultado, " ");
 		return $resultado;
 	}
-	if ( isset($_GET["item"]) ) {
-		if ( isset($_GET["action"]) && $_GET["action"] == "show" ) {
-			if ( isset($_GET["view"]) ){
-				$view=$_GET["view"];
-			}else{
-				$view=0;
-			}
-			if ( isset($_GET["user"]) ){
-				$user=$_GET["user"];
-			}else{
-				$user=0;
-			}
-			if ( isset($_GET["q"]) ){
-				$q=$_GET["q"];
-			}else{
-				$q="";
-			}
-			$item = $_GET["item"];
-			$resultado=ListaRequisiciones($view, $user, $q);
 
-			print $resultado;
+	if ( isset($_GET["action"]) && $_GET["action"] == "list" ) {
+		if ( isset($_GET["view"]) ){
+			$view=$_GET["view"];
+		}else{
+			$view=0;
 		}
+		if ( isset($_GET["user"]) ){
+			$user=$_GET["user"];
+		}else{
+			$user=0;
+		}
+		if ( isset($_GET["q"]) ){
+			$q=$_GET["q"];
+		}else{
+			$q="";
+		}
+		$resultado=ListaRequisiciones($view, $user, $q);
+		echo $resultado;
 	}
+
 	if ( isset($_GET["action"]) && $_GET["action"] == "export" ) {
 		$resultado="";
 		if ( isset($_GET["view"]) ){
@@ -423,6 +450,7 @@
 		$res->execute([$ultimoidreq, $comentario, $_COOKIE["usuario"]]);
 		return "OK";
 	}
+
 	function ExportarRequisicion($pdf, $idrequisicion) {
 		global $db;
 		$y=$pdf->LastY();
@@ -544,7 +572,7 @@
 			$fontsize = obtenerPreferencia('impresion', 'IdFontSize', '14');
 			$fontname = obtenerPreferencia('impresion', 'IdFontName', 'Arial');
 			$x = obtenerPreferencia('impresion', 'IdX', '190');
-			$y = obtenerPreferencia('impresion', 'IdY', '15');
+			$y = obtenerPreferencia('impresion', 'IdY', '5');
 			$pdf->SetFont($fontname,'', $fontsize);
 			$pdf->PutRows($x, $y, "[". $idrequisicion ."]");
 
@@ -567,11 +595,11 @@
 			$fontsize = obtenerPreferencia('impresion', 'FechaFontSize', '10');
 			$fontname = obtenerPreferencia('impresion', 'FechaFontName', 'Arial');
 			$dx = obtenerPreferencia('impresion', 'FechaDayX', '148');
-			$dy = obtenerPreferencia('impresion', 'FechaDayY', '35');
+			$dy = obtenerPreferencia('impresion', 'FechaDayY', '32');
 			$mx = obtenerPreferencia('impresion', 'FechaMonthX', '156');
-			$my = obtenerPreferencia('impresion', 'FechaMonthY', '35');
+			$my = obtenerPreferencia('impresion', 'FechaMonthY', '32');
 			$yx = obtenerPreferencia('impresion', 'FechaYearX', '163');
-			$yy = obtenerPreferencia('impresion', 'FechaYearY', '35');
+			$yy = obtenerPreferencia('impresion', 'FechaYearY', '32');
 			$pdf->SetFont($fontname,'', $fontsize);
 			$pdf->PutRows($dx, $dy, date("d"));
 			$pdf->PutRows($mx, $my, date("m"));
@@ -886,7 +914,7 @@
 		$resultado .="<table id=\"marcorequisicion". $idrequisicion ."\" class=\"". $clase ."\">";
 		$resultado .="<tr>";
 		$resultado .="<td width=\"90%\">";
-		$resultado .=MostrarRequisicion($idrequisicion); 
+		$resultado .=MostrarRequisicion($idrequisicion);
 		$resultado .="</td>";
 		$resultado .="<td width=\"10%\">";
 		$resultado .=AccionesRequisicion($idrequisicion);
@@ -1022,9 +1050,6 @@
 		$resultado.="				</tr>";
 		$resultado.="				<tr>";
 		$resultado.="					<td><small>Area:</small></td><td><select name = \"area\">". ObtenerOpcionesSelect("areas","area") ."</select></td>";
-		$resultado.="				</tr>";
-		$resultado.="				<tr>";
-		$resultado.="					<td><small>Requisicion:</small></td><td><input type='text' name='requisicion' /></td>";
 		$resultado.="				</tr>";
 		$resultado.="				<tr>";
 		$resultado.="					<td colspan=2>";
