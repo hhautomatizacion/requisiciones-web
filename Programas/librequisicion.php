@@ -13,6 +13,7 @@
 		$solicitante=$_REQUEST["solicitante"];
 		$centrocostos = 0;
 		$importancia = 5;
+		$uploaddir="uploads/";
 		if ( isset($_REQUEST["totalpartidas"]) ) {
 			foreach( $_REQUEST["totalpartidas"] as $item) {
 				$cantidad = $_REQUEST["cantidad"][$item];
@@ -51,11 +52,12 @@
 				$ultimoidpart = $db->lastInsertId();
 				if ( isset($_REQUEST["partcomentarios"]) ) {
 					foreach ( $_REQUEST["partcomentarios"]["tablacomentarios". $item ] as $elemento ) {
-						$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0, ?,0, ?, ?,NOW(),1);");
-						$res->execute([$ultimoidpart, $elemento, $_COOKIE["usuario"]]);
+						if ( strlen($elemento) > 0 ) {
+							$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0, ?,0, ?, ?,NOW(),1);");
+							$res->execute([$ultimoidpart, $elemento, $_COOKIE["usuario"]]);
+						}
 					}
 				}
-				$uploaddir="uploads/";
 				if ( isset($_REQUEST["totalpartadjuntos"]) ) {
 					foreach ( $_REQUEST["totalpartadjuntos"]["tablaadjuntos". $item ] as $elemento ) {
 						$rutaupload=$uploaddir ."p". $ultimoidpart;
@@ -77,11 +79,12 @@
 		if ( isset($_REQUEST["totalreqcomentarios"]) ) {
 			foreach( $_REQUEST["totalreqcomentarios"] as $item) {
 				$comentario = $_REQUEST["reqcomentarios"][$item];
-				$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(),1);");
-				$res->execute([$ultimoidreq, $comentario, $_COOKIE["usuario"]]);
+				if ( strlen($comentario) > 0 ) {
+					$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(),1);");
+					$res->execute([$ultimoidreq, $comentario, $_COOKIE["usuario"]]);
+				}
 			}
 		}
-		$uploaddir="uploads/";
 		if ( isset($_REQUEST["totalreqadjuntos"]) ) {
 			foreach( $_REQUEST["totalreqadjuntos"] as $item) {
 				$rutaupload=$uploaddir ."r". $ultimoidreq;

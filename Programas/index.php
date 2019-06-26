@@ -151,12 +151,12 @@
 			.req {background: lightgray;}
 			.printed {background: #FFC040;}
 			.supplied {background: #C0C080;}
-	      		.req {	opacity: 0.9;}
+			.req {opacity: 0.9;}
 			.owner {opacity: 1;}
 			.deleted {opacity: 0.5;}
 			.partsupplied {background: #C0C080;}
 			.partdeleted {opacity: 0.5;}
-			.com {	opacity: 0.9;}
+			.com {opacity: 0.9;}
 			.comowner {opacity: 1;}
 			.comdeleted {opacity: 0.5;}
 		</style>
@@ -165,6 +165,7 @@
 			var requisiciones = [];
 			var requisicion = 0;
 			var busquedarequisiciones="";
+
 			function formatBytes(bytes) {
 				if (typeof bytes !== 'number') {
 					return '';
@@ -180,6 +181,7 @@
 				}
 				return bytes + ' B';
 			}
+
 			function GetFileSizeAdjuntoNewReq(fileID) {
 				var zTextFields = document.getElementsByTagName("input");
 				for (var i=0; i<zTextFields.length; i++) {
@@ -198,6 +200,7 @@
 					}
 				}
 			}
+
 			function GetFileSizeAdjuntoPartidaNewReq(tableID, fileID) {
 				var zTextFields = document.getElementsByTagName("input");
 				for (var i=0; i<zTextFields.length; i++) {
@@ -216,6 +219,7 @@
 					}
 				}
 			}
+
 			function GetFileSizeAdjunto(el, tableID, fileID) {
 				thesize=formatBytes(el.files.item(0).size);
 				var table = document.getElementById(tableID);
@@ -231,22 +235,27 @@
 					}
 				}
 			}
+
 			function elementoMostrar(idelemento) {
 				document.getElementById(idelemento).style.visibility="visible";
 			}
+
 			function elementoOcultar(idelemento) {
 				document.getElementById(idelemento).style.visibility="hidden";
 			}
+
 			function appTextBusqueda(e) {
 				if ( e.key == 'Enter' ) {
 					appBusqueda();
 				}
 			}
+
 			function appBusqueda() {
 				txtBusqueda= document.getElementById("busquedarequisiciones");
 				busquedarequisiciones=txtBusqueda.value;
 				appActualizaVista();
 			}
+
 			function appEnviarNewReq() {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -268,6 +277,7 @@
 				xmlhttp.open("POST", "librequisicion.php", true);
 				xmlhttp.send(new FormData(document.getElementById("newreqform")));
 			}
+
 			function appEnviarSignin() {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -287,6 +297,7 @@
 				xmlhttp.open("POST", "libuser.php", true);
 				xmlhttp.send(new FormData(document.getElementById("signinform")));
 			}
+
 			function appEnviarLogin() {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -306,6 +317,7 @@
 				xmlhttp.open("POST", "libuser.php", true);
 				xmlhttp.send(new FormData(document.getElementById("loginform")));
 			}
+
 			function appEnviarPassword() {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -386,6 +398,7 @@
 				xmlhttp.open("GET", "libnotificaciones.php", true);
 				xmlhttp.send();
 			}
+
 			function tik() {
 				var divContenido = document.getElementById("contenido");
 				var estado = document.getElementById("estado");
@@ -409,10 +422,8 @@
 				var mostrarvista = 0;
 				var usuarios = '';
 				var busqueda = '';
-
 				requisicion = 0;
 				requisiciones = [];
-
 				if ( document.getElementById("mostrarrequisiciones") ) {
 					mostrarvista = document.getElementById("mostrarrequisiciones").value;
 				}
@@ -456,6 +467,7 @@
 					xmlhttp.send();
 				}
 			}
+
 			function appLostpassword() {
 				appLostpasswordForm();
 				elementoMostrar("formulario");
@@ -469,18 +481,21 @@
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
 			}
+
 			function appSettings() {
 				appSettingsForm();
 				elementoMostrar("formulario");
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
 			}
+
 			function appLogin() {
 				appLoginForm();
 				elementoMostrar("formulario");
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
 			}
+
 			function appNewReq() {
 				appNewReqForm();
 				elementoMostrar("formulario");
@@ -506,6 +521,7 @@
 				xmlhttp.open("GET","librequisicion.php?action=showreqform",true);
 				xmlhttp.send();
 			}
+
 			function appLostpasswordForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -523,6 +539,7 @@
 				xmlhttp.open("GET","libuser.php?action=showlostpasswordform",true);
 				xmlhttp.send();
 			}
+
 			function appSigninForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -540,6 +557,7 @@
 				xmlhttp.open("GET","libuser.php?action=showsigninform",true);
 				xmlhttp.send();
 			}
+
 			function appLoginForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -557,6 +575,7 @@
 				xmlhttp.open("GET","libuser.php?action=showloginform",true);
 				xmlhttp.send();
 			}
+
 			function appSettingsForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -574,6 +593,7 @@
 				xmlhttp.open("GET","libdb.php?action=showsettingsform",true);
 				xmlhttp.send();
 			}
+
 			function appPreferencesForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -598,6 +618,7 @@
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
 			}
+
 			function appHelpForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -622,6 +643,7 @@
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
 			}
+
 			function appCreditsForm() {
 				var divFormulario = document.getElementById("formulario");
 				if (window.XMLHttpRequest) {
@@ -656,6 +678,7 @@
 				xmlhttp.open("GET","libuser.php?action=logout",true);
 				xmlhttp.send();
 			}
+
 			function appHeader() {
 				var divHeader = document.getElementById("header");
 				if (window.XMLHttpRequest) {
@@ -673,6 +696,7 @@
 				xmlhttp.open("GET","libheader.php?action=showheader",true);
 				xmlhttp.send();
 			}
+
 			function appMenu() {
 				var divMenu = document.getElementById("menu");
 				if (window.XMLHttpRequest) {
@@ -690,6 +714,7 @@
 				xmlhttp.open("GET","libheader.php?action=showmenu",true);
 				xmlhttp.send();
 			}
+
 			function appHome() {
 				document.getElementById("busquedarequisiciones").value="";
 				busquedarequisiciones="";
@@ -698,6 +723,7 @@
 				appHeader();
 				appActualizaVista();
 			}
+
 			function appPrefereces() {
 				elementoOcultar("contenido");
 				appPreferencesForm();
@@ -742,6 +768,7 @@
 				xmlhttp.open("GET","libcomentario.php?action=comdelete&type=comreq&idcom="+ idcomentario,true);
 				xmlhttp.send();
 			}
+
 			function deleteComentarioPart(el, idcomentario){
 				var cell = el.parentElement;
 				if (window.XMLHttpRequest) {
@@ -759,6 +786,7 @@
 				xmlhttp.open("GET","libcomentario.php?action=comdelete&type=compart&idcom="+ idcomentario,true);
 				xmlhttp.send();
 			}
+
 			function undeleteComentarioReq(el, idcomentario){
 				var cell = el.parentElement;
 				if (window.XMLHttpRequest) {
@@ -776,6 +804,7 @@
 				xmlhttp.open("GET","libcomentario.php?action=comundelete&type=comreq&idcom="+ idcomentario,true);
 				xmlhttp.send();
 			}
+
 			function removeRow(tableID, rowID){
 				var table = document.getElementById(tableID);
 				var cols = table.rows[rowID].cells.length;
@@ -784,6 +813,7 @@
 				}
 				table.rows[rowID].style.display='none';
 			}
+
 			function populateUsersCombo(el,tabla,campo){
 				if ( el.options.length <= 1 ) {
 					if (window.XMLHttpRequest) {
@@ -821,11 +851,11 @@
 					xmlhttp.send();
 				}
 			}
+
 			function addPartidaNewReq(tableID) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr><tr><td><input type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select name = 'unidad["+newRow+"]' onfocus=\"populateCombo(this,'unidades','unidad');\"></select></td><td><input type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select name = 'centrocostos["+newRow+"]' onfocus=\"populateCombo(this, 'centroscostos','descripcion')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\"tablapartidas\","+ newRow +");'>";
 			}
@@ -846,7 +876,6 @@
 				var input = document.getElementById("adjuntosrequisicion"+ idrequisicion +"["+ adjunto +"]");
 				var file = input.files.item(0);
 				var celdas = document.getElementById('tablaadjuntosreq'+ idrequisicion).rows[adjunto].cells;
-
 				celdas[4].innerHTML="";
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
@@ -897,8 +926,8 @@
 				formdata.append("archivo", file);
 				xmlhttp.open("POST","libpartida.php");
 				xmlhttp.send(formdata);
-
 			}
+
 			function addComentarioReq(tableID) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
@@ -907,7 +936,7 @@
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalreqcomentarios[]' value='"+ newRow +"'><input type='text' name='reqcomentarios["+ newRow +"]' />";
 				row.insertCell(1).innerHTML = fecha;
 				row.insertCell(2).innerHTML = "";
-				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioReq(\""+  tableID +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
+				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioReq(\""+ tableID +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\""+ tableID +"\","+ newRow +");'>";
 			}
 
 			function addComentarioPart(idpartida) {
@@ -918,7 +947,7 @@
 				row.insertCell(0).innerHTML = "<input type='text' id='comentariospartida"+ idpartida +"["+ newRow +"]' />";
 				row.insertCell(1).innerHTML = fecha;
 				row.insertCell(2).innerHTML = "";
-				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioPart(\""+  idpartida +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablacomentriospart"+ idpartida +"\","+ newRow +");'>";
+				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioPart(\""+  idpartida +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablacomentariospart"+ idpartida +"\","+ newRow +");'>";
 			}
 
 			function saveComentarioPart(idpartida, renglon){
@@ -953,6 +982,7 @@
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalreqcomentarios[]' value='"+ newRow +"'><input type='text' name='reqcomentarios["+ newRow +"]' />";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
+
 			function addAdjuntoPartidaNewReq(tableID) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
@@ -961,24 +991,25 @@
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
+
 			function addAdjuntoNewReq(tableID) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalreqadjuntos[]' value='"+ newRow +"'><input type='file' onchange='GetFileSizeAdjuntoNewReq("+ newRow +");' name='reqadjuntos["+ newRow +"]' />";
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
+
 			function addSetting(tableID,descripcion) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-
 				row.insertCell(0).innerHTML = "<input type='hidden' name='total"+ tableID +"[]' value='"+ newRow +"'>";
 				row.insertCell(1).innerHTML = '<input type = "text" id = "'+ tableID +'descripcion'+ newRow +'" />';
 				row.insertCell(2).innerHTML = "<button onClick=\"event.preventDefault();appSaveSetting('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
+
 			function addSetting2(tableID,numero,descripcion) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
@@ -988,6 +1019,7 @@
 				row.insertCell(2).innerHTML = '<input type = "text" id = "'+ tableID +'descripcion'+ newRow +'" />';
 				row.insertCell(3).innerHTML = "<button onClick=\"event.preventDefault();appSaveSetting('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
+
 			function appActivarSetting(setting, id) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1023,6 +1055,7 @@
 				xmlhttp.open("GET","libdb.php?action=deactivate&setting="+ setting +"&id="+ id,true);
 				xmlhttp.send();
 			}
+
 			function appSaveSetting(setting, row) {
 				if ( document.getElementById(setting +"numero"+ row) ) {
 					numero = "&number="+ document.getElementById(setting +"numero"+ row).value;
@@ -1055,6 +1088,7 @@
 				xmlhttp.open("GET","libdb.php?action=addsetting&setting="+ setting + descripcion + numero,true);
 				xmlhttp.send();
 			}
+
 			function appRestauraPartida(idpartida, idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1071,6 +1105,7 @@
 				xmlhttp.open("GET","libpartida.php?action=partundelete&id="+idpartida,true);
 				xmlhttp.send();
 			}
+
 			function appBorraPartida(idpartida, idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1087,6 +1122,7 @@
 				xmlhttp.open("GET","libpartida.php?action=partdelete&id="+idpartida,true);
 				xmlhttp.send();
 			}
+
 			function appSurtePartida(idpartida, idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1103,6 +1139,7 @@
 				xmlhttp.open("GET","libpartida.php?action=partsupplied&id="+idpartida,true);
 				xmlhttp.send();
 			}
+
 			function appPorsurtirPartida(idpartida, idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1119,12 +1156,12 @@
 				xmlhttp.open("GET","libpartida.php?action=parttobesupplied&id="+idpartida,true);
 				xmlhttp.send();
 			}
+
 			function appExportar() {
 				var mostrarusuarios = 0;
 				var mostrarvista = 0;
 				var usuarios = '';
 				var busqueda = '';
-
 				if ( document.getElementById("mostrarrequisiciones") ) {
 					mostrarvista = document.getElementById("mostrarrequisiciones").value;
 				}
@@ -1183,6 +1220,7 @@
 				xmlhttp.open("GET","librequisicion.php?action=print&id="+idrequisicion,true);
 				xmlhttp.send();
 			}
+
 			function appPorsurtirRequisicion(idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1199,6 +1237,7 @@
 				xmlhttp.open("GET","librequisicion.php?action=tobesupplied&id="+idrequisicion,true);
 				xmlhttp.send();
 			}
+
 			function appSurteRequisicion(idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1215,6 +1254,7 @@
 				xmlhttp.open("GET","librequisicion.php?action=supplied&id="+idrequisicion,true);
 				xmlhttp.send();
 			}
+
 			function appBorraRequisicion(idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1231,6 +1271,7 @@
 				xmlhttp.open("GET","librequisicion.php?action=delete&id="+idrequisicion,true);
 				xmlhttp.send();
 			}
+
 			function appRestauraRequisicion(idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1247,6 +1288,7 @@
 				xmlhttp.open("GET","librequisicion.php?action=undelete&id="+idrequisicion,true);
 				xmlhttp.send();
 			}
+
 			function appCopiaRequisicion(idrequisicion) {
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
@@ -1256,7 +1298,6 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
-							//appActualizaRequisicion(idrequisicion);
 							window.scrollTo(0,document.body.scrollHeight);
 						}
 					}
@@ -1264,6 +1305,7 @@
 				xmlhttp.open("GET","librequisicion.php?action=copy&id="+idrequisicion,true);
 				xmlhttp.send();
 			}
+
 			function appActualizaRequisicion(idrequisicion) {
 				var divRequisicion = document.getElementById(idrequisicion);
 				if (window.XMLHttpRequest) {

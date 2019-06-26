@@ -1,6 +1,6 @@
 <?php
 	use PHPMailer\PHPMailer\PHPMailer;
-	
+
 	require_once("PHPMailer.php");
 	require_once("SMTP.php");
 	require_once("libconfig.php");
@@ -10,7 +10,7 @@
 	require_once("librequisicion.php");
 	require_once("libpdf.php");
 	require_once("libuser.php");
-	
+
 	function NotificacionesPartidas() {
 		global $db;
 		$resultado = array();
@@ -53,18 +53,18 @@
 			$idusuario = $row[0];
 			switch ($row[1]) {
 				case 4:
-					$tiponotificacion='Impresa';			
+					$tiponotificacion='Impresa';
 					break;
 				case 5:
-					$tiponotificacion='Surtida';			
+					$tiponotificacion='Surtida';
 					break;
 				case 6:
-					$tiponotificacion='Eliminada';			
+					$tiponotificacion='Eliminada';
 					break;
 			}
 		}
 		if ( $idnotificacion == 0 ) {
-			$tiponotificacion='Con cambios';			
+			$tiponotificacion='Con cambios';
 		}
 		$res= $db->prepare("SELECT idsolicitante, idusuario FROM requisiciones WHERE id=". $idrequisicion .";");
 		$res->execute();
@@ -85,7 +85,50 @@
 			}
 		}
 	}
-	
+
+	function obtenerAdjuntosRequisicion($idrequisicion) {
+		global $db;
+		$nombre = "";
+		$longitud = 0;
+		$partidas = array();
+		$resultado = array();
+		$uploaddir = "uploads/";
+		writelog("Obtener adjuntos requisicion ". $idrequisicion);
+		$res= $db->prepare("SELECT nombre, longitud FROM adjuntosrequisiciones WHERE idrequisicion=". $idrequisicion ." AND activo=1;");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$nombre = $row[0];
+			$longitud = $row[1];
+			if ( $longitud > 10 * 1024 * 1024 ) {
+				writelog("Archivo demasiado grande ". $nombre);
+			}else{
+				$resultado[] = $uploaddir ."r". $idrequisicion ."/". $nombre;
+			}
+		}
+		writelog("Partidas:");
+		$res= $db->prepare("SELECT id FROM partidas WHERE idrequisicion=". $idrequisicion ." AND activo=1;");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			
+			$partidas[] = $row[0];
+		}
+		writelog($partidas);
+		foreach ( $partidas as $idpartida ) {
+			$res= $db->prepare("SELECT nombre, longitud FROM adjuntospartidas WHERE idpartida=". $idpartida ." AND activo=1;");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				$nombre = $row[0];
+				$longitud = $row[1];
+				if ( $longitud > 10 * 1024 * 1024 ) {
+					writelog("Archivo demasiado grande ". $nombre);
+				}else{
+					$resultado[] = $uploaddir ."p". $idpartida ."/". $nombre;
+				}
+			}
+		}
+		return $resultado;
+	}
+
 	function enviarRequisicionPorCorreo($idrequisicion, $direccion, $asunto, $mensaje) {
 		global $mail_server;
 		global $mail_port;
@@ -112,12 +155,12 @@
 		$message .= '.req {background: lightgray;}';
 		$message .= '.printed {background: #FFC040;}';
 		$message .= '.supplied {background: #C0C080;}';
-		$message .= '.req {	opacity: 0.9;}';
+		$message .= '.req {opacity: 0.9;}';
 		$message .= '.owner {opacity: 1;}';
 		$message .= '.deleted {opacity: 0.5;}';
 		$message .= '.partsupplied {background: #C0C080;}';
 		$message .= '.partdeleted {opacity: 0.5;}';
-		$message .= '.com {	opacity: 0.9;}';
+		$message .= '.com {opacity: 0.9;}';
 		$message .= '.comowner {opacity: 1;}';
 		$message .= '.comdeleted {opacity: 0.5;}';
 		$message .= '</style>';
@@ -146,6 +189,11 @@
 			$mail->CharSet = 'utf-8';
 			$mail->Subject=$asunto;
 			$mail->Body=$message;
+
+			foreach ( obtenerAdjuntosRequisicion($idrequisicion) as $adjunto) {
+				writelog("Adjuntando ". $adjunto);
+				$mail->addAttachment($adjunto);
+			}
 
 			$mail->send();
 		}
@@ -187,6 +235,6 @@
 		$res->execute();
 		while ($row = $res->fetch()) {
 			EnviarNotificacionRequisicion($item, $row[0]);
-		}	
+		}
 	}
 ?>

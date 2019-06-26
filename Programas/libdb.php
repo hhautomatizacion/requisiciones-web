@@ -63,7 +63,7 @@
 		global $db_user;
 		global $db_pass;
 		try {
-			$db = new PDO("mysql:host=". $db_server .";dbname=". $db_database .";charset=utf8", $db_user , $db_pass);
+			$db = new PDO("mysql:host=". $db_server .";dbname=". $db_database, $db_user , $db_pass);
 		}
 		catch (Exception $error) {
 			die("Connection failed: ". $error->getMessage());
@@ -97,6 +97,10 @@
 				$res = $db->prepare("CREATE TABLE areas (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, area VARCHAR(20), activo TINYINT(1) UNSIGNED) DEFAULT CHARACTER SET utf8;");
 				$res->execute();
 				$res = $db->prepare("CREATE TABLE centroscostos (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, numero INT UNSIGNED, descripcion VARCHAR(20), activo TINYINT(1) UNSIGNED) DEFAULT CHARACTER SET utf8;");
+				$res->execute();
+				$res = $db->prepare("CREATE TABLE notificacionesrequisiciones (id INT AUTO_INCREMENT PRIMARY KEY, fecha DATETIME, clave INT, idrequisicion INT, idusuario INT, activo TINYINT(1)) DEFAULT CHARACTER SET utf8;");
+				$res->execute();
+				$res = $db->prepare("CREATE TABLE notificacionespartidas (id INT AUTO_INCREMENT PRIMARY KEY, fecha DATETIME, clave INT, idpartida INT, idusuario INT, activo TINYINT(1)) DEFAULT CHARACTER SET utf8;");
 				$res->execute();
 				$res = $db->prepare("INSERT INTO usuarios VALUES (0,NULL,'root','root','',SHA1('manttocl'),'',0,1,1);");
 				$res->execute();
