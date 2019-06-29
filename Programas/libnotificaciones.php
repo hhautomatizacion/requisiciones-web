@@ -109,7 +109,6 @@
 		$res= $db->prepare("SELECT id FROM partidas WHERE idrequisicion=". $idrequisicion ." AND activo=1;");
 		$res->execute();
 		while ($row = $res->fetch()) {
-			
 			$partidas[] = $row[0];
 		}
 		writelog($partidas);

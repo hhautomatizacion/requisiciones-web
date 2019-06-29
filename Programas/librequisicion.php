@@ -202,10 +202,8 @@
 			while ($row = $res->fetch()) {
 				$resultado = $resultado ." ". $row[0];
 			}
-
 			$res = $db->prepare("DROP TABLE IF EXISTS ". $tablatemp .";");
 			$res->execute();
-
 			$resultado = trim($resultado, " ");
 		return $resultado;
 	}
@@ -248,12 +246,10 @@
 				$q="";
 			}
 			$resultado=ListaRequisiciones($view, $user, $q);
-
 		$pdf = new PDF("L");
 		$pdf->SetFont('Arial','',6);
 		$pdf->AddPage();
 		ExportarEncabezados($pdf);
-
 		$listarequisiciones= explode(" ",$resultado);
 		foreach ($listarequisiciones as $idrequisicion) {
 			ExportarRequisicion($pdf, $idrequisicion);
@@ -330,6 +326,7 @@
 				break;
 		}
 	}
+
 	function CopiarRequisicion($idrequisicion) {
 		global $db;
 		$uploaddir="uploads/";
@@ -490,8 +487,8 @@
 			$pdf->PutRows(75,$y,ObtenerDescripcionDesdeID("unidades",$row[3],"unidad"));
 			$pdf->PutRows(229,$y,$estado);
 			$pdf->PutRows(257,$y,$solicitante);
-			$pdf->PutRows(89,$y,$row[4] ,115,5);
-			$y=$y+ ($pdf->MeassureRows($row[4] ,115,5));
+			$pdf->PutRows(89,$y,$row[4] ,125,5);
+			$y=$y+ ($pdf->MeassureRows($row[4] ,125,5));
 			$pdf->SetLineWidth(0.20);
 			$pdf->Line(4,$y-4,280,$y-4);
 		}
@@ -523,7 +520,6 @@
 		$comentario="";
 		$solicitante="";
 		$idusuario ="";
-
 		$fontsize = obtenerPreferencia('impresion', 'ComentarioFontSize', '12');
 		$fontname = obtenerPreferencia('impresion', 'ComentarioFontName', 'Arial');
 		$x = obtenerPreferencia('impresion', 'ComentarioX', '40');
@@ -532,9 +528,7 @@
 		$interlineado = obtenerPreferencia('impresion', 'ComentarioInterlineado', '5');
 		$lineas = obtenerPreferencia('impresion', 'ComentarioLineas', '2');
 		$pdf->SetFont($fontname,'', $fontsize);
-
 		$maximoy = $lineas * $interlineado;
-
 		$res = $db->prepare("SELECT idsolicitante,idusuario FROM requisiciones WHERE id=". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -578,7 +572,6 @@
 			$y = obtenerPreferencia('impresion', 'IdY', '5');
 			$pdf->SetFont($fontname,'', $fontsize);
 			$pdf->PutRows($x, $y, "[". $idrequisicion ."]");
-
 			$fontsize = obtenerPreferencia('impresion', 'DeptoFontSize', '10');
 			$fontname = obtenerPreferencia('impresion', 'DeptoFontName', 'Arial');
 			$x = obtenerPreferencia('impresion', 'DeptoX', '35');
@@ -586,7 +579,6 @@
 			$ancho = obtenerPreferencia('impresion', 'DeptoAncho', '60');
 			$pdf->SetFont($fontname,'', $fontsize);
 			$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("departamentos",$row[9],"departamento"), $ancho);
-
 			$fontsize = obtenerPreferencia('impresion', 'AreaFontSize', '10');
 			$fontname = obtenerPreferencia('impresion', 'AreaFontName', 'Arial');
 			$x = obtenerPreferencia('impresion', 'AreaX', '35');
@@ -594,7 +586,6 @@
 			$ancho = obtenerPreferencia('impresion', 'AreaAncho', '60');
 			$pdf->SetFont($fontname,'', $fontsize);
 			$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("areas",$row[10],"area"),60);
-
 			$fontsize = obtenerPreferencia('impresion', 'FechaFontSize', '10');
 			$fontname = obtenerPreferencia('impresion', 'FechaFontName', 'Arial');
 			$dx = obtenerPreferencia('impresion', 'FechaDayX', '148');
@@ -607,7 +598,6 @@
 			$pdf->PutRows($dx, $dy, date("d"));
 			$pdf->PutRows($mx, $my, date("m"));
 			$pdf->PutRows($yx, $yy, date("Y"));
-
 			$fontsize = obtenerPreferencia('impresion', 'SolicitanteFontSize', '10');
 			$fontname = obtenerPreferencia('impresion', 'SolicitanteFontName', 'Arial');
 			$x = obtenerPreferencia('impresion', 'SolicitanteX', '15');
@@ -621,7 +611,6 @@
 	function ImprimirPartidas($pdf, $idrequisicion, $modoprueba) {
 		global $db;
 		$cr = "";
-
 		$fontsize = obtenerPreferencia('impresion', 'PartidasFontSize', '12');
 		$fontname = obtenerPreferencia('impresion', 'PartidasFontName', 'Arial');
 		$cantx = obtenerPreferencia('impresion', 'PartidasCantX', '18');
@@ -639,7 +628,6 @@
 			$pdf->Line($cantx, $inicioy, $descx + $ancho, $inicioy);
 			$pdf->Line($cantx, $maximoy - $interlineado, $descx + $ancho, $maximoy - $interlineado);
 		}
-
 		$res = $db->prepare("SELECT * FROM partidas WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -676,6 +664,7 @@
 		}
 		return $resultado;
 	}
+
 	function ComentarioReqEsActivo($idcomentario) {
 		global $db;
 		$resultado=false;
@@ -702,6 +691,7 @@
 		}
 		return $resultado;
 	}
+
 	function AccionesComentarioRequisicion($idcomentario) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
@@ -740,6 +730,7 @@
 		$resultado .= "</table>";
 		return $resultado;
 	}
+
 	function AgregarAdjuntosRequisicion($idrequisicion) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
@@ -749,6 +740,7 @@
 		}
 		return $resultado;
 	}
+
 	function MostrarAdjuntosRequisicion($idrequisicion) {
 		global $db;
 		$resultado="";
@@ -913,7 +905,6 @@
 		if ( !RequisicionEsActiva($idrequisicion) ) {
 			$clase .= " deleted";
 		}
-
 		$resultado .="<table id=\"marcorequisicion". $idrequisicion ."\" class=\"". $clase ."\">";
 		$resultado .="<tr>";
 		$resultado .="<td width=\"90%\">";
@@ -1039,6 +1030,7 @@
 		}
 		return $resultado;
 	}
+
 	function formNewReqForm() {
 		$resultado="";
 		$resultado.="		<form id=\"newreqform\" method = \"POST\" enctype=\"multipart/form-data\">";

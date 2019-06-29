@@ -22,7 +22,7 @@
 * Ninguno
 
 ## Autores
-* <a href="http://www.github.com/emmanuel156">emmanuel156</a> <img src="http://www.github.com/emmanuel156.png" height="32" width="32">
+* <a href="http://www.github.com/emmanuel156">emmanuel156</a> <img src="https://avatars3.githubusercontent.com/u/15036095?v=4" height="32" width="32">
 
 ## Comentarios
 * Ninguno
@@ -67,4 +67,6 @@
 ![00001053.jpg](/Fotos/00001053.jpg)
 ---
 ![00001055.jpg](/Fotos/00001055.jpg)
+---
+![IMG_20190531_095740717.jpg](/Fotos/IMG_20190531_095740717.jpg)
 ---

@@ -131,7 +131,6 @@
 		}else{
 			$errores["email"]="Correo electronico repetido";
 		}
-		writelog($errores);
 		if (count($errores) == 0){
 			$res = $db->prepare("UPDATE usuarios SET numero=". $numero .", nombre='". $nombre ."', usuario='". $usuario ."', email='". $email ."' WHERE id=". $_COOKIE["usuario"] .";");
 			$res->execute();
