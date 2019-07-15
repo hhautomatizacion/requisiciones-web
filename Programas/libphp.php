@@ -10,6 +10,23 @@
 		return implode($pass);
 	}
 
+	function resaltarBusqueda($dato, $q) {
+		writelog ("----------------");
+		writelog ("Dato ". $dato);
+		writelog ("q ". $q);
+		if (strlen($dato) ==0 ) {
+			return "";
+		}
+		if ( !is_int(strpos(strtolower($dato), strtolower($q))) ) {
+			return $dato;
+		}
+		$resultado="";
+		$inicio=strpos(strtolower($dato),strtolower($q));
+		writelog ("Inicio ".$inicio);
+		$resultado=substr($dato,0,$inicio)."<b>". substr($dato,$inicio,strlen($q)) ."</b>". resaltarBusqueda(substr($dato,$inicio+strlen($q)), $q);
+		return $resultado;
+	}
+
 	function formatBytes($bytes, $precision = 2) {
 		$units = array('Bytes', 'KB', 'MB', 'GB', 'TB');
 		$bytes = max($bytes, 0);

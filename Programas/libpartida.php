@@ -138,7 +138,7 @@
 		}
 		return $resultado;
 	}
-	function MostrarAdjuntosPartida($idpartida) {
+	function MostrarAdjuntosPartida($idpartida,$q) {
 		global $db;
 		$resultado="";
 		$res = $db->prepare("SELECT * FROM adjuntospartidas WHERE idpartida=". $idpartida .";");
@@ -147,7 +147,7 @@
 		$resultado .= "<tr><td width=\"50%\"><small>Archivo</small></td><td width=\"10%\"><small>Tama&ntilde;o</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\"><small>". AgregarAdjuntosPartida($idpartida) ."</small></td></tr>";
 		while ($row = $res->fetch()) {
 			$rutaarchivo = "uploads/p". $idpartida ."/". $row[2];
-			$resultado .= "<tr><td>". $row[2] ."</td><td>". formatBytes($row[3]) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td><button onClick=\"window.open('". $rutaarchivo ."');\">Abrir</button></td></tr>";
+			$resultado .= "<tr><td>". resaltarBusqueda($row[2], $q) ."</td><td>". formatBytes($row[3]) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td><button onClick=\"window.open('". $rutaarchivo ."');\">Abrir</button></td></tr>";
 		}
 		$resultado .= "</table>";
 		return $resultado;
@@ -204,7 +204,7 @@
 		}
 		return $resultado;
 	}
-	function MostrarComentariosPartida($idpartida) {
+	function MostrarComentariosPartida($idpartida,$q) {
 		global $db;	
 		$resultado="";
 		$res = $db->prepare("SELECT * FROM comentariospartidas WHERE idpartida=". $idpartida .";");
@@ -219,7 +219,7 @@
 			if ( !ComentarioPartEsActivo($row[0]) ) {
 				$clase .= " comdeleted";
 			}
-			$resultado .= "<tr class=\"". $clase ."\"><td>". $row[3] ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>". AccionesComentarioPartida($row[0]) ."</td></tr>";
+			$resultado .= "<tr class=\"". $clase ."\"><td>". resaltarBusqueda($row[3], $q) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>". AccionesComentarioPartida($row[0]) ."</td></tr>";
 		}
 		$resultado .= "</table>";
 		return $resultado;

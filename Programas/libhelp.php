@@ -8,9 +8,11 @@
 		echo "<table>";
 		echo "<tr><td width=\"20%\"><small>Campo</small></td><td width=\"80%\"><small>Valor</small></td></tr>";
 		echo "<tr><td>Descripcion</td><td>Sistema para control de requisiciones</td></tr>";
-		echo "<tr><td>Version</td><td>0.01</td></tr>";
+		echo "<tr><td>Version</td><td>0.02</td></tr>";
 		echo "<tr><td>Autor</td><td>Emmanuel Castillo</td></tr>";
 		echo "<tr><td>Email</td><td>emmanuel156@gmail.com</td></tr>";
+		echo "<tr><td>Autor</td><td>Jorge Ramirez</td></tr>";
+		echo "<tr><td>Email</td><td>deliriun_jrh@hotmail.com</td></tr>";
 		echo "</table>";
 	}
 
@@ -26,7 +28,6 @@
 		echo "<tr><td>Acceder</td><td>Iniciar sesion. El usuario que no ha iniciado sesion no puede hacer modificaciones.</td></tr>";
 		echo "<tr><td>Salir</td><td>Cierra sesion del usuario actual.</td></tr>";
 		echo "</table>";
-
 		echo "<table>";
 		echo "<tr><td width=\"20%\"><small>Boton</small></td><td width=\"80%\"><small>Accion</small></td></tr>";
 		echo "<tr><td>Nueva</td><td>Muestra el formulario para crear una nueva requisicion.</td></tr>";
@@ -35,6 +36,13 @@
 		echo "<tr><td>Busqueda</td><td>El texto a buscar en las requisiciones.</td></tr>";
 		echo "<tr><td>Buscar</td><td>Realiza la busqueda del texto en las requisiciones filtrando los resultados por el tipo seleccionado y usario seleccionado. Si la busqueda no regresa resultado muestra un mensaje.</td></tr>";
 		echo "<tr><td>Exportar</td><td>Exporta la vista actual en formato de lista a un archivo PDF.</td></tr>";
+		echo "</table>";
+		echo "<table>";
+		echo "<tr><td width=\"20%\"><small>Estado</small></td><td width=\"80%\"><small>Significado</small></td></tr>";
+		echo "<tr><td>M</td><td>El usuario es autor o solicitante de la requisicion.</td></tr>";
+		echo "<tr><td>I</td><td>La requisicion ha sido impresa.</td></tr>";
+		echo "<tr><td>S</td><td>La requisicion ha sido surtida.</td></tr>";
+		echo "<tr><td>E</td><td>La requisicion ha sido eliminada.</td></tr>";
 		echo "</table>";
 	}
 ?>

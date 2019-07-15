@@ -13,9 +13,9 @@
 				font-size: <?php echo obtenerPreferencia('pagina', 'FontSize', '15px'); ?>;
 			}
 			b {
-				border-radius: 5px;
-				border: 2px solid white;
-				padding: 3px;
+				border-radius: 3px;
+				border: 0px solid white;
+				padding: 0px;
 				width:100%;
 				color:white;
 				background:red
@@ -1308,6 +1308,7 @@
 
 			function appActualizaRequisicion(idrequisicion) {
 				var divRequisicion = document.getElementById(idrequisicion);
+				var busqueda='';
 				if (window.XMLHttpRequest) {
 					xmlhttp = new XMLHttpRequest();
 				} else {
@@ -1320,7 +1321,10 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","librequisicion.php?action=show&id="+idrequisicion,true);
+				if ( busquedarequisiciones.length > 0 ) {
+					busqueda='&q='+ busquedarequisiciones;
+				}
+				xmlhttp.open("GET","librequisicion.php?action=show&id="+idrequisicion+busqueda,true);
 				xmlhttp.send();
 			}
 

@@ -72,10 +72,12 @@
 			if ( $idusuario != $row[0] ) {
 				$destinatarios[] = $row[0];
 			}
-			if ( $idusuario != $row[1] ) {
+			if ( $idusuario != $row[1] && $row[0] != $row[1]) {
 				$destinatarios[] = $row[1];
 			}
 		}		
+		writelog("Enviar correos a...");
+		writelog($destinatarios);
 		foreach ($destinatarios as $dest) {
 			$direccion = ObtenerDescripcionDesdeID("usuarios", $dest, "email");
 			$mensaje=ObtenerDescripcionDesdeID("usuarios", $idusuario , "nombre") ." reporta la requisicion Id=". $idrequisicion ." como ". $tiponotificacion;
