@@ -8,6 +8,7 @@
 
 	if ( isset($_REQUEST["posted"]) ) {
 		$errores=array();
+		$validos=array();
 		$departamento=$_REQUEST["departamento"];
 		$area=$_REQUEST["area"];
 		$solicitante=$_REQUEST["solicitante"];
@@ -21,87 +22,97 @@
 				$descripcion = $_REQUEST["descripcion"][$item];
 				$centrocostos = $_REQUEST["centrocostos"][$item];
 				if ( (float)$cantidad <= 0 ) {
-					$errores["partidas"] = "Partida ". $item ." cantidad no valida";
+					$errores[] = "cantidad". $item;
+				} else {
+					$validos[] = "cantidad". $item;
 				}
 				if ( strlen($unidad) == 0) {
-					$errores["partidas"] = "Unidades ". $item ." no valida";
+					$errores[] = "unidad". $item;
+				} else {
+					$validos[] = "unidad". $item;
 				}
 				if ( strlen($descripcion) == 0) {
-					$errores["partidas"] = "Partida ". $item ." vacia";
+					$errores[] = "descripcion". $item;
+				} else {
+					$validos[] = "descripcion". $item;
 				}
 				if ( strlen($centrocostos) == 0) {
-					$errores["partidas"] = "Centro costos ". $item ." no valida";
+					$errores[] = "centrocostos". $item;
+				} else {
+					$validos[] = "centrocostos". $item;
 				}
 			}
 		}else{
-			$errores["vacia"]="Requisicion vacia";
+			$errores[]="newreqform";
 		}
 		if ( count($errores)==0 ) {
-		$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(),'',1,0,0,NULL,0,0, ?, ?, ?, ?, ?, ?);");
-		$res->execute([$departamento, $area, $centrocostos, $importancia, $solicitante, $_COOKIE["usuario"]]);
-		$ultimoidreq = $db->lastInsertId();
-		if ( isset($_REQUEST["totalpartidas"]) ) {
-			foreach( $_REQUEST["totalpartidas"] as $item) {
-				$cantidad = $_REQUEST["cantidad"][$item];
-				$unidad = $_REQUEST["unidad"][$item];
-				$descripcion = $_REQUEST["descripcion"][$item];
-				$centrocostos = $_REQUEST["centrocostos"][$item];
-				$importancia= 5;
-				$res = $db->prepare("INSERT INTO partidas VALUES (0,NOW(), ?, ?, ?,1,0,0,NULL, ?, ?, ?, ?, ?);");
-				$res->execute([$cantidad, $unidad, $descripcion, $centrocostos, $ultimoidreq, $importancia, $solicitante, $_COOKIE["usuario"]]);
-				$ultimoidpart = $db->lastInsertId();
-				if ( isset($_REQUEST["partcomentarios"]) ) {
-					foreach ( $_REQUEST["partcomentarios"]["tablacomentarios". $item ] as $elemento ) {
-						if ( strlen($elemento) > 0 ) {
-							$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0, ?,0, ?, ?,NOW(),1);");
-							$res->execute([$ultimoidpart, $elemento, $_COOKIE["usuario"]]);
+			$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(),'',1,0,0,NULL,0,0, ?, ?, ?, ?, ?, ?);");
+			$res->execute([$departamento, $area, $centrocostos, $importancia, $solicitante, $_COOKIE["usuario"]]);
+			$ultimoidreq = $db->lastInsertId();
+			if ( isset($_REQUEST["totalpartidas"]) ) {
+				foreach( $_REQUEST["totalpartidas"] as $item) {
+					$cantidad = $_REQUEST["cantidad"][$item];
+					$unidad = $_REQUEST["unidad"][$item];
+					$descripcion = $_REQUEST["descripcion"][$item];
+					$centrocostos = $_REQUEST["centrocostos"][$item];
+					$importancia= 5;
+					$res = $db->prepare("INSERT INTO partidas VALUES (0,NOW(), ?, ?, ?,1,0,0,NULL, ?, ?, ?, ?, ?);");
+					$res->execute([$cantidad, $unidad, $descripcion, $centrocostos, $ultimoidreq, $importancia, $solicitante, $_COOKIE["usuario"]]);
+					$ultimoidpart = $db->lastInsertId();
+					if ( isset($_REQUEST["partcomentarios"]) ) {
+						foreach ( $_REQUEST["partcomentarios"]["tablacomentarios". $item ] as $elemento ) {
+							if ( strlen($elemento) > 0 ) {
+								$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0, ?,0, ?, ?,NOW(),1);");
+								$res->execute([$ultimoidpart, $elemento, $_COOKIE["usuario"]]);
+							}
+						}
+					}
+					if ( isset($_REQUEST["totalpartadjuntos"]) ) {
+						foreach ( $_REQUEST["totalpartadjuntos"]["tablaadjuntos". $item ] as $elemento ) {
+							$rutaupload=$uploaddir ."p". $ultimoidpart;
+							if (!is_writeable($rutaupload)) {
+								mkdir($rutaupload);
+							}
+							$nombrearchivo=$_FILES["partadjuntostablaadjuntos". $item]["name"][$elemento];
+							$rutatemp=$_FILES["partadjuntostablaadjuntos". $item]["tmp_name"][$elemento];
+							$longitudarchivo=$_FILES["partadjuntostablaadjuntos". $item]["size"][$elemento];
+							$rutadestino=$rutaupload ."/". $nombrearchivo;
+							if (move_uploaded_file($rutatemp,$rutadestino)) {
+								$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
+								$res->execute([$ultimoidpart, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
+							}
 						}
 					}
 				}
-				if ( isset($_REQUEST["totalpartadjuntos"]) ) {
-					foreach ( $_REQUEST["totalpartadjuntos"]["tablaadjuntos". $item ] as $elemento ) {
-						$rutaupload=$uploaddir ."p". $ultimoidpart;
-						if (!is_writeable($rutaupload)) {
-							mkdir($rutaupload);
-						}
-						$nombrearchivo=$_FILES["partadjuntostablaadjuntos". $item]["name"][$elemento];
-						$rutatemp=$_FILES["partadjuntostablaadjuntos". $item]["tmp_name"][$elemento];
-						$longitudarchivo=$_FILES["partadjuntostablaadjuntos". $item]["size"][$elemento];
-						$rutadestino=$rutaupload ."/". $nombrearchivo;
-						if (move_uploaded_file($rutatemp,$rutadestino)) {
-							$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
-							$res->execute([$ultimoidpart, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
-						}
+			}
+			if ( isset($_REQUEST["totalreqcomentarios"]) ) {
+				foreach( $_REQUEST["totalreqcomentarios"] as $item) {
+					$comentario = $_REQUEST["reqcomentarios"][$item];
+					if ( strlen($comentario) > 0 ) {
+						$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(),1);");
+						$res->execute([$ultimoidreq, $comentario, $_COOKIE["usuario"]]);
 					}
 				}
 			}
-		}
-		if ( isset($_REQUEST["totalreqcomentarios"]) ) {
-			foreach( $_REQUEST["totalreqcomentarios"] as $item) {
-				$comentario = $_REQUEST["reqcomentarios"][$item];
-				if ( strlen($comentario) > 0 ) {
-					$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(),1);");
-					$res->execute([$ultimoidreq, $comentario, $_COOKIE["usuario"]]);
+			if ( isset($_REQUEST["totalreqadjuntos"]) ) {
+				foreach( $_REQUEST["totalreqadjuntos"] as $item) {
+					$rutaupload=$uploaddir ."r". $ultimoidreq;
+					if (!is_writeable($rutaupload)) {
+						mkdir($rutaupload);
+					}
+					$nombrearchivo=$_FILES["reqadjuntos"]["name"][$item];
+					$rutatemp=$_FILES["reqadjuntos"]["tmp_name"][$item];
+					$longitudarchivo=$_FILES["reqadjuntos"]["size"][$item];
+					$rutadestino=$rutaupload ."/". $nombrearchivo;
+					if (move_uploaded_file($rutatemp,$rutadestino)) {
+						$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
+						$res->execute([$ultimoidreq, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
+					}
 				}
 			}
-		}
-		if ( isset($_REQUEST["totalreqadjuntos"]) ) {
-			foreach( $_REQUEST["totalreqadjuntos"] as $item) {
-				$rutaupload=$uploaddir ."r". $ultimoidreq;
-				if (!is_writeable($rutaupload)) {
-					mkdir($rutaupload);
-				}
-				$nombrearchivo=$_FILES["reqadjuntos"]["name"][$item];
-				$rutatemp=$_FILES["reqadjuntos"]["tmp_name"][$item];
-				$longitudarchivo=$_FILES["reqadjuntos"]["size"][$item];
-				$rutadestino=$rutaupload ."/". $nombrearchivo;
-				if (move_uploaded_file($rutatemp,$rutadestino)) {
-					$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
-					$res->execute([$ultimoidreq, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
-				}
-			}
-		}
-		echo $ultimoidreq;
+			echo json_encode(array('succes' => 1, 'id' => $ultimoidreq));
+		}else{
+			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
 

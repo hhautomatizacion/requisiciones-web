@@ -264,13 +264,31 @@
 				}
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
-						if (this.responseText.length > 0) {
-							requisiciones[requisiciones.length] = this.responseText;
+						var respuesta = JSON.parse(this.responseText);
+						console.log(respuesta);
+						if ( respuesta.succes == 1 ) {
+							console.log('id nueva req '+ respuesta.id);
+							requisiciones[requisiciones.length] = respuesta.id;
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
 							document.title = "Requisiciones - "+ requisiciones.length +" mostradas";
 							window.scrollTo(0, window.scrollHeight);
 							t = setInterval(tik, 10);
+						} else {
+							for (var iter=0; iter < respuesta.validos.length; iter++) {
+								console.log('validos '+ respuesta.validos[iter]);
+								var el=document.getElementById(respuesta.validos[iter]);
+								if ( el ) {
+									el.style.outline = '0px';
+								}
+							}
+							for (var iter=0; iter < respuesta.errors.length; iter++) {
+								console.log('resaltar '+ respuesta.errors[iter]);
+								var el=document.getElementById(respuesta.errors[iter]);
+								if ( el ) {
+									el.style.outline = '#f00 solid 2px';
+								}
+							}
 						}
 					}
 				};
@@ -856,7 +874,7 @@
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr><tr><td><input type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select name = 'unidad["+newRow+"]' onfocus=\"populateCombo(this,'unidades','unidad');\"></select></td><td><input type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select name = 'centrocostos["+newRow+"]' onfocus=\"populateCombo(this, 'centroscostos','descripcion')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
+				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr><tr><td><input id = 'cantidad"+newRow+"' type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select id = 'unidad"+newRow+"' name = 'unidad["+newRow+"]' onfocus=\"populateCombo(this,'unidades','unidad');\"></select></td><td><input id = 'descripcion"+newRow+"' type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select id = 'centrocostos"+newRow+"' name = 'centrocostos["+newRow+"]' onfocus=\"populateCombo(this, 'centroscostos','descripcion')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\"tablapartidas\","+ newRow +");'>";
 			}
 
