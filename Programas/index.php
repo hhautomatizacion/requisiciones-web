@@ -253,15 +253,13 @@
 			function appBusqueda() {
 				txtBusqueda= document.getElementById("busquedarequisiciones");
 				busquedarequisiciones=txtBusqueda.value;
+				elementoOcultar("formulario");
+				elementoMostrar("contenido");
 				appActualizaVista();
 			}
 
 			function appEnviarNewReq() {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						var respuesta = JSON.parse(this.responseText);
@@ -297,11 +295,7 @@
 			}
 
 			function appEnviarSignin() {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if (this.responseText == "OK") {
@@ -317,11 +311,7 @@
 			}
 
 			function appEnviarLogin() {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if (this.responseText == "OK") {
@@ -337,11 +327,7 @@
 			}
 
 			function appEnviarPassword() {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if (this.responseText == "OK") {
@@ -357,11 +343,7 @@
 			}
 
 			function appEnviarEditUser() {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if (this.responseText == "OK") {
@@ -377,11 +359,7 @@
 			}
 
 			function appEnviarEditPassword() {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if (this.responseText == "OK") {
@@ -404,11 +382,7 @@
 			}
 
 			function tok() {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 					}
@@ -456,11 +430,7 @@
 					ocupado = true;
 					document.title = "Requisiciones - Buscando...";
 					divContenido.innerHTML = "Espere...";
-					if (window.XMLHttpRequest) {
-						xmlhttp = new XMLHttpRequest();
-					} else {
-						xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-					}
+					xmlhttp = new XMLHttpRequest();
 					xmlhttp.onreadystatechange = function() {
 						if (this.readyState == 4 && this.status == 200) {
 							divContenido.innerHTML="";
@@ -524,11 +494,7 @@
 
 			function appNewReqForm() {
 				var divFormulario = document.getElementById("formulario");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -542,11 +508,7 @@
 
 			function appLostpasswordForm() {
 				var divFormulario = document.getElementById("formulario");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -560,11 +522,7 @@
 
 			function appSigninForm() {
 				var divFormulario = document.getElementById("formulario");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -578,11 +536,7 @@
 
 			function appLoginForm() {
 				var divFormulario = document.getElementById("formulario");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -596,11 +550,7 @@
 
 			function appSettingsForm() {
 				var divFormulario = document.getElementById("formulario");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -614,11 +564,7 @@
 
 			function appPreferencesForm() {
 				var divFormulario = document.getElementById("formulario");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -639,11 +585,7 @@
 
 			function appHelpForm() {
 				var divFormulario = document.getElementById("formulario");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -664,11 +606,7 @@
 
 			function appCreditsForm() {
 				var divFormulario = document.getElementById("formulario");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -681,11 +619,7 @@
 			}
 
 			function appLogout() {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
@@ -699,11 +633,7 @@
 
 			function appHeader() {
 				var divHeader = document.getElementById("header");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -717,11 +647,7 @@
 
 			function appMenu() {
 				var divMenu = document.getElementById("menu");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -752,11 +678,7 @@
 				var table = document.getElementById(tableID);
 				var comentario= table.rows[rowID].cells[0].lastChild;
 				var idrequisicion = tableID.toString().replace("tablacomentariosreq","");
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
@@ -771,11 +693,7 @@
 
 			function deleteComentarioReq(el, idcomentario){
 				var cell = el.parentElement;
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
@@ -789,11 +707,7 @@
 
 			function deleteComentarioPart(el, idcomentario){
 				var cell = el.parentElement;
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
@@ -807,11 +721,7 @@
 
 			function undeleteComentarioReq(el, idcomentario){
 				var cell = el.parentElement;
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText == "OK" ) {
@@ -834,11 +744,7 @@
 
 			function populateUsersCombo(el,tabla,campo){
 				if ( el.options.length <= 1 ) {
-					if (window.XMLHttpRequest) {
-						xmlhttp = new XMLHttpRequest();
-					} else {
-						xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-					}
+					xmlhttp = new XMLHttpRequest();
 					xmlhttp.onreadystatechange = function() {
 						if (this.readyState == 4 && this.status == 200) {
 							if ( this.responseText.length > 0 ) {
@@ -853,11 +759,7 @@
 
 			function populateCombo(el,tabla,campo){
 				if ( el.options.length == 0 ) {
-					if (window.XMLHttpRequest) {
-						xmlhttp = new XMLHttpRequest();
-					} else {
-						xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-					}
+					xmlhttp = new XMLHttpRequest();
 					xmlhttp.onreadystatechange = function() {
 						if (this.readyState == 4 && this.status == 200) {
 							if ( this.responseText.length > 0 ) {
@@ -1039,11 +941,7 @@
 			}
 
 			function appActivarSetting(setting, id) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -1057,11 +955,7 @@
 			}
 
 			function appDesactivarSetting(setting, id) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -1085,11 +979,7 @@
 				}else{
 					descripcion = "";
 				}
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -1108,11 +998,7 @@
 			}
 
 			function appRestauraPartida(idpartida, idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
@@ -1125,11 +1011,7 @@
 			}
 
 			function appBorraPartida(idpartida, idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
@@ -1142,11 +1024,7 @@
 			}
 
 			function appSurtePartida(idpartida, idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
@@ -1159,11 +1037,7 @@
 			}
 
 			function appPorsurtirPartida(idpartida, idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
@@ -1189,11 +1063,7 @@
 				if ( document.getElementById("busquedarequisiciones") ) {
 					document.getElementById("busquedarequisiciones").value = busquedarequisiciones;
 				}
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					var a;
 					if (this.readyState == 4 && this.status == 200) {
@@ -1218,11 +1088,7 @@
 			}
 
 			function appImprimeRequisicion(idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					var a;
 					if (this.readyState == 4 && this.status == 200) {
@@ -1240,11 +1106,7 @@
 			}
 
 			function appPorsurtirRequisicion(idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
@@ -1257,11 +1119,7 @@
 			}
 
 			function appSurteRequisicion(idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
@@ -1274,11 +1132,7 @@
 			}
 
 			function appBorraRequisicion(idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
@@ -1291,11 +1145,7 @@
 			}
 
 			function appRestauraRequisicion(idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
@@ -1308,11 +1158,7 @@
 			}
 
 			function appCopiaRequisicion(idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
@@ -1327,11 +1173,7 @@
 			function appActualizaRequisicion(idrequisicion) {
 				var divRequisicion = document.getElementById(idrequisicion);
 				var busqueda='';
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
@@ -1347,11 +1189,7 @@
 			}
 
 			function appSaveEditarImpresa(idrequisicion) {
-				if (window.XMLHttpRequest) {
-					xmlhttp = new XMLHttpRequest();
-				} else {
-					xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				}
+				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText = "OK" ) {
