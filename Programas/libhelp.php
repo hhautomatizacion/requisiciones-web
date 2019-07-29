@@ -40,8 +40,8 @@
 		echo "<table>";
 		echo "<tr><td width=\"20%\"><small>Estado</small></td><td width=\"80%\"><small>Significado</small></td></tr>";
 		echo "<tr><td>M</td><td>El usuario es autor o solicitante de la requisicion.</td></tr>";
-		echo "<tr><td>I</td><td>La requisicion ha sido impresa.</td></tr>";
-		echo "<tr><td>S</td><td>La requisicion ha sido surtida.</td></tr>";
+		echo "<tr><td><div class=\"printed\" style=\"margin-bottom:0px;\">I</div></td><td>La requisicion ha sido impresa.</td></tr>";
+		echo "<tr><td><div class=\"supplied\" style=\"margin-bottom:0px;\">S</div></td><td>La requisicion ha sido surtida.</td></tr>";
 		echo "<tr><td>E</td><td>La requisicion ha sido eliminada.</td></tr>";
 		echo "</table>";
 	}
