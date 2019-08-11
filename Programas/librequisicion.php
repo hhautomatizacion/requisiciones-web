@@ -17,10 +17,26 @@
 		$uploaddir="uploads/";
 		if ( isset($_REQUEST["totalpartidas"]) ) {
 			foreach( $_REQUEST["totalpartidas"] as $item) {
-				$cantidad = $_REQUEST["cantidad"][$item];
-				$unidad = $_REQUEST["unidad"][$item];
-				$descripcion = $_REQUEST["descripcion"][$item];
-				$centrocostos = $_REQUEST["centrocostos"][$item];
+				if ( isset($_REQUEST["cantidad"][$item])) {
+					$cantidad = $_REQUEST["cantidad"][$item];
+				}else{
+					$cantidad=0;
+				}
+				if ( isset($_REQUEST["unidad"][$item]) ) {
+					$unidad = $_REQUEST["unidad"][$item];
+				}else{
+					$unidad="";
+				}
+				if ( isset($_REQUEST["descripcion"][$item]) ) {
+					$descripcion = $_REQUEST["descripcion"][$item];
+				}else{
+					$descripcion="";
+				}
+				if ( isset($_REQUEST["centrocostos"][$item]) ) {
+					$centrocostos = $_REQUEST["centrocostos"][$item];
+				}else{
+					$centrocostos="";
+				}
 				if ( (float)$cantidad <= 0 ) {
 					$errores[] = "cantidad". $item;
 				} else {
@@ -151,12 +167,12 @@
 		}
 		echo $resultado;
 	}
+
 	function ListaRequisiciones($view=0, $user=-1, $q="") {
 		global $db;
 		$usuario="";
 		$vista="";
 		$resultado="";
-
 		$tablatemp="temp". randomString(4);
 				switch ($view) {
 					case "0":
@@ -178,14 +194,12 @@
 						$vista = " (id>0)";
 						break;
 				}
-
 			if ( $user > 0 ) {
 				$usuario=" AND (idsolicitante=". $user ." OR idusuario=". $user .")";
 			}
 			if ( strlen($q) == 0 ) {
 				$sql="SELECT DISTINCT(id) FROM requisiciones WHERE". $vista . $usuario ." ORDER BY id;"; 
 			}else{
-
 				$res = $db->prepare("DROP TABLE IF EXISTS ". $tablatemp .";");
 				$res->execute();
 				$res = $db->prepare("CREATE TABLE ". $tablatemp ." (id INT UNSIGNED) ENGINE MEMORY DEFAULT CHARSET utf8;");
@@ -1049,64 +1063,62 @@
 
 	function formNewReqForm() {
 		$resultado="";
-		$resultado.="		<form id=\"newreqform\" method = \"POST\" enctype=\"multipart/form-data\">";
-		$resultado.="			<input type=\"hidden\" name=\"posted\" value=\"1\">";
-		$resultado.="			<div>";
-		$resultado.="			<table>";
-		$resultado.="			<tr>";
-		$resultado.="			<td width=\"100%\">";
-		$resultado.="			<table>";
-		$resultado.="				<tr>";
-		$resultado.="					<td><small>Departamento:</small></td><td><select name = \"departamento\">". ObtenerOpcionesSelect("departamentos","departamento") ."</select></td>";
-		$resultado.="				</tr>";
-		$resultado.="				<tr>";
-		$resultado.="					<td><small>Area:</small></td><td><select name = \"area\">". ObtenerOpcionesSelect("areas","area") ."</select></td>";
-		$resultado.="				</tr>";
-		$resultado.="				<tr>";
-		$resultado.="					<td colspan=2>";
-		$resultado.="					<table id=\"tablapartidas\">";
-		$resultado.="						<tr>";
-		$resultado.="							<td width=\"90%\"><small>Partidas</small></td>";
-		$resultado.="							<td width=\"10%\"><input type = \"button\" value=\"Agregar\" onclick=\"addPartidaNewReq('tablapartidas');\"></td>";
-		$resultado.="						</tr>";
-		$resultado.="					</table>";
-		$resultado.="					</td>";
-		$resultado.="				</tr>";
-		$resultado.="				<tr>";
-		$resultado.="					<td colspan=2>";
-		$resultado.="					<table id=\"tablacomentariosreq\">";
-		$resultado.="						<tr>";
-		$resultado.="							<td width=\"90%\"><small>Comentarios</small></td>";
-		$resultado.="							<td width=\"10%\"><input type = \"button\" value=\"Agregar\" onclick=\"addComentarioNewReq('tablacomentariosreq');\"></td>";
-		$resultado.="						</tr>";
-		$resultado.="					</table>";
-		$resultado.="					";
-		$resultado.="					</td>";
-		$resultado.="				</tr>";
-		$resultado.="				<tr>";
-		$resultado.="					<td colspan=2>";
-		$resultado.="					<table id=\"tablaadjuntosreq\">";
-		$resultado.="						<tr>";
-		$resultado.="							<td width=\"80%\"><small>Adjuntos</small></td>";
-		$resultado.="							<td width=\"10%\"><small>Tama&ntilde;o</small></td>";
-		$resultado.="							<td width=\"10%\"><input type = \"button\" value=\"Agregar\" onclick=\"addAdjuntoNewReq('tablaadjuntosreq');\"></td>";
-		$resultado.="						</tr>";
-		$resultado.="					</table>";
-		$resultado.="					";
-		$resultado.="					</td>";
-		$resultado.="				</tr>";
-		$resultado.="				<tr>";
-		$resultado.="					<td><small>Solicitante:</small></td><td><select name = \"solicitante\">". ObtenerUsuariosSelect() ."</select></td>";
-		$resultado.="				</tr>";
-		$resultado.="			</table>";
-		$resultado.="			</td>";
-		$resultado.="			<td width=\"10%\">";
-		$resultado .="						<button onClick=\"event.preventDefault();appEnviarNewReq();\">Guardar</button>";
-		$resultado.="			</td>";
-		$resultado.="			</tr>";
-		$resultado.="			</table>";
-		$resultado.="			</div>";
-		$resultado.="		</form>";
+		$resultado .="<form id=\"newreqform\" method = \"POST\" enctype=\"multipart/form-data\">";
+		$resultado .="	<input type=\"hidden\" name=\"posted\" value=\"1\">";
+		$resultado .="	<div>";
+		$resultado .="	<table>";
+		$resultado .="	<tr>";
+		$resultado .="	<td width=\"90%\">";
+		$resultado .="	<table>";
+		$resultado .="		<tr>";
+		$resultado .="			<td width=\"20%\"><small>Departamento:</small></td><td width=\"80%\"><select name = \"departamento\">". ObtenerOpcionesSelect("departamentos","departamento") ."</select></td>";
+		$resultado .="		</tr>";
+		$resultado .="		<tr>";
+		$resultado .="			<td width=\"20%\"><small>Area:</small></td><td width=\"80%\"><select name = \"area\">". ObtenerOpcionesSelect("areas","area") ."</select></td>";
+		$resultado .="		</tr>";
+		$resultado .="		<tr>";
+		$resultado .="			<td colspan=2>";
+		$resultado .="			<table id=\"tablapartidas\">";
+		$resultado .="				<tr>";
+		$resultado .="					<td width=\"90%\"><small>Partidas</small></td>";
+		$resultado .="					<td width=\"10%\"><input type = \"button\" value=\"Agregar\" onclick=\"addPartidaNewReq('tablapartidas');\"></td>";
+		$resultado .="				</tr>";
+		$resultado .="			</table>";
+		$resultado .="			</td>";
+		$resultado .="		</tr>";
+		$resultado .="		<tr>";
+		$resultado .="			<td colspan=2>";
+		$resultado .="			<table id=\"tablacomentariosreq\">";
+		$resultado .="				<tr>";
+		$resultado .="					<td width=\"90%\"><small>Comentarios</small></td>";
+		$resultado .="					<td width=\"10%\"><input type = \"button\" value=\"Agregar\" onclick=\"addComentarioNewReq('tablacomentariosreq');\"></td>";
+		$resultado .="				</tr>";
+		$resultado .="			</table>";
+		$resultado .="			</td>";
+		$resultado .="		</tr>";
+		$resultado .="		<tr>";
+		$resultado .="			<td colspan=2>";
+		$resultado .="			<table id=\"tablaadjuntosreq\">";
+		$resultado .="				<tr>";
+		$resultado .="					<td width=\"80%\"><small>Adjuntos</small></td>";
+		$resultado .="					<td width=\"10%\"><small>Tama&ntilde;o</small></td>";
+		$resultado .="					<td width=\"10%\"><input type = \"button\" value=\"Agregar\" onclick=\"addAdjuntoNewReq('tablaadjuntosreq');\"></td>";
+		$resultado .="				</tr>";
+		$resultado .="			</table>";
+		$resultado .="			</td>";
+		$resultado .="		</tr>";
+		$resultado .="		<tr>";
+		$resultado .="			<td width=\"20%\"><small>Solicitante:</small></td><td width=\"80%\"><select name = \"solicitante\">". ObtenerUsuariosSelect() ."</select></td>";
+		$resultado .="		</tr>";
+		$resultado .="	</table>";
+		$resultado .="	</td>";
+		$resultado .="	<td width=\"10%\">";
+		$resultado .="		<button id=\"botonenviarnewreq\" onClick=\"event.preventDefault();appEnviarNewReq();\">Guardar</button>";
+		$resultado .="	</td>";
+		$resultado .="	</tr>";
+		$resultado .="	</table>";
+		$resultado .="	</div>";
+		$resultado .="</form>";
 		return $resultado;
 	}
 ?>

@@ -8,7 +8,7 @@
 		echo "<table>";
 		echo "<tr><td width=\"20%\"><small>Campo</small></td><td width=\"80%\"><small>Valor</small></td></tr>";
 		echo "<tr><td>Descripcion</td><td>Sistema para control de requisiciones</td></tr>";
-		echo "<tr><td>Version</td><td>0.02</td></tr>";
+		echo "<tr><td>Version</td><td>0.03</td></tr>";
 		echo "<tr><td>Autor</td><td>Emmanuel Castillo</td></tr>";
 		echo "<tr><td>Email</td><td>emmanuel156@gmail.com</td></tr>";
 		echo "<tr><td>Autor</td><td>Jorge Ramirez</td></tr>";
@@ -44,5 +44,10 @@
 		echo "<tr><td><div class=\"supplied\" style=\"margin-bottom:0px;\">S</div></td><td>La requisicion ha sido surtida.</td></tr>";
 		echo "<tr><td>E</td><td>La requisicion ha sido eliminada.</td></tr>";
 		echo "</table>";
+		//echo "<table>";
+		//echo "<tr><td width=\"20%\"><small>Estado</small></td><td width=\"80%\"><small>Significado</small></td></tr>";
+		//echo "<tr><td>MaxSize</td><td>". formatBytes(file_upload_max_size()) ."</td></tr>";
+		//echo "<tr><td>E</td><td>La requisicion ha sido eliminada.</td></tr>";
+		//echo "</table>";
 	}
 ?>

@@ -34,107 +34,215 @@
 	}
 
 	if ( isset($_POST["action"]) && $_POST["action"] == "login" ) {
-		if ( $_POST["name"] || $_POST["password"] ) {
-			usuarioDarEntrada(usuarioVerificarCredenciales($_POST["name"], $_POST["password"]));
-			if ( usuarioEsLogeado() ) {
-				if ( isset($_POST["autologin"]) && $_POST["autologin"] == "on" ) {
-					usuarioActivarToken();
-				}
+		//if ( $_POST["name"] || $_POST["password"] ) {
+			$errores=array();
+			$validos=array();
+
+			$nombre=$_POST["name"];
+			$password=$_POST["password"];
+			if ( strlen($nombre) == 0) {
+				$errores[] = "name";
+			} else {
+				$validos[] = "name";
 			}
-		}
+			if ( strlen($password) == 0) {
+				$errores[] = "password";
+			} else {
+				$validos[] = "password";
+			}
+			if ( count($errores) == 0 ) {
+				if (usuarioDarEntrada(usuarioVerificarCredenciales($nombre, $password)) > 0) {
+					echo json_encode(array('succes' => 1));
+					if ( isset($_POST["autologin"]) && $_POST["autologin"] == "on" ) {
+						usuarioActivarToken();
+					}
+				}else{
+					$errores[]="loginform";
+					echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
+				}
+			}else{
+				$validos[]="loginform";
+				echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
+			}
+		//}
 	}
 
 	if ( isset($_POST["action"]) && $_POST["action"] == "signin" ) {
-		$errores=array();
+		$encontrado = false;
+		$errores = array();
+		$validos = array();
 		if ( intval($_REQUEST["numero"]) <= 0 ){
-			$errores["numero"]="Numero de usuario no valido";
+			$errores[] = "numero";
+		} else {
+			$encontrado = false;
+			$res = $db->prepare("SELECT * FROM usuarios WHERE numero=" . intval($_REQUEST["numero"]) .";");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				$encontrado = true;
+			}
+			if ( $encontrado ) {
+				$errores[] = "numero";
+			} else {
+				$validos[] = "numero";
+			}
 		}
-		$res = $db->prepare("SELECT * FROM usuarios WHERE numero='" . intval($_REQUEST["numero"]) ."' OR LCASE(nombre)=LCASE('". $_REQUEST["nombre"]."') OR LCASE(usuario)=LCASE('". $_REQUEST["usuario"] ."') OR LCASE(email)=LCASE('". $_REQUEST["usuario"] ."');");
+		if ( strlen($_REQUEST["nombre"]) == 0) {
+			$errores[] = "nombre";
+		} else {
+			$validos[] = "nombre";
+		}
+		if ( strlen($_REQUEST["email"]) == 0) {
+			$errores[] = "email";
+		} else {
+			$validos[] = "email";
+		}
+		$encontrado = false;
+		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["nombre"]."') OR LCASE(usuario)=LCASE('". $_REQUEST["nombre"] ."') OR LCASE(email)=LCASE('". $_REQUEST["nombre"] ."');");
 		$res->execute();
 		while ($row = $res->fetch()) {
-			$errores["user1"]="El usuario ya existe";
+			$encontrado = true;
 		}
-		if ( strlen($_REQUEST["password1"]) == 0) {
-			$errores["password1"]="Password vacio";
+		if ( $encontrado ) {
+			$errores[] = "nombre";
+		} else {
+			$validos[] = "nombre";
 		}
-		if ( $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
-			$errores["password2"]="Password no igual";
+		$encontrado = false;
+		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["usuario"]."') OR LCASE(usuario)=LCASE('". $_REQUEST["usuario"] ."') OR LCASE(email)=LCASE('". $_REQUEST["usuario"] ."');");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$encontrado = true;
 		}
-		if (count($errores) == 0){
+		if ( $encontrado ) {
+			$errores[] = "usuario";
+		} else {
+			$validos[] = "usuario";
+		}
+		$encontrado = false;
+		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["email"]."') OR LCASE(usuario)=LCASE('". $_REQUEST["email"] ."') OR LCASE(email)=LCASE('". $_REQUEST["email"] ."');");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$encontrado = true;
+		}
+		if ( $encontrado ) {
+			$errores[] = "email";
+		} else {
+			$validos[] = "email";
+		}
+		if ( strlen($_REQUEST["password1"]) == 0 || $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
+			$errores[] = "password1";
+		} else {
+			$validos[] = "password1";
+		}
+		if ( strlen($_REQUEST["password2"]) == 0 || $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
+			$errores[] = "password2";
+		} else {
+			$validos[] = "password2";
+		}
+		if ( count($errores) == 0 ){
 			$res = $db->prepare("INSERT INTO usuarios VALUES (0,". $_REQUEST["numero"] .",'". $_REQUEST["nombre"] ."','". $_REQUEST["usuario"] ."','". $_REQUEST["email"] ."',SHA1('". $_REQUEST["password1"] ."'),'',0,0,1);");
 			$res->execute();
-			echo "OK";
+			echo json_encode(array('succes' => 1));
+		} else {
+			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
 
 	if ( isset($_POST["action"]) && $_POST["action"] == "editpassword" ) {
-		$errores=array();
-		if ( strlen($_REQUEST["password1"]) == 0) {
-			$errores["password1"]="Password vacio";
+		$errores = array();
+		$validos = array();
+		if ( strlen($_REQUEST["password1"]) == 0 || $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
+			$errores[]="password1";
+		} else {
+			$validos[]="password1";
 		}
-		if ( $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
-			$errores["password2"]="Password no igual";
+		if ( strlen($_REQUEST["password2"]) == 0 || $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
+			$errores[]="password2";
+		} else {
+			$validos[]="password2";
 		}
-		if (count($errores) == 0){
+		if ( count($errores) == 0 ){
 			$res = $db->prepare("UPDATE usuarios SET password=SHA1('". $_REQUEST["password1"] ."') WHERE id=". $_COOKIE["usuario"] .";");
 			$res->execute();
-			echo "OK";
+			echo json_encode(array('succes' => 1));
+		} else {
+			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
 
 	if ( isset($_POST["action"]) && $_POST["action"] == "edituser" ) {
 		$errores = array();
+		$validos = array();
 		$numero = intval($_REQUEST["numero"]);
 		$nombre = $_REQUEST["nombre"];
 		$usuario = $_REQUEST["usuario"];
 		$email = $_REQUEST["email"];
 		if ( $numero < 0 ){
-			$errores["numero1"]="Numero de usuario no valido";
+			$errores[] = "numero";
+		} else {
+			$id = $_COOKIE["usuario"];
+			$res = $db->prepare("SELECT id FROM usuarios WHERE numero=". $numero .";");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				$id = $row[0];
+			}
+			if ( $id == $_COOKIE["usuario"] ) {
+				$validos[] = "numero";
+			} else {
+				$errores[] = "numero";
+			}
 		}
-		$id = $_COOKIE["usuario"];
-		$res = $db->prepare("SELECT id FROM usuarios WHERE numero=". $numero .";");
-		$res->execute();
-		while ($row = $res->fetch()) {
-			$id=$row[0];
+		if ( strlen($nombre) == 0 ){
+			$errores[] = "nombre";
+		} else {
+			$id = $_COOKIE["usuario"];
+			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $nombre ."') OR LCASE(usuario)=LCASE('". $nombre ."') OR LCASE(email)=LCASE('". $nombre ."');");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				$id=$row[0];
+			}
+			if ( $id == $_COOKIE["usuario"] ) {
+				$validos[] = "nombre";
+			} else {
+				$errores[] = "nombre";
+			}
 		}
-		if ( $id == $_COOKIE["usuario"] ) {
-		}else{
-			$errores["numero2"]="Numero de usuario repetido";
+		if ( strlen($usuario) == 0 ){
+			$errores[] = "usuario";
+		} else {
+			$id = $_COOKIE["usuario"];
+			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $usuario ."') OR LCASE(usuario)=LCASE('". $usuario ."') OR LCASE(email)=LCASE('". $usuario ."');");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				$id=$row[0];
+			}
+			if ( $id == $_COOKIE["usuario"] ) {
+				$validos[] = "usuario";
+			} else {
+				$errores[] = "usuario";
+			}
 		}
-		$id = $_COOKIE["usuario"];
-		$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $nombre ."') OR LCASE(usuario)=LCASE('". $nombre ."') OR LCASE(email)=LCASE('". $nombre ."');");
-		$res->execute();
-		while ($row = $res->fetch()) {
-			$id=$row[0];
+		if ( strlen($email) == 0 ){
+			$errores[] = "email";
+		} else {
+			$id = $_COOKIE["usuario"];
+			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $email ."') OR LCASE(usuario)=LCASE('". $email ."') OR LCASE(email)=LCASE('". $email ."');");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				$id=$row[0];
+			}
+			if ( $id == $_COOKIE["usuario"] ) {
+				$validos[] = "email";
+			} else {
+				$errores[] = "email";
+			}
 		}
-		if ( $id == $_COOKIE["usuario"] ) {
-		}else{
-			$errores["nombre1"]="Nombre de usuario repetido";
-		}
-		$id = $_COOKIE["usuario"];
-		$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $usuario ."') OR LCASE(usuario)=LCASE('". $usuario ."') OR LCASE(email)=LCASE('". $usuario ."');");
-		$res->execute();
-		while ($row = $res->fetch()) {
-			$id=$row[0];
-		}
-		if ( $id == $_COOKIE["usuario"] ) {
-		}else{
-			$errores["nombre2"]="Nombre de usuario repetido";
-		}
-		$id = $_COOKIE["usuario"];
-		$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $email ."') OR LCASE(usuario)=LCASE('". $email ."') OR LCASE(email)=LCASE('". $email ."');");
-		$res->execute();
-		while ($row = $res->fetch()) {
-			$id=$row[0];
-		}
-		if ( $id == $_COOKIE["usuario"] ) {
-		}else{
-			$errores["email"]="Correo electronico repetido";
-		}
-		if (count($errores) == 0){
+		if ( count($errores) == 0 ){
 			$res = $db->prepare("UPDATE usuarios SET numero=". $numero .", nombre='". $nombre ."', usuario='". $usuario ."', email='". $email ."' WHERE id=". $_COOKIE["usuario"] .";");
 			$res->execute();
-			echo "OK";
+			echo json_encode(array('succes' => 1));
+		}else{
+			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
 
@@ -203,26 +311,24 @@
 		$resultado .="<form id=\"edituserform\" method = \"POST\">";
 		$resultado .="	<input type=\"hidden\" name=\"action\" value=\"edituser\"/>";
 		$resultado .="	<table>";
-		//$resultado .="<form id=\"edituserform\" method = \"POST\">";
-		//$resultado .="	<input type=\"hidden\" name=\"action\" value=\"edituser\"/>";
 		$resultado .="		<tr>";
 		$resultado .="			<td width=\"80%\">";
 		$resultado .="				<table>	";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Numero de empleado:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"number\" min=\"0\" name = \"numero\" value = \"". $numero ."\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id = \"numero\" type = \"number\" min=\"0\" name = \"numero\" value = \"". $numero ."\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Nombre:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"text\" name = \"nombre\" value = \"". $nombre ."\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id = \"nombre\" type = \"text\" name = \"nombre\" value = \"". $nombre ."\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Usuario:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"text\" name = \"usuario\" value = \"". $usuario ."\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id = \"usuario\" type = \"text\" name = \"usuario\" value = \"". $usuario ."\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Email:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"email\" name = \"email\" value = \"". $email ."\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id = \"email\" type = \"email\" name = \"email\" value = \"". $email ."\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="				</table>";
 		$resultado .="			</td>";
@@ -230,72 +336,21 @@
 		$resultado .="				<button onClick=\"event.preventDefault();appEnviarEditUser();\">Guardar</button>";
 		$resultado .="			</td>";
 		$resultado .="		</tr>";
-		//$resultado .="</form>";
-		//$resultado .="<form id=\"editpasswordform\" method = \"POST\">";
-		//$resultado .="	<input type=\"hidden\" name=\"action\" value=\"editpassword\"/>";
-		//$resultado .="		<tr>";
-		//$resultado .="			<td width=\"80%\">";
-		//$resultado .="				<table>	";
-		//$resultado .="					<tr>";
-		//$resultado .="						<td width=\"20%\"><small>Password:</small></td>";
-		//$resultado .="						<td width=\"80%\"><input type = \"password\" name = \"password1\" /></td>";
-		//$resultado .="					</tr>";
-		//$resultado .="					<tr>";
-		//$resultado .="						<td width=\"20%\"><small>Repetir password:</small></td>";
-		//$resultado .="						<td width=\"80%\"><input type = \"password\" name = \"password2\" /></td>";
-		//$resultado .="					</tr>";
-		//$resultado .="				</table>";
-		//$resultado .="			</td>";
-		//$resultado .="			<td width=\"20%\">";
-		//$resultado .="				<button onClick=\"event.preventDefault();appEnviarEditPassword();\">Cambiar</button>";
-		//$resultado .="			</td>";
-		//$resultado .="		</tr>";
-		//$resultado .="</form>";
 		$resultado .="	</table>";
 		$resultado .="</form>";
 		$resultado .="<form id=\"editpasswordform\" method = \"POST\">";
 		$resultado .="	<input type=\"hidden\" name=\"action\" value=\"editpassword\"/>";
 		$resultado .="	<table>";
-		//$resultado .="<form id=\"edituserform\" method = \"POST\">";
-		//$resultado .="	<input type=\"hidden\" name=\"action\" value=\"edituser\"/>";
-		//$resultado .="		<tr>";
-		//$resultado .="			<td width=\"80%\">";
-		//$resultado .="				<table>	";
-		//$resultado .="					<tr>";
-		//$resultado .="						<td width=\"20%\"><small>Numero de empleado:</small></td>";
-		//$resultado .="						<td width=\"80%\"><input type = \"number\" min=\"0\" name = \"numero\" value = \"". $numero ."\" /></td>";
-		//$resultado .="					</tr>";
-		//$resultado .="					<tr>";
-		//$resultado .="						<td width=\"20%\"><small>Nombre:</small></td>";
-		//$resultado .="						<td width=\"80%\"><input type = \"text\" name = \"nombre\" value = \"". $nombre ."\" /></td>";
-		//$resultado .="					</tr>";
-		//$resultado .="					<tr>";
-		//$resultado .="						<td width=\"20%\"><small>Usuario:</small></td>";
-		//$resultado .="						<td width=\"80%\"><input type = \"text\" name = \"usuario\" value = \"". $usuario ."\" /></td>";
-		//$resultado .="					</tr>";
-		//$resultado .="					<tr>";
-		//$resultado .="						<td width=\"20%\"><small>Email:</small></td>";
-		//$resultado .="						<td width=\"80%\"><input type = \"email\" name = \"email\" value = \"". $email ."\" /></td>";
-		//$resultado .="					</tr>";
-		//$resultado .="				</table>";
-		//$resultado .="			</td>";
-		//$resultado .="			<td width=\"20%\">";
-		//$resultado .="				<button onClick=\"event.preventDefault();appEnviarEditUser();\">Guardar</button>";
-		//$resultado .="			</td>";
-		//$resultado .="		</tr>";
-		//$resultado .="</form>";
-		//$resultado .="<form id=\"editpasswordform\" method = \"POST\">";
-		//$resultado .="	<input type=\"hidden\" name=\"action\" value=\"editpassword\"/>";
 		$resultado .="		<tr>";
 		$resultado .="			<td width=\"80%\">";
 		$resultado .="				<table>	";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Password:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"password\" name = \"password1\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id=\"password1\" type = \"password\" name = \"password1\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Repetir password:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"password\" name = \"password2\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id=\"password2\" type = \"password\" name = \"password2\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="				</table>";
 		$resultado .="			</td>";
@@ -303,7 +358,6 @@
 		$resultado .="				<button onClick=\"event.preventDefault();appEnviarEditPassword();\">Cambiar</button>";
 		$resultado .="			</td>";
 		$resultado .="		</tr>";
-		//$resultado .="</form>";
 		$resultado .="	</table>";
 		$resultado .="</form>";
 		return $resultado;
@@ -334,33 +388,33 @@
 
 	function formLoginForm() {
 		$resultado="";
-		$resultado .="			<form id=\"loginform\" action=\"libuser.php\" method=\"POST\">";
-		$resultado .="				<input type=\"hidden\" name=\"action\" value=\"login\">";
-		$resultado .="				<table>";
-		$resultado .="					<tr>";
-		$resultado .="						<td width=\"80%\">";
-		$resultado .="						<table>";
-		$resultado .="							<tr>";
-		$resultado .="								<td width=\"20%\"><small>Usuario:</small></td>";
-		$resultado .="								<td><input type = \"text\" name = \"name\" /></td>";
-		$resultado .="							</tr>";
-		$resultado .="							<tr>";
-		$resultado .="								<td width=\"20%\"><small>Password:</small></td>";
-		$resultado .="								<td><input type = \"password\" name = \"password\" /></td>";
-		$resultado .="							</tr>";
-		$resultado .="							<tr>";
-		$resultado .="								<td width=\"20%\"><small>Login automatico:</small></td>";
-		$resultado .="								<td><input type = \"checkbox\" name = \"autologin\" /></td>";
-		$resultado .="							</tr>";
-		$resultado .="						</table>";
-		$resultado .="						</td>";
-		$resultado .="						<td width=\"20%\">";
-		$resultado .="						<button onClick=\"event.preventDefault();appEnviarLogin();\">Entrar</button>";
-		$resultado .="						</td>";
-		$resultado .="					</tr>";
-		$resultado .="				</table>";
-		$resultado .="				<button onClick=\"event.preventDefault();appLostpassword();\">He olvidado mi password!</button>";
-		$resultado .="			</form>";
+		$resultado .="<form id=\"loginform\" action=\"libuser.php\" method=\"POST\">";
+		$resultado .="	<input type=\"hidden\" name=\"action\" value=\"login\">";
+		$resultado .="	<table>";
+		$resultado .="		<tr>";
+		$resultado .="			<td width=\"80%\">";
+		$resultado .="			<table>";
+		$resultado .="				<tr>";
+		$resultado .="					<td width=\"20%\"><small>Usuario:</small></td>";
+		$resultado .="					<td><input id=\"name\" type = \"text\" name = \"name\" /></td>";
+		$resultado .="				</tr>";
+		$resultado .="				<tr>";
+		$resultado .="					<td width=\"20%\"><small>Password:</small></td>";
+		$resultado .="					<td><input id=\"password\" type = \"password\" name = \"password\" /></td>";
+		$resultado .="				</tr>";
+		$resultado .="				<tr>";
+		$resultado .="					<td width=\"20%\"><small>Login automatico:</small></td>";
+		$resultado .="					<td><input type = \"checkbox\" name = \"autologin\" /></td>";
+		$resultado .="				</tr>";
+		$resultado .="			</table>";
+		$resultado .="			</td>";
+		$resultado .="			<td width=\"20%\">";
+		$resultado .="			<button onClick=\"event.preventDefault();appEnviarLogin();\">Entrar</button>";
+		$resultado .="			</td>";
+		$resultado .="		</tr>";
+		$resultado .="	</table>";
+		$resultado .="	<button onClick=\"event.preventDefault();appLostpassword();\">He olvidado mi password!</button>";
+		$resultado .="</form>";
 		return $resultado;
 	}
 
@@ -374,27 +428,27 @@
 		$resultado .="				<table>	";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Numero de empleado:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"number\" min=\"0\" name = \"numero\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id=\"numero\" type = \"number\" min=\"0\" name = \"numero\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Nombre:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"text\" name = \"nombre\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id=\"nombre\" type = \"text\" name = \"nombre\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Usuario:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"text\" name = \"usuario\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id=\"usuario\" type = \"text\" name = \"usuario\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Email:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"email\" name = \"email\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id=\"email\" type = \"email\" name = \"email\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Password:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"password\" name = \"password1\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id=\"password1\" type = \"password\" name = \"password1\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="					<tr>";
 		$resultado .="						<td width=\"20%\"><small>Repetir password:</small></td>";
-		$resultado .="						<td width=\"80%\"><input type = \"password\" name = \"password2\" /></td>";
+		$resultado .="						<td width=\"80%\"><input id=\"password2\" type = \"password\" name = \"password2\" /></td>";
 		$resultado .="					</tr>";
 		$resultado .="				</table>";
 		$resultado .="			</td>";
@@ -413,14 +467,12 @@
 		$res = $db->prepare("SELECT id FROM usuarios WHERE (numero=? OR LCASE(nombre)=LCASE(?) OR LCASE(usuario)=LCASE(?) OR LCASE(email)=LCASE(?)) AND activo=1 AND password=SHA1(?)");
 		$res->execute([$name, $name, $name, $name, $password]);
 		while ($row = $res->fetch()) {
-			echo "OK";
 			$resultado=$row[0];
 		}
 		if ( strlen($resultado) == 0 ) {
 			$res = $db->prepare("SELECT id FROM usuarios WHERE (numero=? OR LCASE(nombre)=LCASE(?) OR LCASE(usuario)=LCASE(?) OR LCASE(email)=LCASE(?)) AND activo=1 AND recovery=1 AND recoverypw=SHA1(?)");
 			$res->execute([$name, $name, $name, $name, $password]);
 			while ($row = $res->fetch()) {
-				echo "OK";
 				$resultado=$row[0];
 			}
 		}
@@ -453,13 +505,16 @@
 
 	function usuarioDarEntrada($idusuario) {
 		global $db;
+		$resultado=0;
 		$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND activo=1");
 		$res->execute([$idusuario]);
 		while ($row = $res->fetch()) {
 			setcookie("usuario",$row[0]);
 			$res = $db->prepare("UPDATE usuarios SET recovery=0, recoverypw='' WHERE id=?" );
 			$res->execute([$row[0]]);
+			$resultado=$row[0];
 		}
+		return $resultado;
 	}
 
 	function usuarioDesactivarToken() {
@@ -517,10 +572,12 @@
 	function obtenerPreferencia($seccion, $clave, $default='') {
 		global $db;
 		$resultado = $default;
-		$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
-		$res->execute([$_COOKIE["usuario"], $seccion, $clave]);
-		while ($row = $res->fetch()) {
-			$resultado = $row[0];
+		if ( isset($_COOKIE["usuario"]) ) {
+			$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
+			$res->execute([$_COOKIE["usuario"], $seccion, $clave]);
+			while ($row = $res->fetch()) {
+				$resultado = $row[0];
+			}
 		}
 		return $resultado;
 	}

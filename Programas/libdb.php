@@ -66,7 +66,7 @@
 			$db = new PDO("mysql:host=". $db_server .";dbname=". $db_database, $db_user , $db_pass);
 		}
 		catch (Exception $error) {
-			die("Connection failed: ". $error->getMessage());
+			writelog("error conexion a db ". $error->getMessage());
 		}
 		try {
 			$res = $db->prepare("SELECT usuario FROM usuarios WHERE id=1;");
@@ -77,6 +77,8 @@
 			}
 			if ( !$encontrado ) {
 				$res = $db->prepare("CREATE TABLE usuarios (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, numero INT UNSIGNED, nombre VARCHAR(80), usuario VARCHAR(20), email VARCHAR(50), password VARCHAR(40), recoverypw VARCHAR(40), recovery TINYINT(1) UNSIGNED, su TINYINT(1) UNSIGNED, activo TINYINT(1) UNSIGNED) DEFAULT CHARACTER SET utf8;");
+				$res->execute();
+				$res = $db->prepare("CREATE TABLE opcionesusuarios (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, idusuario INT UNSIGNED, seccion VARCHAR(100), clave VARCHAR(100), valor VARCHAR(300)) DEFAULT CHARACTER SET utf8;");
 				$res->execute();
 				$res = $db->prepare("CREATE TABLE unidades (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, unidad VARCHAR(10), activo TINYINT(1) UNSIGNED) DEFAULT CHARACTER SET utf8;");
 				$res->execute();

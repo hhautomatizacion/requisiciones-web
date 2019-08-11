@@ -165,6 +165,7 @@
 			var requisiciones = [];
 			var requisicion = 0;
 			var busquedarequisiciones="";
+			var file_upload_max_size = 0;
 
 			function formatBytes(bytes) {
 				if (typeof bytes !== 'number') {
@@ -182,56 +183,17 @@
 				return bytes + ' B';
 			}
 
-			function GetFileSizeAdjuntoNewReq(fileID) {
-				var zTextFields = document.getElementsByTagName("input");
-				for (var i=0; i<zTextFields.length; i++) {
-					thefield=zTextFields[i].name;
-					if (!thefield) thefield=zTextFields[i].id;
-					if (thefield == 'reqadjuntos['+ fileID +']' ) {
-						thesize=formatBytes(zTextFields[i].files.item(0).size);
-						if (zTextFields[i].files.item(0).size >  100 * 1024 * 1024 ) {
-							alert("El archivo es demasiado grande.\n\nFile: " + zTextFields[i].files.item(0).name + "\nSize: " + thesize);
-							var table = document.getElementById('tablaadjuntosreq');
-							table.rows[fileID].cells[1].innerHTML='<b>'+ thesize +'</b>';
-						}else{
-							var table = document.getElementById('tablaadjuntosreq');
-							table.rows[fileID].cells[1].innerHTML=thesize ;
-						}
-					}
-				}
-			}
-
-			function GetFileSizeAdjuntoPartidaNewReq(tableID, fileID) {
-				var zTextFields = document.getElementsByTagName("input");
-				for (var i=0; i<zTextFields.length; i++) {
-					thefield=zTextFields[i].name;
-					if (!thefield) thefield=zTextFields[i].id;
-					if (thefield == 'partadjuntos'+ tableID +'['+ fileID +']' ) {
-						thesize=formatBytes(zTextFields[i].files.item(0).size);
-						if (zTextFields[i].files.item(0).size >  100 * 1024 * 1024 ) {
-							alert("El archivo es demasiado grande.\n\nFile: " + zTextFields[i].files.item(0).name + "\nSize: " + thesize);
-							var table = document.getElementById(tableID);
-							table.rows[fileID].cells[1].innerHTML='<b>'+ thesize +'</b>';
-						}else{
-							var table = document.getElementById(tableID);
-							table.rows[fileID].cells[1].innerHTML=thesize ;
-						}
-					}
-				}
-			}
-
 			function GetFileSizeAdjunto(el, tableID, fileID) {
-				thesize=formatBytes(el.files.item(0).size);
+				var thesize = formatBytes(el.files.item(0).size);
 				var table = document.getElementById(tableID);
-				if (el.files.item(0).size >  100 * 1024 * 1024 ) {
-					alert("El archivo es demasiado grande.\n\nFile: " + el.files.item(0).name + "\nSize: " + thesize);
-					table.rows[fileID].cells[1].innerHTML='<b>'+ thesize +'</b>';
-				}else{
-					if (el.files.item(0).size == 0 ) {
-						alert("El archivo esta vacio.\n\nFile: " + el.files.item(0).name + "\nSize: " + thesize);
-						table.rows[fileID].cells[1].innerHTML='<b>'+ thesize +'</b>';
-					}else{
-						table.rows[fileID].cells[1].innerHTML=thesize;
+				table.rows[fileID].cells[1].innerHTML = thesize;
+				if ( el.files.item(0).size >  file_upload_max_size ) {
+					table.rows[fileID].cells[1].style.outline = '#f00 solid 2px';
+				} else {
+					if ( el.files.item(0).size == 0 ) {
+						table.rows[fileID].cells[1].style.outline = '#f00 solid 2px';
+					} else {
+						table.rows[fileID].cells[1].style.outline = '0px';
 					}
 				}
 			}
@@ -242,6 +204,14 @@
 
 			function elementoOcultar(idelemento) {
 				document.getElementById(idelemento).style.visibility="hidden";
+			}
+
+			function elementoDeshabilitar(idelemento) {
+				document.getElementById(idelemento).disabled = true;
+			}
+
+			function elementoHabilitar(idelemento) {
+				document.getElementById(idelemento).disabled = false;
 			}
 
 			function appTextBusqueda(e) {
@@ -273,6 +243,7 @@
 							window.scrollTo(0, window.scrollHeight);
 							t = setInterval(tik, 10);
 						} else {
+							elementoHabilitar("botonenviarnewreq");
 							for (var iter=0; iter < respuesta.validos.length; iter++) {
 								console.log('validos '+ respuesta.validos[iter]);
 								var el=document.getElementById(respuesta.validos[iter]);
@@ -290,6 +261,7 @@
 						}
 					}
 				};
+				elementoDeshabilitar("botonenviarnewreq");
 				xmlhttp.open("POST", "librequisicion.php", true);
 				xmlhttp.send(new FormData(document.getElementById("newreqform")));
 			}
@@ -298,11 +270,28 @@
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
-						if (this.responseText == "OK") {
+						var respuesta = JSON.parse(this.responseText);
+						console.log(respuesta);
+						if ( respuesta.succes == 1 ) {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
 							appHeader();
 							appActualizaVista();
+						} else {
+							for (var iter=0; iter < respuesta.validos.length; iter++) {
+								console.log('validos '+ respuesta.validos[iter]);
+								var el=document.getElementById(respuesta.validos[iter]);
+								if ( el ) {
+									el.style.outline = '0px';
+								}
+							}
+							for (var iter=0; iter < respuesta.errors.length; iter++) {
+								console.log('resaltar '+ respuesta.errors[iter]);
+								var el=document.getElementById(respuesta.errors[iter]);
+								if ( el ) {
+									el.style.outline = '#f00 solid 2px';
+								}
+							}
 						}
 					}
 				};
@@ -314,11 +303,28 @@
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
-						if (this.responseText == "OK") {
+						var respuesta = JSON.parse(this.responseText);
+						console.log(respuesta);
+						if ( respuesta.succes == 1 ) {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
 							appHeader();
 							appActualizaVista();
+						} else {
+							for (var iter=0; iter < respuesta.validos.length; iter++) {
+								console.log('validos '+ respuesta.validos[iter]);
+								var el=document.getElementById(respuesta.validos[iter]);
+								if ( el ) {
+									el.style.outline = '0px';
+								}
+							}
+							for (var iter=0; iter < respuesta.errors.length; iter++) {
+								console.log('resaltar '+ respuesta.errors[iter]);
+								var el=document.getElementById(respuesta.errors[iter]);
+								if ( el ) {
+									el.style.outline = '#f00 solid 2px';
+								}
+							}
 						}
 					}
 				};
@@ -346,11 +352,28 @@
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
-						if (this.responseText == "OK") {
+						var respuesta = JSON.parse(this.responseText);
+						console.log(respuesta);
+						if ( respuesta.succes == 1 ) {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
 							appHeader();
 							appActualizaVista();
+						} else {
+							for (var iter=0; iter < respuesta.validos.length; iter++) {
+								console.log('validos '+ respuesta.validos[iter]);
+								var el=document.getElementById(respuesta.validos[iter]);
+								if ( el ) {
+									el.style.outline = '0px';
+								}
+							}
+							for (var iter=0; iter < respuesta.errors.length; iter++) {
+								console.log('resaltar '+ respuesta.errors[iter]);
+								var el=document.getElementById(respuesta.errors[iter]);
+								if ( el ) {
+									el.style.outline = '#f00 solid 2px';
+								}
+							}
 						}
 					}
 				};
@@ -362,11 +385,28 @@
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
-						if (this.responseText == "OK") {
+						var respuesta = JSON.parse(this.responseText);
+						console.log(respuesta);
+						if ( respuesta.succes == 1 ) {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
 							appHeader();
 							appActualizaVista();
+						} else {
+							for (var iter=0; iter < respuesta.validos.length; iter++) {
+								console.log('validos '+ respuesta.validos[iter]);
+								var el=document.getElementById(respuesta.validos[iter]);
+								if ( el ) {
+									el.style.outline = '0px';
+								}
+							}
+							for (var iter=0; iter < respuesta.errors.length; iter++) {
+								console.log('resaltar '+ respuesta.errors[iter]);
+								var el=document.getElementById(respuesta.errors[iter]);
+								if ( el ) {
+									el.style.outline = '#f00 solid 2px';
+								}
+							}
 						}
 					}
 				};
@@ -378,7 +418,20 @@
 				appHeader();
 				appMenu();
 				appActualizaVista();
+				getServerInfo();
 				f = setInterval(tok, 60000);
+			}
+
+			function getServerInfo() {
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						file_upload_max_size = this.responseText;
+						console.log(this.responseText);
+					}
+				};
+				xmlhttp.open("GET", "libphp.php?action=getserverinfo", true);
+				xmlhttp.send();
 			}
 
 			function tok() {
@@ -907,7 +960,7 @@
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartadjuntos["+ tableID +"][]' value='"+ newRow +"'><input type='file' onchange='GetFileSizeAdjuntoPartidaNewReq(\""+ tableID +"\","+ newRow +");' name='partadjuntos"+ tableID +"["+newRow+"]' />";
+				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartadjuntos["+ tableID +"][]' value='"+ newRow +"'><input type='file' onchange='GetFileSizeAdjunto(this, \""+ tableID +"\","+ newRow +");' name='partadjuntos"+ tableID +"["+newRow+"]' />";
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
@@ -916,7 +969,7 @@
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-				row.insertCell(0).innerHTML = "<input type='hidden' name='totalreqadjuntos[]' value='"+ newRow +"'><input type='file' onchange='GetFileSizeAdjuntoNewReq("+ newRow +");' name='reqadjuntos["+ newRow +"]' />";
+				row.insertCell(0).innerHTML = "<input type='hidden' name='totalreqadjuntos[]' value='"+ newRow +"'><input type='file' onchange='GetFileSizeAdjunto(this, \""+ tableID +"\","+ newRow +");' name='reqadjuntos["+ newRow +"]' />";
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
