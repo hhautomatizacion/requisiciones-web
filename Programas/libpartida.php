@@ -24,59 +24,44 @@
 			$rutadestino=$rutaupload ."/". $nombrearchivo;
 		}
 		if (move_uploaded_file($rutatemp,$rutadestino)) {
-			//$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0,". $idpartida .",'". $nombrearchivo ."',". $longitudarchivo .",". $_COOKIE["usuario"] .",NOW(),1);");
-			//$res->execute();
 			$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
 			$res->execute([$idpartida, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
 			echo "OK";
 		}	
 	}
+
 	if ( isset($_GET["id"]) ) {
 		$idpartida=$_GET["id"];
 		switch ($_GET["action"]) {
 			case "parttobesupplied":
-				//$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE id=". $idpartida .";");
-				//$res->execute();
 				$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE id= ?;");
 				$res->execute([$idpartida]);
-				//$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id IN (SELECT idrequisicion FROM partidas WHERE id=". $idpartida .");");
-				//$res->execute();
 				$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id IN (SELECT idrequisicion FROM partidas WHERE id= ?);");
 				$res->execute([$idpartida]);
 				echo "OK";
 				break;
 			case "partsupplied":
-				//$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE id=". $idpartida .";");
-				//$res->execute();
 				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE id= ?;");
 				$res->execute([$idpartida]);
-				//$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 5,". $idpartida .", ". $_COOKIE["usuario"] .",1)");
-				//$res->execute();
 				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 5, ?,  ?,1)");
 				$res->execute([$idpartida, $_COOKIE["usuario"]]);
 				echo "OK";
 				break;
 			case "partdelete":
-				//$res = $db->prepare("UPDATE partidas SET activo=0 WHERE id=". $idpartida .";");
-				//$res->execute();
 				$res = $db->prepare("UPDATE partidas SET activo=0 WHERE id= ?;");
 				$res->execute([$idpartida]);
-				//$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 6,". $idpartida .", ". $_COOKIE["usuario"] .",1)");
-				//$res->execute();
 				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 6, ?,  ?,1)");
 				$res->execute([$idpartida, $_COOKIE["usuario"]]);
 				echo "OK";
 				break;
 			case "partundelete":
-				//$res = $db->prepare("UPDATE partidas SET activo=1 WHERE id=". $idpartida .";");
-				//$res->execute();
 				$res = $db->prepare("UPDATE partidas SET activo=1 WHERE id= ?;");
 				$res->execute([$idpartida]);
 				echo "OK";
 				break;
 		}
 	}
-	
+
 	function PartidaEsActiva($idpartida) {
 		global $db;
 		$resultado=false;
@@ -89,6 +74,7 @@
 		}
 		return $resultado;
 	}
+
 	function PartidaEsSurtida($idpartida) {
 		global $db;
 		$resultado=0;
@@ -102,6 +88,7 @@
 		}
 		return $resultado;
 	}
+
 	function AccionesPartida($idpartida) {
 		global $db;
 		$idrequisicion=0;
@@ -123,12 +110,14 @@
 			if ( RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && PartidaEsSurtida($idpartida) ) {
 				$resultado .= "<button onClick=\"appPorsurtirPartida(". $idpartida .",". $idrequisicion .");\">Por surtir</button>";
 			}
-			if ( !PartidaEsActiva($idpartida) && RequisicionEsActiva($idrequisicion) ) {	
+			if ( !PartidaEsActiva($idpartida) && RequisicionEsActiva($idrequisicion) ) {
 				$resultado .= "<button onClick=\"appRestauraPartida(". $idpartida .",". $idrequisicion .");\">Restaurar</button>";
 			}
+			$resultado .= "<button onClick=\"appEditarPartida(". $idpartida .",". $idrequisicion .");\">Editar</button>";
 		}
 		return $resultado;
 	}
+
 	function AgregarAdjuntosPartida($idpartida) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
@@ -138,6 +127,7 @@
 		}
 		return $resultado;
 	}
+
 	function MostrarAdjuntosPartida($idpartida,$q) {
 		global $db;
 		$resultado="";
@@ -152,6 +142,7 @@
 		$resultado .= "</table>";
 		return $resultado;
 	}
+
 	function AgregarComentariosPartida($idpartida) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
@@ -161,6 +152,7 @@
 		}
 		return $resultado;
 	}
+
 	function ComentarioPartEsActivo($idcomentario) {
 		global $db;
 		$resultado=false;
@@ -187,6 +179,7 @@
 		}
 		return $resultado;
 	}
+
 	function AccionesComentarioPartida($idcomentario) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
@@ -204,6 +197,7 @@
 		}
 		return $resultado;
 	}
+
 	function MostrarComentariosPartida($idpartida,$q) {
 		global $db;	
 		$resultado="";
@@ -223,7 +217,5 @@
 		}
 		$resultado .= "</table>";
 		return $resultado;
-	}	
-	
-	
+	}
 ?>

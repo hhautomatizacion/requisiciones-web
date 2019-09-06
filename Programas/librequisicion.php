@@ -707,6 +707,7 @@
 		}
 		return $resultado;
 	}
+
 	function ComentarioReqEsMio($idcomentario) {
 		global $db;
 		$resultado=false;
@@ -804,8 +805,8 @@
 			if ( strval($row[5]) == 0 ) {
 				$clase .= " partdeleted";
 			}
-			$resultado .= "<tr class=\"". $clase ."\"><td>";
-			$resultado .= "<table >";
+			$resultado .= "<tr id=\"part". $row[0] ."\" class=\"". $clase ."\"><td>";
+			$resultado .= "<table id=\"corepart". $row[0] ."\">";
 			$resultado .= "<tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr>";
 			$resultado .= "<tr><td>". (float)$row[2] ."</td><td>". ObtenerDescripcionDesdeID("unidades",$row[3],"unidad") ."</td><td>". resaltarBusqueda($row[4], $q) ."</td><td>". ObtenerDescripcionDesdeID("centroscostos",$row[9],"descripcion") ."</td></tr>";
 			$resultado .= "</table>";
@@ -1010,8 +1011,8 @@
 			if ( strval($row[5]) == 0 ) {
 				$clase .= " partdeleted";
 			}
-			$resultado .= "<tr class=\"". $clase ."\"><td>";
-			$resultado .= "<table >";
+			$resultado .= "<tr id=\"corepart". $row[0] ."\" class=\"". $clase ."\"><td>";
+			$resultado .= "<table id=\"corepart". $row[0] ."\">";
 			$resultado .= "<tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr>";
 			$resultado .= "<tr><td>". (float)$row[2] ."</td><td>". ObtenerDescripcionDesdeID("unidades",$row[3],"unidad") ."</td><td>". $row[4] ."</td><td>". ObtenerDescripcionDesdeID("centroscostos",$row[9],"descripcion") ."</td></tr>";
 			$resultado .= "</table>";

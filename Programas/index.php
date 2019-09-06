@@ -729,7 +729,7 @@
 
 			function saveComentarioReq(tableID, rowID){
 				var table = document.getElementById(tableID);
-				var comentario= table.rows[rowID].cells[0].lastChild;
+				var comentario = table.rows[rowID].cells[0].lastChild;
 				var idrequisicion = tableID.toString().replace("tablacomentariosreq","");
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
@@ -1074,6 +1074,10 @@
 				};
 				xmlhttp.open("GET","libpartida.php?action=partdelete&id="+idpartida,true);
 				xmlhttp.send();
+			}
+
+			function appEditarPartida(idpartida, idrequisicion) {
+				
 			}
 
 			function appSurtePartida(idpartida, idrequisicion) {
