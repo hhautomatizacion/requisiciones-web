@@ -1,9 +1,9 @@
 <?php
-	require_once("libconfig.php");
-	require_once("libdb.php");
-	require_once("libphp.php");
-	require_once("libpartida.php");
-	require_once("libuser.php");
+	require_once "libconfig.php";
+	require_once "libdb.php";
+	require_once "libphp.php";
+	require_once "libpartida.php";
+	require_once "libuser.php";
 
 	if ( isset($_GET["action"]) && $_GET["action"] == "comadd" ) {
 		if ( isset($_GET["type"]) && $_GET["type"] == "comreq" ) {
@@ -11,7 +11,7 @@
 				$idrequisicion=$_GET["idreq"];
 				$comentario=urldecode($_GET["comentario"]);
 				$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(),1);");
-				$res->execute([$idrequisicion, $comentario, $_COOKIE["usuario"]]);
+				$res->execute([$idrequisicion, $comentario, usuarioId()]);
 				echo "OK";
 			}
 		}
@@ -20,7 +20,7 @@
 				$idpartida=$_GET["idpart"];
 				$comentario=urldecode($_GET["comentario"]);
 				$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0, ?,0, ?, ?,NOW(),1);");
-				$res->execute([$idpartida, $comentario, $_COOKIE["usuario"]]);
+				$res->execute([$idpartida, $comentario, usuarioId()]);
 				echo "OK";
 			}
 		}

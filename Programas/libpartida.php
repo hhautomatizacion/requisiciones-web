@@ -1,8 +1,8 @@
 <?php
-	require_once("libconfig.php");
-	require_once("libdb.php");
-	require_once("libphp.php");
-	require_once("librequisicion.php");
+	require_once "libconfig.php";
+	require_once "libdb.php";
+	require_once "libphp.php";
+	require_once "librequisicion.php";
 
 	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntopart" ) {
 		$idpartida=$_POST["partida"];
@@ -25,7 +25,7 @@
 		}
 		if (move_uploaded_file($rutatemp,$rutadestino)) {
 			$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
-			$res->execute([$idpartida, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
+			$res->execute([$idpartida, $nombrearchivo, $longitudarchivo, usuarioId()]);
 			echo "OK";
 		}	
 	}
@@ -41,17 +41,17 @@
 				echo "OK";
 				break;
 			case "partsupplied":
-				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE id= ?;");
+				$res = $db->prepare("UPDATE partidas SET surtida=1, fechasurtida=NOW() WHERE id= ?;");
 				$res->execute([$idpartida]);
 				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 5, ?,  ?,1)");
-				$res->execute([$idpartida, $_COOKIE["usuario"]]);
+				$res->execute([$idpartida, usuarioId()]);
 				echo "OK";
 				break;
 			case "partdelete":
-				$res = $db->prepare("UPDATE partidas SET activo=0 WHERE id= ?;");
+				$res = $db->prepare("UPDATE partidas SET activo=0, fechaactiva=NOW() WHERE id= ?;");
 				$res->execute([$idpartida]);
 				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 6, ?,  ?,1)");
-				$res->execute([$idpartida, $_COOKIE["usuario"]]);
+				$res->execute([$idpartida, usuarioId()]);
 				echo "OK";
 				break;
 			case "partundelete":
@@ -169,7 +169,7 @@
 		global $db;
 		$resultado=false;
 		if ( usuarioEsLogeado() ) {
-			$res = $db->prepare("SELECT id FROM comentariospartidas WHERE id=". $idcomentario ." AND idusuario=". $_COOKIE["usuario"] .";");
+			$res = $db->prepare("SELECT id FROM comentariospartidas WHERE id=". $idcomentario ." AND idusuario=". usuarioId() .";");
 			$res->execute();
 			while ($row = $res->fetch()) {
 				if ( $row[0] == $idcomentario ) {

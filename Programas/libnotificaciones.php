@@ -1,15 +1,15 @@
 <?php
 	use PHPMailer\PHPMailer\PHPMailer;
 
-	require_once("PHPMailer.php");
-	require_once("SMTP.php");
-	require_once("libconfig.php");
-	require_once("libdb.php");
-	require_once("libphp.php");
-	require_once("libpartida.php");
-	require_once("librequisicion.php");
-	require_once("libpdf.php");
-	require_once("libuser.php");
+	require_once "PHPMailer.php";
+	require_once "SMTP.php";
+	require_once "libconfig.php";
+	require_once "libdb.php";
+	require_once "libphp.php";
+	require_once "libpartida.php";
+	require_once "librequisicion.php";
+	require_once "libpdf.php";
+	require_once "libuser.php";
 
 	function NotificacionesPartidas() {
 		global $db;
@@ -46,7 +46,6 @@
 		$idusuario=0;
 		$idsolicitante=0;
 		$destinatarios=array();
-		//writelog('enviar notif '. $idnotificacion .' de la req '. $idrequisicion);
 		$res= $db->prepare("SELECT idusuario, clave FROM notificacionesrequisiciones WHERE id=". $idnotificacion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -75,54 +74,46 @@
 			if ( $idusuario != $row[1] && $row[0] != $row[1]) {
 				$destinatarios[] = $row[1];
 			}
-		}		
-		writelog("Enviar correos a...");
-		writelog($destinatarios);
+		}
 		foreach ($destinatarios as $dest) {
 			$direccion = ObtenerDescripcionDesdeID("usuarios", $dest, "email");
 			$mensaje=ObtenerDescripcionDesdeID("usuarios", $idusuario , "nombre") ." reporta la requisicion Id=". $idrequisicion ." como ". $tiponotificacion;
 			if ( $direccion != '') {
-			writelog('enviar notificacion a '. $direccion .' requisicion '. $idrequisicion .'');
-			enviarRequisicionPorCorreo($idrequisicion, $direccion, "Requisicion Id=". $idrequisicion ." ". $tiponotificacion, $mensaje);
+				enviarRequisicionPorCorreo($idrequisicion, $direccion, "Requisicion Id=". $idrequisicion ." ". $tiponotificacion, $mensaje);
 			}
 		}
 	}
 
 	function obtenerAdjuntosRequisicion($idrequisicion) {
 		global $db;
+		$mail_attachmentsize = obtenerPreferenciaGlobal("mail","attachmentsize","10485760");
 		$nombre = "";
 		$longitud = 0;
 		$partidas = array();
 		$resultado = array();
+		$longitudmax = parse_size($mail_attachmentsize);
 		$uploaddir = "uploads/";
-		writelog("Obtener adjuntos requisicion ". $idrequisicion);
 		$res= $db->prepare("SELECT nombre, longitud FROM adjuntosrequisiciones WHERE idrequisicion=". $idrequisicion ." AND activo=1;");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$nombre = $row[0];
 			$longitud = $row[1];
-			if ( $longitud > 10 * 1024 * 1024 ) {
-				writelog("Archivo demasiado grande ". $nombre);
-			}else{
+			if ( $longitud <= $longitudmax ) {
 				$resultado[] = $uploaddir ."r". $idrequisicion ."/". $nombre;
 			}
 		}
-		writelog("Partidas:");
 		$res= $db->prepare("SELECT id FROM partidas WHERE idrequisicion=". $idrequisicion ." AND activo=1;");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$partidas[] = $row[0];
 		}
-		writelog($partidas);
 		foreach ( $partidas as $idpartida ) {
 			$res= $db->prepare("SELECT nombre, longitud FROM adjuntospartidas WHERE idpartida=". $idpartida ." AND activo=1;");
 			$res->execute();
 			while ($row = $res->fetch()) {
 				$nombre = $row[0];
 				$longitud = $row[1];
-				if ( $longitud > 10 * 1024 * 1024 ) {
-					writelog("Archivo demasiado grande ". $nombre);
-				}else{
+				if ( $longitud <= $longitudmax ) {
 					$resultado[] = $uploaddir ."p". $idpartida ."/". $nombre;
 				}
 			}
@@ -131,13 +122,12 @@
 	}
 
 	function enviarRequisicionPorCorreo($idrequisicion, $direccion, $asunto, $mensaje) {
-		global $mail_server;
-		global $mail_port;
-		global $mail_user;
-		global $mail_pass;
-		global $mail_fromaddress;
-		global $mail_fromname;
-
+		$mail_server = obtenerPreferenciaGlobal("mail","server","128.128.5.243");
+		$mail_port = obtenerPreferenciaGlobal("mail","port","25");
+		$mail_user = obtenerPreferenciaGlobal("mail","user","mttocl");
+		$mail_pass = obtenerPreferenciaGlobal("mail","pass","lcottm");
+		$mail_fromaddress = obtenerPreferenciaGlobal("mail","fromaddres","mttocl@cualquierlavado.com.mx");
+		$mail_fromname = obtenerPreferenciaGlobal("mail","fromname","MantenimientoCL");
 		$message = '<html>';
 		$message .= '<head>';
 		$message .= '<style>';
@@ -153,6 +143,11 @@
 		$message .= 'tr:last-child>td {';
 		$message .= 'border-bottom: 0px;';
 		$message .= '}';
+		$message .= '.campo {';
+		$message .= 'border: 0;';
+		$message .= 'width:100%;';
+		$message .= 'margin-bottom: 1px;';
+		$message .= '}';
 		$message .= '.req {background: lightgray;}';
 		$message .= '.printed {background: #FFC040;}';
 		$message .= '.supplied {background: #C0C080;}';
@@ -167,12 +162,11 @@
 		$message .= '</style>';
 		$message .= '</head>';
 		$message .= '<body>';
-		$message .= ResumenRequisicion($idrequisicion);
+		$message .= MostrarRequisicion($idrequisicion);
 		$message .= '</body>';
 		$message .= '</html>';
-	 
+		writelog($message);
 		$mail = new PHPMailer(true);
-
 		try 
 		{
 			$mail->IsSMTP();
@@ -182,27 +176,21 @@
 			$mail->Password = $mail_pass;
 			$mail->SMTPSecure = 'tls';
 			$mail->port = $mail_port;
-
 			$mail->setFrom($mail_fromaddress,$mail_fromname);
 			$mail->addAddress($direccion);
-
 			$mail->IsHTML(true);
 			$mail->CharSet = 'utf-8';
 			$mail->Subject=$asunto;
 			$mail->Body=$message;
-
-			foreach ( obtenerAdjuntosRequisicion($idrequisicion) as $adjunto) {
-				writelog("Adjuntando ". $adjunto);
+			foreach ( obtenerAdjuntosRequisicion($idrequisicion) as $adjunto ) {
 				$mail->addAttachment($adjunto);
 			}
-
 			$mail->send();
 		}
 		catch (Exception $e)
 		{
 			writelog('Error al enviar correo: '. $asunto . ' a '. $direccion);
 		}
-		
 	}
 	function notificarPartidas() {
 		global $db;

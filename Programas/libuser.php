@@ -1,11 +1,11 @@
 <?php
 	use PHPMailer\PHPMailer\PHPMailer;
 
-	require_once("PHPMailer.php");
-	require_once("SMTP.php");
-	require_once("libconfig.php");
-	require_once("libdb.php");
-	require_once("libphp.php");
+	require_once "PHPMailer.php";
+	require_once "SMTP.php";
+	require_once "libconfig.php";
+	require_once "libdb.php";
+	require_once "libphp.php";
 
 	if ( isset($_GET["action"]) && $_GET["action"] == "showpreferencesform" ) {
 		$resultado= formPreferencesForm();
@@ -29,42 +29,39 @@
 
 	if ( isset($_GET["action"]) && $_GET["action"] == "logout" ) {
 		setcookie("usuario","");
-		usuarioDesactivarToken();
+		//usuarioDesactivarToken();
 		echo "OK";
 	}
 
 	if ( isset($_POST["action"]) && $_POST["action"] == "login" ) {
-		//if ( $_POST["name"] || $_POST["password"] ) {
-			$errores=array();
-			$validos=array();
-
-			$nombre=$_POST["name"];
-			$password=$_POST["password"];
-			if ( strlen($nombre) == 0) {
-				$errores[] = "name";
-			} else {
-				$validos[] = "name";
-			}
-			if ( strlen($password) == 0) {
-				$errores[] = "password";
-			} else {
-				$validos[] = "password";
-			}
-			if ( count($errores) == 0 ) {
-				if (usuarioDarEntrada(usuarioVerificarCredenciales($nombre, $password)) > 0) {
-					echo json_encode(array('succes' => 1));
-					if ( isset($_POST["autologin"]) && $_POST["autologin"] == "on" ) {
-						usuarioActivarToken();
-					}
-				}else{
-					$errores[]="loginform";
-					echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
-				}
+		$errores=array();
+		$validos=array();
+		$nombre=$_POST["name"];
+		$password=$_POST["password"];
+		if ( strlen($nombre) == 0) {
+			$errores[] = "name";
+		} else {
+			$validos[] = "name";
+		}
+		if ( strlen($password) == 0) {
+			$errores[] = "password";
+		} else {
+			$validos[] = "password";
+		}
+		if ( count($errores) == 0 ) {
+			if (usuarioDarEntrada(usuarioVerificarCredenciales($nombre, $password)) > 0) {
+				echo json_encode(array('succes' => 1));
+				/* if ( isset($_POST["autologin"]) && $_POST["autologin"] == "on" ) {
+					usuarioActivarToken();
+				} */
 			}else{
-				$validos[]="loginform";
+				$errores[]="loginform";
 				echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 			}
-		//}
+		}else{
+			$validos[]="loginform";
+			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
+		}
 	}
 
 	if ( isset($_POST["action"]) && $_POST["action"] == "signin" ) {
@@ -140,7 +137,7 @@
 			$validos[] = "password2";
 		}
 		if ( count($errores) == 0 ){
-			$res = $db->prepare("INSERT INTO usuarios VALUES (0,". $_REQUEST["numero"] .",'". $_REQUEST["nombre"] ."','". $_REQUEST["usuario"] ."','". $_REQUEST["email"] ."',SHA1('". $_REQUEST["password1"] ."'),'',0,0,1);");
+			$res = $db->prepare("INSERT INTO usuarios VALUES (0,". $_REQUEST["numero"] .",'". $_REQUEST["nombre"] ."','". $_REQUEST["usuario"] ."','". $_REQUEST["email"] ."',SHA1('". $_REQUEST["password1"] ."'), NULL, NULL, '', 0, 0, 1);");
 			$res->execute();
 			echo json_encode(array('succes' => 1));
 		} else {
@@ -162,7 +159,7 @@
 			$validos[]="password2";
 		}
 		if ( count($errores) == 0 ){
-			$res = $db->prepare("UPDATE usuarios SET password=SHA1('". $_REQUEST["password1"] ."') WHERE id=". $_COOKIE["usuario"] .";");
+			$res = $db->prepare("UPDATE usuarios SET password=SHA1('". $_REQUEST["password1"] ."') WHERE id=". usuarioId() .";");
 			$res->execute();
 			echo json_encode(array('succes' => 1));
 		} else {
@@ -180,13 +177,13 @@
 		if ( $numero < 0 ){
 			$errores[] = "numero";
 		} else {
-			$id = $_COOKIE["usuario"];
+			$id = usuarioId();
 			$res = $db->prepare("SELECT id FROM usuarios WHERE numero=". $numero .";");
 			$res->execute();
 			while ($row = $res->fetch()) {
 				$id = $row[0];
 			}
-			if ( $id == $_COOKIE["usuario"] ) {
+			if ( $id == usuarioId() ) {
 				$validos[] = "numero";
 			} else {
 				$errores[] = "numero";
@@ -195,13 +192,13 @@
 		if ( strlen($nombre) == 0 ){
 			$errores[] = "nombre";
 		} else {
-			$id = $_COOKIE["usuario"];
+			$id = usuarioId();
 			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $nombre ."') OR LCASE(usuario)=LCASE('". $nombre ."') OR LCASE(email)=LCASE('". $nombre ."');");
 			$res->execute();
 			while ($row = $res->fetch()) {
 				$id=$row[0];
 			}
-			if ( $id == $_COOKIE["usuario"] ) {
+			if ( $id == usuarioId() ) {
 				$validos[] = "nombre";
 			} else {
 				$errores[] = "nombre";
@@ -210,13 +207,13 @@
 		if ( strlen($usuario) == 0 ){
 			$errores[] = "usuario";
 		} else {
-			$id = $_COOKIE["usuario"];
+			$id = usuarioId();
 			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $usuario ."') OR LCASE(usuario)=LCASE('". $usuario ."') OR LCASE(email)=LCASE('". $usuario ."');");
 			$res->execute();
 			while ($row = $res->fetch()) {
 				$id=$row[0];
 			}
-			if ( $id == $_COOKIE["usuario"] ) {
+			if ( $id == usuarioId() ) {
 				$validos[] = "usuario";
 			} else {
 				$errores[] = "usuario";
@@ -225,20 +222,20 @@
 		if ( strlen($email) == 0 ){
 			$errores[] = "email";
 		} else {
-			$id = $_COOKIE["usuario"];
+			$id = usuarioId();
 			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $email ."') OR LCASE(usuario)=LCASE('". $email ."') OR LCASE(email)=LCASE('". $email ."');");
 			$res->execute();
 			while ($row = $res->fetch()) {
 				$id=$row[0];
 			}
-			if ( $id == $_COOKIE["usuario"] ) {
+			if ( $id == usuarioId() ) {
 				$validos[] = "email";
 			} else {
 				$errores[] = "email";
 			}
 		}
 		if ( count($errores) == 0 ){
-			$res = $db->prepare("UPDATE usuarios SET numero=". $numero .", nombre='". $nombre ."', usuario='". $usuario ."', email='". $email ."' WHERE id=". $_COOKIE["usuario"] .";");
+			$res = $db->prepare("UPDATE usuarios SET numero=". $numero .", nombre='". $nombre ."', usuario='". $usuario ."', email='". $email ."' WHERE id=". usuarioId() .";");
 			$res->execute();
 			echo json_encode(array('succes' => 1));
 		}else{
@@ -270,12 +267,12 @@
 	}
 
 	function enviarPorCorreo($direccion, $asunto, $mensaje) {
-		global $mail_server;
-		global $mail_port;
-		global $mail_user;
-		global $mail_pass;
-		global $mail_fromaddress;
-		global $mail_fromname;
+		$mail_server = obtenerPreferenciaGlobal("mail","server","128.128.5.243");
+		$mail_port = obtenerPreferenciaGlobal("mail","port","25");
+		$mail_user = obtenerPreferenciaGlobal("mail","user","mttocl");
+		$mail_pass = obtenerPreferenciaGlobal("mail","pass","lcottm");
+		$mail_fromaddress = obtenerPreferenciaGlobal("mail","fromaddres","mttocl@cualquierlavado.com.mx");
+		$mail_fromname = obtenerPreferenciaGlobal("mail","fromname","MantenimientoCL");
 
 		$mail = new PHPMailer(true);
 		try
@@ -302,10 +299,10 @@
 	}
 
 	function formPreferencesForm() {
-		$numero = ObtenerDescripcionDesdeID("usuarios", $_COOKIE["usuario"], "numero");
-		$nombre = ObtenerDescripcionDesdeID("usuarios", $_COOKIE["usuario"], "nombre");
-		$usuario = ObtenerDescripcionDesdeID("usuarios", $_COOKIE["usuario"], "usuario");
-		$email = ObtenerDescripcionDesdeID("usuarios", $_COOKIE["usuario"], "email");
+		$numero = ObtenerDescripcionDesdeID("usuarios", usuarioId(), "numero");
+		$nombre = ObtenerDescripcionDesdeID("usuarios", usuarioId(), "nombre");
+		$usuario = ObtenerDescripcionDesdeID("usuarios", usuarioId(), "usuario");
+		$email = ObtenerDescripcionDesdeID("usuarios", usuarioId(), "email");
 
 		$resultado="";
 		$resultado .="<form id=\"edituserform\" method = \"POST\">";
@@ -478,26 +475,54 @@
 		}
 		return $resultado;
 	}
+	
+	function usuarioId() {
+		global $db;
+		$resultado = 0;
+		$token = $_COOKIE["usuario"];
+		$res = $db->prepare("SELECT id FROM usuarios WHERE token = ? AND activo = 1;");
+		$res->execute([$token]);
+		while ($row = $res->fetch()) {
+			$resultado = $row[0];
+		}
+		return $resultado;
+	}
 
 	function usuarioNombre() {
-		return ObtenerDescripcionDesdeID("usuarios", $_COOKIE["usuario"] ,"nombre");
+		return ObtenerDescripcionDesdeID("usuarios", usuarioId() ,"nombre");
 	}
 
 	function usuarioEsLogeado() {
-		return ( isset($_COOKIE["usuario"])  && $_COOKIE["usuario"] != "" );
+		return ( usuarioId() != 0 );
 	}
 
-	function usuarioEsSuper($idusuario = "") {
+	function usuarioEsSuper() {
 		global $db;
 		$resultado=false;
-		if ( usuarioEsLogeado() ) {
+		/* if ( usuarioEsLogeado() ) {
 			if ( $idusuario == "" ) {
-				$idusuario = $_COOKIE["usuario"];
-			}
-			$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND su=1 AND activo=1");
-			$res->execute([$idusuario]);
+				$idusuario =usuarioId();
+			} */
+		$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND su=1 AND activo=1");
+		$res->execute([usuarioId()]);
+		while ($row = $res->fetch()) {
+			$resultado=true;
+		}
+		//}
+		return $resultado;
+	}
+	
+	function crearToken() {
+		global $db;
+		$resultado = "";
+		$usuarios = 1;
+		while ($usuarios > 0) {
+			$usuarios = 0;
+			$resultado = randomString(8);
+			$res = $db->prepare("SELECT COUNT(id) FROM usuarios WHERE token = ?;");
+			$res->execute([$resultado]);
 			while ($row = $res->fetch()) {
-				$resultado=true;
+				$usuarios = $row[0];
 			}
 		}
 		return $resultado;
@@ -505,19 +530,31 @@
 
 	function usuarioDarEntrada($idusuario) {
 		global $db;
-		$resultado=0;
+		$resultado = 0;
+		$usuarios = 1;
+		/* while ($usuarios > 0) {
+			$usuarios = 0;
+			$token = randomString(8);
+			$res = $db->prepare("SELECT COUNT(id) FROM usuarios WHERE token = ?;");
+			$res->execute([$token]);
+			while ($row = $res->fetch()) {
+				$usuarios = $row[0];
+			}
+		} */
+		$token = crearToken();
 		$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND activo=1");
 		$res->execute([$idusuario]);
 		while ($row = $res->fetch()) {
-			setcookie("usuario",$row[0]);
-			$res = $db->prepare("UPDATE usuarios SET recovery=0, recoverypw='' WHERE id=?" );
-			$res->execute([$row[0]]);
-			$resultado=$row[0];
+			setcookie("usuario",$token);
+			$resultado = $row[0];
+			$res = $db->prepare("UPDATE usuarios SET token= ?, ultimologin=NOW(), recovery=0, recoverypw='' WHERE id=?" );
+			$res->execute([$token, $row[0]]);
+			
 		}
 		return $resultado;
 	}
 
-	function usuarioDesactivarToken() {
+	/* function usuarioDesactivarToken() {
 		global $db;
 		$db->prepare("DELETE FROM tokensusuarios WHERE cliente=?")->execute([$_SERVER["REMOTE_ADDR"]]);
 		setcookie("token", "");
@@ -529,9 +566,9 @@
 		$tokenNuevo=randomString(40);
 		$db->prepare("INSERT INTO tokensusuarios VALUES (0,?,?,?,DATE_ADD(NOW(), INTERVAL 7 DAY)")->execute([$_COOKIE["usuario"], $_SERVER["REMOTE_ADDR"], $tokenNuevo]);
 		setcookie("token", $tokenNuevo, time()+604800);
-	}
+	} */
 
-	function userAutoLogin() {
+/* 	function userAutoLogin() {
 		global $db;
 		$token = "";
 		$userId = "";
@@ -547,38 +584,42 @@
 				usuarioDarEntrada($userId);
 			}
 		}
-	}
+	} */
 
 	function guardarPreferencia($seccion, $clave, $valor) {
 		global $db;
 		$resultado = 0;
 		$res = $db->prepare("SELECT id FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
-		$res->execute([$_COOKIE["usuario"], $seccion, $clave]);
+		$res->execute([usuarioId(), $seccion, $clave]);
 		while ($row = $res->fetch()) {
 			$resultado = $row[0];
 		}
 		if ( $resultado > 0 ) {
 			$res = $db->prepare("UPDATE opcionesusuarios SET valor= ? WHERE idusuario= ? AND seccion= ? AND clave= ?;");
-			$res->execute([$valor, $_COOKIE["usuario"], $seccion, $clave]);
+			$res->execute([$valor, usuarioId(), $seccion, $clave]);
 		}
 		else
 		{
 			$res = $db->prepare("INSERT INTO opcionesusuarios VALUES (0,  ?,  ?,  ?,  ?);");
-			$res->execute([$_COOKIE["usuario"], $seccion, $clave, $valor]);
+			$res->execute([usuarioId(), $seccion, $clave, $valor]);
 		}
-		return $resultado;
 	}
 
 	function obtenerPreferencia($seccion, $clave, $default='') {
 		global $db;
 		$resultado = $default;
-		if ( isset($_COOKIE["usuario"]) ) {
-			$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
-			$res->execute([$_COOKIE["usuario"], $seccion, $clave]);
-			while ($row = $res->fetch()) {
-				$resultado = $row[0];
-			}
+		$encontrado = false;
+		//if ( isset($_COOKIE["usuario"]) ) {
+		$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
+		$res->execute([usuarioId(), $seccion, $clave]);
+		while ($row = $res->fetch()) {
+			$encontrado = true;
+			$resultado = $row[0];
 		}
+		if (!$encontrado) {
+			guardarPreferencia($seccion, $clave, $resultado);
+		}
+		//}
 		return $resultado;
 	}
 ?>

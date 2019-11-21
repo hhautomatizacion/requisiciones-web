@@ -1,16 +1,36 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
+		<link rel="shortcut icon" href="favicon.ico">
+		<link rel="icon" sizes="16x16 32x32 64x64" href="favicon.ico">
+		<link rel="icon" type="image/png" sizes="196x196" href="favicon-192.png">
+		<link rel="icon" type="image/png" sizes="160x160" href="favicon-160.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="favicon-96.png">
+		<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+		<link rel="apple-touch-icon" href="favicon-57.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="favicon-114.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="favicon-72.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="favicon-144.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="favicon-60.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="favicon-120.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="favicon-76.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="favicon-152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+		<meta name="msapplication-TileColor" content="#FFFFFF">
+		<meta name="msapplication-TileImage" content="favicon-144.png">
+		<meta name="msapplication-config" content="/browserconfig.xml">
 		<?php
-			require_once("libconfig.php");
-			require_once("libdb.php");
-			require_once("libphp.php");
-			require_once("libuser.php");
+			require_once "libconfig.php";
+			require_once "libdb.php";
+			require_once "libphp.php";
+			require_once "libuser.php";
 		?>
 		<style type="text/css">
 			* {
-				font-family: <?php echo obtenerPreferencia('pagina', 'FontName', 'Arial'); ?>;
-				font-size: <?php echo obtenerPreferencia('pagina', 'FontSize', '15px'); ?>;
+				font-family: 'Arial';
+				font-size: '15px';
 			}
 			b {
 				border-radius: 3px;
@@ -18,7 +38,7 @@
 				padding: 0px;
 				width:100%;
 				color:white;
-				background:red
+				background:red;
 			}
 			table {
 				border-radius: 5px;
@@ -28,6 +48,7 @@
 			}
 			td {
 				border-bottom: 1px solid gray;
+				vertical-align: top;
 			}
 			tr:last-child>td {
 				border-bottom: 0px;
@@ -148,6 +169,12 @@
 				vertical-align: -moz-middle-with-baseline;
 				vertical-align: middle;
 			}
+			.campo {
+				//border-radius: 5px;
+				border: 0;
+				width:100%;
+				margin-bottom: 1px;
+			}
 			.req {background: lightgray;}
 			.printed {background: #FFC040;}
 			.supplied {background: #C0C080;}
@@ -233,9 +260,7 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						var respuesta = JSON.parse(this.responseText);
-						console.log(respuesta);
 						if ( respuesta.succes == 1 ) {
-							console.log('id nueva req '+ respuesta.id);
 							requisiciones[requisiciones.length] = respuesta.id;
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
@@ -245,14 +270,12 @@
 						} else {
 							elementoHabilitar("botonenviarnewreq");
 							for (var iter=0; iter < respuesta.validos.length; iter++) {
-								console.log('validos '+ respuesta.validos[iter]);
 								var el=document.getElementById(respuesta.validos[iter]);
 								if ( el ) {
 									el.style.outline = '0px';
 								}
 							}
 							for (var iter=0; iter < respuesta.errors.length; iter++) {
-								console.log('resaltar '+ respuesta.errors[iter]);
 								var el=document.getElementById(respuesta.errors[iter]);
 								if ( el ) {
 									el.style.outline = '#f00 solid 2px';
@@ -271,7 +294,6 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						var respuesta = JSON.parse(this.responseText);
-						console.log(respuesta);
 						if ( respuesta.succes == 1 ) {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
@@ -279,14 +301,12 @@
 							appActualizaVista();
 						} else {
 							for (var iter=0; iter < respuesta.validos.length; iter++) {
-								console.log('validos '+ respuesta.validos[iter]);
 								var el=document.getElementById(respuesta.validos[iter]);
 								if ( el ) {
 									el.style.outline = '0px';
 								}
 							}
 							for (var iter=0; iter < respuesta.errors.length; iter++) {
-								console.log('resaltar '+ respuesta.errors[iter]);
 								var el=document.getElementById(respuesta.errors[iter]);
 								if ( el ) {
 									el.style.outline = '#f00 solid 2px';
@@ -304,7 +324,6 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						var respuesta = JSON.parse(this.responseText);
-						console.log(respuesta);
 						if ( respuesta.succes == 1 ) {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
@@ -312,14 +331,12 @@
 							appActualizaVista();
 						} else {
 							for (var iter=0; iter < respuesta.validos.length; iter++) {
-								console.log('validos '+ respuesta.validos[iter]);
 								var el=document.getElementById(respuesta.validos[iter]);
 								if ( el ) {
 									el.style.outline = '0px';
 								}
 							}
 							for (var iter=0; iter < respuesta.errors.length; iter++) {
-								console.log('resaltar '+ respuesta.errors[iter]);
 								var el=document.getElementById(respuesta.errors[iter]);
 								if ( el ) {
 									el.style.outline = '#f00 solid 2px';
@@ -353,7 +370,6 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						var respuesta = JSON.parse(this.responseText);
-						console.log(respuesta);
 						if ( respuesta.succes == 1 ) {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
@@ -361,14 +377,12 @@
 							appActualizaVista();
 						} else {
 							for (var iter=0; iter < respuesta.validos.length; iter++) {
-								console.log('validos '+ respuesta.validos[iter]);
 								var el=document.getElementById(respuesta.validos[iter]);
 								if ( el ) {
 									el.style.outline = '0px';
 								}
 							}
 							for (var iter=0; iter < respuesta.errors.length; iter++) {
-								console.log('resaltar '+ respuesta.errors[iter]);
 								var el=document.getElementById(respuesta.errors[iter]);
 								if ( el ) {
 									el.style.outline = '#f00 solid 2px';
@@ -386,7 +400,6 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						var respuesta = JSON.parse(this.responseText);
-						console.log(respuesta);
 						if ( respuesta.succes == 1 ) {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
@@ -394,14 +407,12 @@
 							appActualizaVista();
 						} else {
 							for (var iter=0; iter < respuesta.validos.length; iter++) {
-								console.log('validos '+ respuesta.validos[iter]);
 								var el=document.getElementById(respuesta.validos[iter]);
 								if ( el ) {
 									el.style.outline = '0px';
 								}
 							}
 							for (var iter=0; iter < respuesta.errors.length; iter++) {
-								console.log('resaltar '+ respuesta.errors[iter]);
 								var el=document.getElementById(respuesta.errors[iter]);
 								if ( el ) {
 									el.style.outline = '#f00 solid 2px';
@@ -427,7 +438,6 @@
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						file_upload_max_size = this.responseText;
-						console.log(this.responseText);
 					}
 				};
 				xmlhttp.open("GET", "libphp.php?action=getserverinfo", true);
@@ -611,7 +621,7 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","libdb.php?action=showsettingsform",true);
+				xmlhttp.open("GET","libsettings.php?action=showsettingsform",true);
 				xmlhttp.send();
 			}
 
@@ -647,27 +657,6 @@
 					}
 				};
 				xmlhttp.open("GET","libhelp.php?action=showhelp",true);
-				xmlhttp.send();
-			}
-
-			function appCredits() {
-				appCreditsForm();
-				elementoMostrar("formulario");
-				elementoOcultar("contenido");
-				window.scrollTo(0,0);
-			}
-
-			function appCreditsForm() {
-				var divFormulario = document.getElementById("formulario");
-				xmlhttp = new XMLHttpRequest();
-				xmlhttp.onreadystatechange = function() {
-					if (this.readyState == 4 && this.status == 200) {
-						if ( this.responseText.length > 0 ) {
-							divFormulario.innerHTML = this.responseText;
-						}
-					}
-				};
-				xmlhttp.open("GET","libhelp.php?action=showcredits",true);
 				xmlhttp.send();
 			}
 
@@ -727,22 +716,6 @@
 				elementoMostrar("formulario");
 			}
 
-			function saveComentarioReq(tableID, rowID){
-				var table = document.getElementById(tableID);
-				var comentario = table.rows[rowID].cells[0].lastChild;
-				var idrequisicion = tableID.toString().replace("tablacomentariosreq","");
-				xmlhttp = new XMLHttpRequest();
-				xmlhttp.onreadystatechange = function() {
-					if (this.readyState == 4 && this.status == 200) {
-						if ( this.responseText == "OK" ) {
-							table.rows[rowID].cells[0].innerHTML = comentario.value;
-							table.rows[rowID].cells[3].innerHTML = '';
-						}
-					}
-				};
-				xmlhttp.open("GET","libcomentario.php?action=comadd&type=comreq&idreq="+ idrequisicion +"&comentario="+ encodeURIComponent(comentario.value),true);
-				xmlhttp.send();
-			}
 
 			function deleteComentarioReq(el, idcomentario){
 				var cell = el.parentElement;
@@ -786,6 +759,20 @@
 				xmlhttp.send();
 			}
 
+			function undeleteComentarioPart(el, idcomentario){
+				var cell = el.parentElement;
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							cell.innerHTML = "";
+						}
+					}
+				};
+				xmlhttp.open("GET","libcomentario.php?action=comundelete&type=compart&idcom="+ idcomentario,true);
+				xmlhttp.send();
+			}
+
 			function removeRow(tableID, rowID){
 				var table = document.getElementById(tableID);
 				var cols = table.rows[rowID].cells.length;
@@ -795,7 +782,7 @@
 				table.rows[rowID].style.display='none';
 			}
 
-			function populateUsersCombo(el,tabla,campo){
+			function populateSelectUsers(el,tabla,campo){
 				if ( el.options.length <= 1 ) {
 					xmlhttp = new XMLHttpRequest();
 					xmlhttp.onreadystatechange = function() {
@@ -810,7 +797,7 @@
 				}
 			}
 
-			function populateCombo(el,tabla,campo){
+			function populateSelect(el, tabla, campo, seleccionado=0){
 				if ( el.options.length == 0 ) {
 					xmlhttp = new XMLHttpRequest();
 					xmlhttp.onreadystatechange = function() {
@@ -820,7 +807,28 @@
 							}
 						}
 					};
-					xmlhttp.open("GET","libdb.php?action=getoptions&table="+ tabla +"&description="+ campo,true);
+					var sel = "";
+					if ( seleccionado > 0 ) {
+						sel = "&seleccionado="+seleccionado;
+					}
+					xmlhttp.open("GET","libdb.php?action=getoptions&table="+ tabla +"&description="+ campo + sel,true);
+					xmlhttp.send();
+				}
+			}
+
+			function populateSelectGroup(el, tabla, campo, tablagrupos, campogrupo){
+				if ( el.options.length == 0 ) {
+					xmlhttp = new XMLHttpRequest();
+					xmlhttp.onreadystatechange = function() {
+						if (this.readyState == 4 && this.status == 200) {
+							if ( this.responseText.length > 0 ) {
+								console.log(this.responseText);
+								el.innerHTML = this.responseText;
+							}
+						}
+					};
+					console.log(tablagrupos);
+					xmlhttp.open("GET","libdb.php?action=getgroupoptions&table="+ tabla +"&description="+ campo +"&grouptable="+ tablagrupos +"&groupfield="+ campogrupo,true);
 					xmlhttp.send();
 				}
 			}
@@ -829,7 +837,7 @@
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
-				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr><tr><td><input id = 'cantidad"+newRow+"' type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select id = 'unidad"+newRow+"' name = 'unidad["+newRow+"]' onfocus=\"populateCombo(this,'unidades','unidad');\"></select></td><td><input id = 'descripcion"+newRow+"' type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select id = 'centrocostos"+newRow+"' name = 'centrocostos["+newRow+"]' onfocus=\"populateCombo(this, 'centroscostos','descripcion')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
+				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>CentroCostos</small></td></tr><tr><td><input id = 'cantidad"+newRow+"' type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select id = 'unidad"+newRow+"' name = 'unidad["+newRow+"]' onfocus=\"populateSelect(this,'unidades','unidad');\"></select></td><td><input id = 'descripcion"+newRow+"' type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select id = 'centrocostos"+newRow+"' name = 'centrocostos["+newRow+"]' onfocus=\"populateSelectGroup(this, 'centroscostos','descripcion','empresas','idempresa')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\"tablapartidas\","+ newRow +");'>";
 			}
 
@@ -923,6 +931,23 @@
 				row.insertCell(3).innerHTML = "<input type = 'button' value='Guardar' onclick='saveComentarioPart(\""+  idpartida +"\","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablacomentariospart"+ idpartida +"\","+ newRow +");'>";
 			}
 
+			function saveComentarioReq(tableID, rowID){
+				var table = document.getElementById(tableID);
+				var comentario = table.rows[rowID].cells[0].lastChild;
+				var idrequisicion = tableID.toString().replace("tablacomentariosreq","");
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							table.rows[rowID].cells[0].innerHTML = comentario.value;
+							table.rows[rowID].cells[3].innerHTML = '';
+						}
+					}
+				};
+				xmlhttp.open("GET","libcomentario.php?action=comadd&type=comreq&idreq="+ idrequisicion +"&comentario="+ encodeURIComponent(comentario.value),true);
+				xmlhttp.send();
+			}
+
 			function saveComentarioPart(idpartida, renglon){
 				var comentario = document.getElementById("comentariospartida"+ idpartida +"["+ renglon +"]");
 				var celdas = document.getElementById('tablacomentariospart'+ idpartida).rows[renglon].cells;
@@ -993,6 +1018,16 @@
 				row.insertCell(3).innerHTML = "<button onClick=\"event.preventDefault();appSaveSetting('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
 
+			function addSettingEmpresa(tableID,numero,descripcion) {
+				var table = document.getElementById(tableID);
+				var newRow = table.rows.length;
+				var row = table.insertRow(newRow);
+				row.insertCell(0).innerHTML = "<input type='hidden' name='total"+ tableID +"[]' value='"+ newRow +"'>";
+				row.insertCell(1).innerHTML = '<input type = "text" id = "'+ tableID +'codigo'+ newRow +'" />';
+				row.insertCell(2).innerHTML = '<input type = "text" id = "'+ tableID +'descripcion'+ newRow +'" />';
+				row.insertCell(3).innerHTML = "<button onClick=\"event.preventDefault();appSaveSettingEmpresa('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
+			}
+
 			function appActivarSetting(setting, id) {
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
@@ -1003,7 +1038,7 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","libdb.php?action=activate&setting="+ setting +"&id="+ id,true);
+				xmlhttp.open("GET","libsettings.php?action=activate&setting="+ setting +"&id="+ id,true);
 				xmlhttp.send();
 			}
 
@@ -1017,7 +1052,7 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","libdb.php?action=deactivate&setting="+ setting +"&id="+ id,true);
+				xmlhttp.open("GET","libsettings.php?action=deactivate&setting="+ setting +"&id="+ id,true);
 				xmlhttp.send();
 			}
 
@@ -1046,7 +1081,37 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","libdb.php?action=addsetting&setting="+ setting + descripcion + numero,true);
+				xmlhttp.open("GET","libsettings.php?action=addsetting&setting="+ setting + descripcion + numero,true);
+				xmlhttp.send();
+			}
+
+
+			function appSaveSettingEmpresa(setting, row) {
+				if ( document.getElementById(setting +"codigo"+ row) ) {
+					numero = "&codigo="+ document.getElementById(setting +"codigo"+ row).value;
+				}else{
+					numero = "";
+				}
+				if ( document.getElementById(setting +"descripcion"+ row) ) {
+					descripcion = "&description="+ document.getElementById(setting +"descripcion"+ row).value;
+				}else{
+					descripcion = "";
+				}
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText.length > 0 ) {
+							alert(this.responseText);
+							if ( document.getElementById(setting +"codigo"+ row) ) {
+								document.getElementById(setting +"codigo"+ row).parentElement.innerHTML=document.getElementById(setting +"codigo"+ row).value;
+							}
+							if ( document.getElementById(setting +"descripcion"+ row) ) {
+								document.getElementById(setting +"descripcion"+ row).parentElement.innerHTML=document.getElementById(setting +"descripcion"+ row).value;
+							}
+						}
+					}
+				};
+				xmlhttp.open("GET","libsettings.php?action=addsetting&setting="+ setting + descripcion + numero,true);
 				xmlhttp.send();
 			}
 
@@ -1077,7 +1142,11 @@
 			}
 
 			function appEditarPartida(idpartida, idrequisicion) {
+				var tablapart = document.getElementById("corepart"+idpartida);
 				
+				tablapart.innerHTML = "<tbody><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr><tr><td><input id = 'cantidad"+idpartida+"' type = 'number' min='0' step='0.001' name = 'cantidad["+idpartida+"]' /></td><td><select id = 'unidad"+idpartida+"' name = 'unidad["+idpartida+"]' onfocus=\"populateSelect(this,'unidades','unidad');\"></select></td><td><input id = 'descripcion"+idpartida+"' type = 'text' name = 'descripcion["+idpartida+"]' value = 'toto' /></td><td><select id = 'centrocostos"+idpartida+"' name = 'centrocostos["+idpartida+"]' onfocus=\"populateSelect(this, 'centroscostos','descripcion')\" ></select></td></tr></tbody>";
+				var sel = document.getElementById("unidad"+idpartida);
+				populateSelect(sel,'unidades','unidad',3);
 			}
 
 			function appSurtePartida(idpartida, idrequisicion) {
@@ -1125,7 +1194,6 @@
 					var a;
 					if (this.readyState == 4 && this.status == 200) {
 						var fecha = new Date().toISOString().replace("T"," ").slice(0,19);
-						console.log('fecha '+ fecha);
 						a = document.createElement("a");
 						a.href=window.URL.createObjectURL(this.response);
 						a.download="req "+ fecha +".pdf";
@@ -1279,7 +1347,7 @@
 			function appEditarImpresa(el,idrequisicion) {
 				var divRequisicion=document.getElementById('mostrarrequisicion'+ idrequisicion);
 				if ( !document.getElementById('editreqno'+ idrequisicion) ) {
-					var cellRequisicion = divRequisicion.children[0].children[0].children[3];
+					var cellRequisicion = divRequisicion.children[0].children[0].children[5];
 					var requisicion= cellRequisicion.innerHTML;
 					cellRequisicion.innerHTML='<input id="editreqno'+ idrequisicion +'" type="text" value="'+ requisicion +'" onkeyup="appTextSaveEditarImpresa(event, '+ idrequisicion +');">';
 				}

@@ -1,31 +1,36 @@
 <?php
-	require_once("libconfig.php");
-	require_once("libdb.php");
-	require_once("libphp.php");
-	require_once("libpartida.php");
-	require_once("libpdf.php");
-	require_once("libuser.php");
-
+	require_once "libconfig.php";
+	require_once "libdb.php";
+	require_once "libphp.php";
+	require_once "libpartida.php";
+	require_once "libpdf.php";
+	require_once "libuser.php";
+	require_once "libsettings.php";
+	
 	if ( isset($_REQUEST["posted"]) ) {
 		$errores=array();
 		$validos=array();
+		$empresa=$_REQUEST["empresa"];;
 		$departamento=$_REQUEST["departamento"];
 		$area=$_REQUEST["area"];
 		$solicitante=$_REQUEST["solicitante"];
-		$centrocostos = 0;
+		$centrocostosreq = $_REQUEST["centrocostosreq"];
 		$importancia = 5;
 		$uploaddir="uploads/";
+		if ( !usuarioEsLogeado() ) {
+			$errores[]="newreqform";
+		}
 		if ( isset($_REQUEST["totalpartidas"]) ) {
 			foreach( $_REQUEST["totalpartidas"] as $item) {
 				if ( isset($_REQUEST["cantidad"][$item])) {
 					$cantidad = $_REQUEST["cantidad"][$item];
 				}else{
-					$cantidad=0;
+					$cantidad = 0;
 				}
 				if ( isset($_REQUEST["unidad"][$item]) ) {
 					$unidad = $_REQUEST["unidad"][$item];
 				}else{
-					$unidad="";
+					$unidad=0;
 				}
 				if ( isset($_REQUEST["descripcion"][$item]) ) {
 					$descripcion = $_REQUEST["descripcion"][$item];
@@ -35,14 +40,14 @@
 				if ( isset($_REQUEST["centrocostos"][$item]) ) {
 					$centrocostos = $_REQUEST["centrocostos"][$item];
 				}else{
-					$centrocostos="";
+					$centrocostos=0;
 				}
 				if ( (float)$cantidad <= 0 ) {
 					$errores[] = "cantidad". $item;
 				} else {
 					$validos[] = "cantidad". $item;
 				}
-				if ( strlen($unidad) == 0) {
+				if ( $unidad == 0) {
 					$errores[] = "unidad". $item;
 				} else {
 					$validos[] = "unidad". $item;
@@ -52,7 +57,7 @@
 				} else {
 					$validos[] = "descripcion". $item;
 				}
-				if ( strlen($centrocostos) == 0) {
+				if ( $centrocostos == 0) {
 					$errores[] = "centrocostos". $item;
 				} else {
 					$validos[] = "centrocostos". $item;
@@ -61,9 +66,9 @@
 		}else{
 			$errores[]="newreqform";
 		}
-		if ( count($errores)==0 ) {
-			$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(),'',1,0,0,NULL,0,0, ?, ?, ?, ?, ?, ?);");
-			$res->execute([$departamento, $area, $centrocostos, $importancia, $solicitante, $_COOKIE["usuario"]]);
+		if ( count($errores) == 0 ) {
+			$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(),'',1,0,0,NULL,NULL,NULL,NULL, NOW(),NULL,NULL,NULL,NULL, ?, ?, ?, ?, ?, ?, ?);");
+			$res->execute([$empresa, $departamento, $area, $centrocostosreq, $importancia, $solicitante, usuarioId()]);
 			$ultimoidreq = $db->lastInsertId();
 			if ( isset($_REQUEST["totalpartidas"]) ) {
 				foreach( $_REQUEST["totalpartidas"] as $item) {
@@ -72,14 +77,14 @@
 					$descripcion = $_REQUEST["descripcion"][$item];
 					$centrocostos = $_REQUEST["centrocostos"][$item];
 					$importancia= 5;
-					$res = $db->prepare("INSERT INTO partidas VALUES (0,NOW(), ?, ?, ?,1,0,0,NULL, ?, ?, ?, ?, ?);");
-					$res->execute([$cantidad, $unidad, $descripcion, $centrocostos, $ultimoidreq, $importancia, $solicitante, $_COOKIE["usuario"]]);
+					$res = $db->prepare("INSERT INTO partidas VALUES (0,NOW(), ?, ?, ?,1,0,0,NULL, NULL,NULL,NULL, NULL,NULL,NULL,NULL,?, ?, ?, ?, ?);");
+					$res->execute([$cantidad, $unidad, $descripcion, $centrocostos, $ultimoidreq, $importancia, $solicitante, usuarioId()]);
 					$ultimoidpart = $db->lastInsertId();
 					if ( isset($_REQUEST["partcomentarios"]) ) {
 						foreach ( $_REQUEST["partcomentarios"]["tablacomentarios". $item ] as $elemento ) {
 							if ( strlen($elemento) > 0 ) {
 								$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0, ?,0, ?, ?,NOW(),1);");
-								$res->execute([$ultimoidpart, $elemento, $_COOKIE["usuario"]]);
+								$res->execute([$ultimoidpart, $elemento, usuarioId()]);
 							}
 						}
 					}
@@ -95,7 +100,7 @@
 							$rutadestino=$rutaupload ."/". $nombrearchivo;
 							if (move_uploaded_file($rutatemp,$rutadestino)) {
 								$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
-								$res->execute([$ultimoidpart, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
+								$res->execute([$ultimoidpart, $nombrearchivo, $longitudarchivo, usuarioId()]);
 							}
 						}
 					}
@@ -106,7 +111,7 @@
 					$comentario = $_REQUEST["reqcomentarios"][$item];
 					if ( strlen($comentario) > 0 ) {
 						$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(),1);");
-						$res->execute([$ultimoidreq, $comentario, $_COOKIE["usuario"]]);
+						$res->execute([$ultimoidreq, $comentario, usuarioId()]);
 					}
 				}
 			}
@@ -116,13 +121,13 @@
 					if (!is_writeable($rutaupload)) {
 						mkdir($rutaupload);
 					}
-					$nombrearchivo=$_FILES["reqadjuntos"]["name"][$item];
-					$rutatemp=$_FILES["reqadjuntos"]["tmp_name"][$item];
-					$longitudarchivo=$_FILES["reqadjuntos"]["size"][$item];
-					$rutadestino=$rutaupload ."/". $nombrearchivo;
+					$nombrearchivo = $_FILES["reqadjuntos"]["name"][$item];
+					$rutatemp = $_FILES["reqadjuntos"]["tmp_name"][$item];
+					$longitudarchivo = $_FILES["reqadjuntos"]["size"][$item];
+					$rutadestino = $rutaupload ."/". $nombrearchivo;
 					if (move_uploaded_file($rutatemp,$rutadestino)) {
 						$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
-						$res->execute([$ultimoidreq, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
+						$res->execute([$ultimoidreq, $nombrearchivo, $longitudarchivo, usuarioId()]);
 					}
 				}
 			}
@@ -153,7 +158,7 @@
 		}
 		if (move_uploaded_file($rutatemp,$rutadestino)) {
 			$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
-			$res->execute([$idrequisicion, $nombrearchivo, $longitudarchivo, $_COOKIE["usuario"]]);
+			$res->execute([$idrequisicion, $nombrearchivo, $longitudarchivo, usuarioId()]);
 			echo "OK";
 		}
 	}
@@ -174,26 +179,26 @@
 		$vista="";
 		$resultado="";
 		$tablatemp="temp". randomString(4);
-				switch ($view) {
-					case "0":
-						$vista = " (activo=1 AND impresa=1 AND surtida=0)";
-						break;
-					case "1":
-						$vista = " (activo=1 AND impresa=1 AND surtida=1)";
-						break;
-					case "2":
-						$vista = " (activo=1 AND impresa=0)";
-						break;
-					case "3":
-						$vista = " (activo=1 AND impresa=1)";
-						break;
-					case "4":
-						$vista = " (activo=0)";
-						break;
-					case "5":
-						$vista = " (id>0)";
-						break;
-				}
+			switch ($view) {
+				case "0":
+					$vista = " (activo=1 AND impresa=1 AND surtida=0)";
+					break;
+				case "1":
+					$vista = " (activo=1 AND impresa=1 AND surtida=1)";
+					break;
+				case "2":
+					$vista = " (activo=1 AND impresa=0)";
+					break;
+				case "3":
+					$vista = " (activo=1 AND impresa=1)";
+					break;
+				case "4":
+					$vista = " (activo=0)";
+					break;
+				case "5":
+					$vista = " (id>0)";
+					break;
+			}
 			if ( $user > 0 ) {
 				$usuario=" AND (idsolicitante=". $user ." OR idusuario=". $user .")";
 			}
@@ -256,24 +261,25 @@
 	if ( isset($_GET["action"]) && $_GET["action"] == "export" ) {
 		$resultado="";
 		if ( isset($_GET["view"]) ){
-				$view=$_GET["view"];
-			}else{
-				$view=0;
-			}
-			if ( isset($_GET["user"]) ){
-				$user=$_GET["user"];
-			}else{
-				$user=0;
-			}
-			if ( isset($_GET["q"]) ){
-				$q=$_GET["q"];
-			}else{
-				$q="";
-			}
-			$resultado=ListaRequisiciones($view, $user, $q);
+			$view=$_GET["view"];
+		}else{
+			$view=0;
+		}
+		if ( isset($_GET["user"]) ){
+			$user=$_GET["user"];
+		}else{
+			$user=0;
+		}
+		if ( isset($_GET["q"]) ){
+			$q=$_GET["q"];
+		}else{
+			$q="";
+		}
+		$resultado=ListaRequisiciones($view, $user, $q);
+		writelog($resultado);
 		$pdf = new PDF("L");
-		$pdf->SetFont('Arial','',6);
-		$pdf->AddPage();
+		//$pdf->SetFont('Arial','',6);
+		//$pdf->AddPage();
 		ExportarEncabezados($pdf);
 		$listarequisiciones= explode(" ",$resultado);
 		foreach ($listarequisiciones as $idrequisicion) {
@@ -313,9 +319,9 @@
 				$pdf->AddPage();
 				ImprimirRequisicion($pdf, $idrequisicion);
 				$pdf->Output();
-				$res = $db->prepare("UPDATE requisiciones SET impresa=1 WHERE id=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE requisiciones SET impresa=1, fecha=NOW(), fechaimpresa=NOW(), idimpresa=". usuarioId() ." WHERE id=". $idrequisicion .";");
 				$res->execute();
-				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 4, ". $idrequisicion .", ". $_COOKIE["usuario"] .", 1);");
+				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 4, ". $idrequisicion .", ". usuarioId() .", 1);");
 				$res->execute();
 				break;
 			case "testprint":
@@ -332,20 +338,20 @@
 				echo "OK";
 				break;
 			case "supplied":
-				$res = $db->prepare("UPDATE partidas SET surtida=1 WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE partidas SET surtida=1, fechasurtida=NOW(), idsurtida=". usuarioId() ." WHERE activo=1 AND surtida=0 AND idrequisicion=". $idrequisicion .";");
 				$res->execute();
-				$res = $db->prepare("UPDATE requisiciones SET surtida=1 WHERE id=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE requisiciones SET surtida=1, fechasurtida=NOW(), idsurtida=". usuarioId() ." WHERE id=". $idrequisicion .";");
 				$res->execute();
-				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 5, ". $idrequisicion .", ". $_COOKIE["usuario"] .", 1);");
+				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 5, ". $idrequisicion .", ". usuarioId() .", 1);");
 				$res->execute();
 				echo "OK";
 				break;
 			case "delete":
-				$res = $db->prepare("UPDATE partidas SET activo=0 WHERE surtida=0 AND idrequisicion=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE partidas SET activo=0, fechaactiva=NOW(), idactiva=". usuarioId() ." WHERE surtida=0 AND activo=1 AND idrequisicion=". $idrequisicion .";");
 				$res->execute();
-				$res = $db->prepare("UPDATE requisiciones SET activo=0 WHERE id=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE requisiciones SET activo=0, fechaactiva=NOW(), idactiva=". usuarioId() ." WHERE id=". $idrequisicion .";");
 				$res->execute();
-				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 6, ". $idrequisicion .", ". $_COOKIE["usuario"] .", 1);");
+				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 6, ". $idrequisicion .", ". usuarioId() .", 1);");
 				$res->execute();
 				echo "OK";
 				break;
@@ -364,11 +370,12 @@
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$requisicion="";
-			$departamento=$row[9];
-			$area=$row[10];
-			$solicitante=$row[13];
-			$centrocostos = $row[11];
-			$importancia = $row[12];
+			$empresa=$row[15];
+			$departamento=$row[16];
+			$area=$row[17];
+			$solicitante=$row[20];
+			$centrocostos = $row[18];
+			$importancia = $row[19];
 		}
 		$iter=0;
 		$res= $db->prepare("SELECT * FROM partidas WHERE activo=1 AND idrequisicion=". $idrequisicion);
@@ -378,9 +385,9 @@
 			$cantidad[$iter] = $row[2];
 			$unidad[$iter] = $row[3];
 			$descripcion[$iter] = $row[4];
-			$centrocostospart[$iter] = $row[9];
-			$importanciapart[$iter] = $row[11];
-			$solicitantepart[$iter] = $row[12];
+			$centrocostospart[$iter] = $row[16];
+			$importanciapart[$iter] = $row[18];
+			$solicitantepart[$iter] = $row[19];
 			$iter2=0;
 			$res2= $db->prepare("SELECT * FROM comentariospartidas WHERE activo=1 AND idpartida=". $row[0]);
 			$res2->execute();
@@ -405,12 +412,12 @@
 			}
 			$iter=$iter+1;
 		}
-		$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(), ?,1,0,0,NULL,0,0, ?, ?, ?, ?, ?, ?);");
-		$res->execute([$requisicion, $departamento, $area, $centrocostos, $importancia, $solicitante, $_COOKIE["usuario"]]);
+		$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(), ?,1,0,0,NULL, NULL,NULL,NULL,NOW(),NULL,NULL,NULL,NULL, ?, ?, ?, ?, ?, ?, ?);");
+		$res->execute([$requisicion, $empresa, $departamento, $area, $centrocostos, $importancia, $solicitante, usuarioId()]);
 		$ultimoidreq = $db->lastInsertId();
 		foreach( $totalpartidas as $item) {
-			$res = $db->prepare("INSERT INTO partidas VALUES (0,NOW(), ?, ?, ?,1,0,0,NULL, ?, ?, ?, ?, ?);");
-			$res->execute([$cantidad[$item], $unidad[$item], $descripcion[$item], $centrocostospart[$item], $ultimoidreq, $importanciapart[$item], $solicitantepart[$item], $_COOKIE["usuario"]]);
+			$res = $db->prepare("INSERT INTO partidas VALUES (0,NOW(), ?, ?, ?,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, ?, ?, ?, ?, ?);");
+			$res->execute([$cantidad[$item], $unidad[$item], $descripcion[$item], $centrocostospart[$item], $ultimoidreq, $importanciapart[$item], $solicitantepart[$item], usuarioId()]);
 			$ultimoidpart = $db->lastInsertId();
 			if ( isset($totalpartcometarios) ) {
 				foreach ( $totalpartcometarios[$item] as $item2 ) {
@@ -477,66 +484,290 @@
 		}
 		$comentario = 'Copia de la requisicion Id='. $idrequisicion ;
 		$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(), 0);");
-		$res->execute([$ultimoidreq, $comentario, $_COOKIE["usuario"]]);
+		$res->execute([$ultimoidreq, $comentario, usuarioId()]);
 		return "OK";
 	}
 
 	function ExportarRequisicion($pdf, $idrequisicion) {
 		global $db;
-		$y=$pdf->LastY();
+		//$y=$pdf->LastY();
 		$req="";
 		$fecha="";
 		$solicitante="";
 		$estado="";
-		$res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
+		$res = $db->prepare("SELECT * FROM requisiciones WHERE id = ". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$fecha=$row[1];
 			$req=$row[2];
-			$solicitante=ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre");
+			$empresa = ObtenerDescripcionDesdeID("empresas", $row[15], "nombre");
+			$solicitante=ObtenerDescripcionDesdeID("usuarios", $row[20], "nombre");
 		}
-		$res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion=". $idrequisicion .";");
+		$y=$pdf->GetY();
+		$pdf->SetLineWidth(0.40);
+		$pdf->Line(2,$y-4,292,$y-4);
+		$res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion = ". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$estado="";
-			if ( $y + $pdf->MeassureRows($row[4] ,115,5) > 210 ) {
-				$pdf->AddPage();
+			//$pdf->SetLineWidth(0.20);
+			//$pdf->Line(4,$y,285,$y);
+			$y=$pdf->GetY();
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionAncho', '69');
+			$alto = $pdf->MeassureRows($row[4] , $ancho,5);
+			if ( $y + $alto > 210 ) {
+				//$pdf->AddPage();
 				ExportarEncabezados($pdf);
-				$y=10;
+				$y=$pdf->GetY();
 			}
+			$pdf->SetLineWidth(0.20);
+			$pdf->Line(4,$y-4,290,$y-4);
 			if ( strval($row[6]) == 1 ) {
 				$estado .= "Surtida";
 			}
 			if ( strval($row[5]) == 0 ) {
 				$estado .= "Eliminada";
 			}
-			$pdf->PutRows(5,$y,$idrequisicion);
-			$pdf->PutRows(19,$y,$req);
-			$pdf->PutRows(33,$y,$fecha);
-			$pdf->PutRows(61,$y,(float)$row[2]);
-			$pdf->PutRows(75,$y,ObtenerDescripcionDesdeID("unidades",$row[3],"unidad"));
-			$pdf->PutRows(229,$y,$estado);
-			$pdf->PutRows(257,$y,$solicitante);
-			$pdf->PutRows(89,$y,$row[4] ,135,5);
-			$y=$y+ ($pdf->MeassureRows($row[4] ,135,5));
-			$pdf->SetLineWidth(0.20);
-			$pdf->Line(4,$y-4,280,$y-4);
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoIdVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoIdFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoIdFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoIdX', '5');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoIdY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoIdAncho', '14');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoIdEtiqueta', 'Id');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, $idrequisicion , $ancho);
+			}
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoFechaVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoFechaFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoFechaFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoFechaX', '20');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoFechaY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoFechaAncho', '29');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoFechaEtiqueta', 'Fecha');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, $fecha, $ancho);
+			}
+			//$pdf->PutRows(5,$y,$idrequisicion);
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaX', '20');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaAncho', '29');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaEtiqueta', 'Empresa');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, $empresa, $ancho);
+			}
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionX', '50');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionAncho', '14');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionEtiqueta', 'Requisicion');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, $req, $ancho);
+			}
+			//$pdf->PutRows(19,$y,$req);
+			
+			//$pdf->PutRows(33,$y,$fecha);
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadX', '95');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadAncho', '14');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadEtiqueta', 'Cantidad');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, (float)$row[2], $ancho);
+			}
+			//$pdf->PutRows(61,$y,(float)$row[2]);
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadX', '100');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadAncho', '14');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadEtiqueta', 'Unidad');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("unidades",$row[3],"unidad"), $ancho);
+			}
+			//$pdf->PutRows(75,$y,ObtenerDescripcionDesdeID("unidades",$row[3],"unidad"));
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionX', '115');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionAncho', '69');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionEtiqueta', 'Descripcion');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, $row[4], $ancho,5);
+			}
+			//$pdf->PutRows(89,$y,$row[4] ,135,5);
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoX', '240');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoAncho', '14');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoEtiqueta', 'Estado');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, $estado, $ancho);
+			}
+			//$pdf->PutRows(229,$y,$estado);
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteX', '255');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteAncho', '34');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteEtiqueta', 'Solicitante');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, $solicitante, $ancho);
+			}
+			//$pdf->PutRows(257,$y,$solicitante);
+			
+			//$y=$y+ ($pdf->MeassureRows($row[4] ,135,5));
+			/* writelog("------------");
+			writelog("desc ". $row[4]);
+			writelog("y ". $y);
+			writelog("alto ". $alto ); */
+			$pdf->SetY($y + $alto);
+			//$y = $y + $alto;
+			// /* /* writelog("newy ". $y); */ */
+			//$pdf->SetLineWidth(0.20);
+			//$pdf->Line(4,$y-5,285,$y-5);
+			
 		}
-		$pdf->SetLineWidth(0.40);
-		$pdf->Line(2,$y-4,285,$y-4);
+		//$y = $y + $alto +5;
+		//$pdf->SetLineWidth(0.40);
+		//$pdf->Line(4,$y-5,285,$y-5);
+		
 	}
 
 	function ExportarEncabezados($pdf) {
-		$y=5;
-		$pdf->PutRows(5, $y, "Id");
-		$pdf->PutRows(19, $y, "Req");
-		$pdf->PutRows(33, $y, "Fecha");
-		$pdf->PutRows(61, $y, "Cant");
-		$pdf->PutRows(75, $y, "Unidad");
-		$pdf->PutRows(89, $y, "Descripcion");
-		$pdf->PutRows(229, $y, "Estado");
-		$pdf->PutRows(257, $y, "Solicitante");
-		$pdf->PutRows(5, 10, "");
+		$pdf->AddPage();
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoIdVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoIdTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoIdFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoIdX', '5');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoIdY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoIdAncho', '14');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoIdEtiqueta', 'Id');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionX', '20');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionAncho', '14');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionEtiqueta', 'Requisicion');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoFechaVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoFechaTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoFechaFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoFechaX', '35');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoFechaY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoFechaAncho', '29');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoFechaEtiqueta', 'Fecha');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaX', '65');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaAncho', '29');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaEtiqueta', 'Empresa');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadX', '95');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadAncho', '14');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadEtiqueta', 'Cantidad');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadX', '110');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadAncho', '14');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadEtiqueta', 'Unidad');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionX', '125');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionAncho', '69');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionEtiqueta', 'Descripcion');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioX', '195');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioAncho', '54');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioEtiqueta', 'Comentario');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoX', '250');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoAncho', '14');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoEtiqueta', 'Estado');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$visible = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteVisible', '1');
+		if ( $visible == "1" ) {
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteTituloFontSize', '6');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteX', '265');
+			$y = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteAncho', '34');
+			$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteEtiqueta', 'Solicitante');
+			$pdf->SetFont($fontname,'', $fontsize);
+			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
+		}
+		$pdf->SetY(10);
 	}
 
 	function ImprimirRequisicion($pdf, $idrequisicion, $modoprueba=0) {
@@ -545,18 +776,30 @@
 		ImprimirPartidas($pdf, $idrequisicion, $modoprueba);
 	}
 
+	function ObtenerEmpresaRequisicion($idrequisicion) {
+		global $db;
+		$resultado='';
+		$res = $db->prepare("SELECT idempresa FROM requisiciones WHERE id=". $idrequisicion .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$resultado=$row[0];
+		}
+		return $resultado;
+	}
+
 	function ImprimirComentarios($pdf, $idrequisicion, $modoprueba) {
 		global $db;
 		$comentario="";
 		$solicitante="";
 		$idusuario ="";
-		$fontsize = obtenerPreferencia('impresion', 'ComentarioFontSize', '12');
-		$fontname = obtenerPreferencia('impresion', 'ComentarioFontName', 'Arial');
-		$x = obtenerPreferencia('impresion', 'ComentarioX', '40');
-		$y = obtenerPreferencia('impresion', 'ComentarioY', '108');
-		$ancho = obtenerPreferencia('impresion', 'ComentarioAncho', '170');
-		$interlineado = obtenerPreferencia('impresion', 'ComentarioInterlineado', '5');
-		$lineas = obtenerPreferencia('impresion', 'ComentarioLineas', '2');
+		$empresa= ObtenerEmpresaRequisicion($idrequisicion);
+		$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoComentarioFontSize', '12');
+		$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoComentarioFontName', 'Arial');
+		$x = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoComentarioX', '40');
+		$y = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoComentarioY', '108');
+		$ancho = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoComentarioAncho', '170');
+		$interlineado = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoComentarioInterlineado', '5');
+		$lineas = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoComentarioLineas', '2');
 		$pdf->SetFont($fontname,'', $fontsize);
 		$maximoy = $lineas * $interlineado;
 		$res = $db->prepare("SELECT idsolicitante,idusuario FROM requisiciones WHERE id=". $idrequisicion .";");
@@ -570,15 +813,15 @@
 		while ($row = $res->fetch()) {
 			$comentario= $row[3];
 		}
-		if ( strlen($comentario) == 0 ) {
-			$res = $db->prepare("SELECT comentariospartidas.comentario, comentariospartidas.activo FROM comentariospartidas INNER JOIN partidas ON (comentariospartidas.idpartida=partidas.id) WHERE (comentariospartidas.idusuario=". $solicitante ." OR comentariospartidas.idusuario=". $idusuario .") AND partidas.activo=1 AND partidas.idrequisicion=". $idrequisicion .";");
-			$res->execute();
-			while ($row = $res->fetch()) {
-				if ( $row[1] == '1' ) {
-					$comentario= $row[0];
-				}
-			}
-		}
+		// if ( strlen($comentario) == 0 ) {
+			// $res = $db->prepare("SELECT comentariospartidas.comentario, comentariospartidas.activo FROM comentariospartidas INNER JOIN partidas ON (comentariospartidas.idpartida=partidas.id) WHERE (comentariospartidas.idusuario=". $solicitante ." OR comentariospartidas.idusuario=". $idusuario .") AND partidas.activo=1 AND partidas.idrequisicion=". $idrequisicion .";");
+			// $res->execute();
+			// while ($row = $res->fetch()) {
+				// if ( $row[1] == '1' ) {
+					// $comentario= $row[0];
+				// }
+			// }
+		// }
 		if ( $modoprueba == 1 ) {
 			$comentario = str_replace(' ',' prueba ', $comentario);
 		}
@@ -593,63 +836,108 @@
 
 	function ImprimirEncabezados($pdf, $idrequisicion, $modoprueba) {
 		global $db;
+		$empresa= ObtenerEmpresaRequisicion($idrequisicion);
 		$res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
-			$fontsize = obtenerPreferencia('impresion', 'IdFontSize', '14');
-			$fontname = obtenerPreferencia('impresion', 'IdFontName', 'Arial');
-			$x = obtenerPreferencia('impresion', 'IdX', '190');
-			$y = obtenerPreferencia('impresion', 'IdY', '5');
+			$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoIdFontSize', '14');
+			$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoIdFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoIdX', '190');
+			$y = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoIdY', '5');
 			$pdf->SetFont($fontname,'', $fontsize);
 			$pdf->PutRows($x, $y, "[". $idrequisicion ."]");
-			$fontsize = obtenerPreferencia('impresion', 'DeptoFontSize', '10');
-			$fontname = obtenerPreferencia('impresion', 'DeptoFontName', 'Arial');
-			$x = obtenerPreferencia('impresion', 'DeptoX', '35');
-			$y = obtenerPreferencia('impresion', 'DeptoY', '28');
-			$ancho = obtenerPreferencia('impresion', 'DeptoAncho', '60');
+			$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoDeptoFontSize', '10');
+			$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoDeptoFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoDeptoX', '35');
+			$y = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoDeptoY', '28');
+			$ancho = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoDeptoAncho', '60');
 			$pdf->SetFont($fontname,'', $fontsize);
-			$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("departamentos",$row[9],"departamento"), $ancho);
-			$fontsize = obtenerPreferencia('impresion', 'AreaFontSize', '10');
-			$fontname = obtenerPreferencia('impresion', 'AreaFontName', 'Arial');
-			$x = obtenerPreferencia('impresion', 'AreaX', '35');
-			$y = obtenerPreferencia('impresion', 'AreaY', '34');
-			$ancho = obtenerPreferencia('impresion', 'AreaAncho', '60');
+			$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("departamentos",$row[16],"departamento"), $ancho);
+			$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoAreaFontSize', '10');
+			$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoAreaFontName', 'Arial');
+			$x = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoAreaX', '35');
+			$y = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoAreaY', '34');
+			$ancho = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoAreaAncho', '60');
 			$pdf->SetFont($fontname,'', $fontsize);
-			$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("areas",$row[10],"area"),60);
-			$fontsize = obtenerPreferencia('impresion', 'FechaFontSize', '10');
-			$fontname = obtenerPreferencia('impresion', 'FechaFontName', 'Arial');
-			$dx = obtenerPreferencia('impresion', 'FechaDayX', '148');
-			$dy = obtenerPreferencia('impresion', 'FechaDayY', '32');
-			$mx = obtenerPreferencia('impresion', 'FechaMonthX', '156');
-			$my = obtenerPreferencia('impresion', 'FechaMonthY', '32');
-			$yx = obtenerPreferencia('impresion', 'FechaYearX', '163');
-			$yy = obtenerPreferencia('impresion', 'FechaYearY', '32');
+			$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("areas",$row[17],"area"),60);
+			$visible = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrNumeroVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrNumeroFontSize', '14');
+				$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrNumeroFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrNumeroX', '110');
+				$y = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrNumeroY', '28');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("centroscostos", $row[18], "numero"));
+			}
+			$visible = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrDescripcionVisible', '0');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrDescripcionFontSize', '14');
+				$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrDescripcionFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrDescripcionX', '110');
+				$y = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoCrDescripcionY', '28');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("centroscostos", $row[18], "descripcion"));
+			}
+			$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaFontSize', '10');
+			$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaFontName', 'Arial');
+			$dx = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaDayX', '148');
+			$dy = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaDayY', '32');
+			$mx = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaMonthX', '156');
+			$my = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaMonthY', '32');
+			$yx = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaYearX', '163');
+			$yy = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaYearY', '32');
 			$pdf->SetFont($fontname,'', $fontsize);
 			$pdf->PutRows($dx, $dy, date("d"));
 			$pdf->PutRows($mx, $my, date("m"));
 			$pdf->PutRows($yx, $yy, date("Y"));
-			$fontsize = obtenerPreferencia('impresion', 'SolicitanteFontSize', '10');
-			$fontname = obtenerPreferencia('impresion', 'SolicitanteFontName', 'Arial');
-			$x = obtenerPreferencia('impresion', 'SolicitanteX', '15');
-			$y = obtenerPreferencia('impresion', 'SolicitanteY', '120');
-			$ancho = obtenerPreferencia('impresion', 'SolicitanteAncho', '60');
-			$pdf->SetFont($fontname,'', $fontsize);
-			$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre") ." (". ObtenerDescripcionDesdeID("usuarios",$row[13],"numero") .")", $ancho);
+			$visible = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaCompletaVisible', '0');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaCompletaFontSize', '10');
+				$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaCompletaFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaCompletaX', '60');
+				$y = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoFechaCompletaY', '55');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, date("Y-m-d"));
+			}
+			$visible = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNombreVisible', '1');
+			if ( $visible == "1" ){
+				$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNombreFontSize', '10');
+				$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNombreFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNombreX', '15');
+				$y = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNombreY', '120');
+				$ancho = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNombreAncho', '60');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("usuarios",$row[20],"nombre"), $ancho);
+			}
+			$visible = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNumeroVisible', '1');
+			if ( $visible == "1" ){
+				$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNumeroFontSize', '10');
+				$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNumeroFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNumeroX', '15');
+				$y = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNumeroY', '125');
+				$ancho = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoSolicitanteNumeroAncho', '60');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y, "(". ObtenerDescripcionDesdeID("usuarios",$row[20],"numero") .")", $ancho);
+			}
 		}
 	}
 
 	function ImprimirPartidas($pdf, $idrequisicion, $modoprueba) {
 		global $db;
-		$cr = "";
-		$fontsize = obtenerPreferencia('impresion', 'PartidasFontSize', '12');
-		$fontname = obtenerPreferencia('impresion', 'PartidasFontName', 'Arial');
-		$cantx = obtenerPreferencia('impresion', 'PartidasCantX', '18');
-		$unidx = obtenerPreferencia('impresion', 'PartidasUnidX', '40');
-		$descx = obtenerPreferencia('impresion', 'PartidasDescX', '65');
-		$inicioy = obtenerPreferencia('impresion', 'PartidasY', '47');
-		$ancho = obtenerPreferencia('impresion', 'PartidasAncho', '145');
-		$interlineado = obtenerPreferencia('impresion', 'PartidasInterlineado', '4.91');
-		$lineas = obtenerPreferencia('impresion', 'PartidasLineas', '12');
+
+		$empresa= ObtenerEmpresaRequisicion($idrequisicion);
+		$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasFontSize', '12');
+		$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasFontName', 'Arial');
+		$partvisible = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasPartVisible', '0');
+		$partx = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasPartX', '18');
+		$cantx = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasCantX', '18');
+		$unidx = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasUnidX', '40');
+		$descx = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasDescX', '65');
+		$inicioy = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasY', '47');
+		$ancho = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasAncho', '145');
+		$interlineado = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasInterlineado', '4.91');
+		$lineas = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasLineas', '12');
+		$linea=0;
 		$pdf->SetFont($fontname,'', $fontsize);
 		$maximoy = $inicioy + ($lineas * $interlineado);
 		$partidasy = $inicioy;
@@ -661,12 +949,15 @@
 		$res = $db->prepare("SELECT * FROM partidas WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
-			$cr = ObtenerDescripcionDesdeID("centroscostos", $row[9], "numero");
+			$linea = $linea +1;
 			if ( $partidasy + $pdf->MeassureRows($row[4], $ancho, $interlineado) > $maximoy ) {
 				$partidasy = $inicioy;
 				$pdf->AddPage();
 				ImprimirEncabezados($pdf, $idrequisicion, $modoprueba);
 				ImprimirComentarios($pdf, $idrequisicion, $modoprueba);
+			}
+			if ( $partvisible == "1") {
+				$pdf->PutRows($partx, $partidasy, $linea);
 			}
 			$pdf->PutRows($cantx, $partidasy, (float)$row[2]);
 			$pdf->PutRows($unidx, $partidasy, ObtenerDescripcionDesdeID("unidades", $row[3], "unidad"));
@@ -677,12 +968,6 @@
 			$pdf->PutRows($descx, $partidasy, $descripcion, $ancho, $interlineado);
 			$partidasy = $partidasy + ($pdf->MeassureRows($descripcion, $ancho, $interlineado));
 		}
-		$fontsize = obtenerPreferencia('impresion', 'CrFontSize', '14');
-		$fontname = obtenerPreferencia('impresion', 'CrFontName', 'Arial');
-		$x = obtenerPreferencia('impresion', 'CrX', '110');
-		$y = obtenerPreferencia('impresion', 'CrY', '28');
-		$pdf->SetFont($fontname,'', $fontsize);
-		$pdf->PutRows($x, $y, $cr);
 	}
 
 	function AgregarComentariosRequisicion($idrequisicion) {
@@ -712,7 +997,7 @@
 		global $db;
 		$resultado=false;
 		if ( usuarioEsLogeado() ) {
-			$res = $db->prepare("SELECT id FROM comentariosrequisiciones WHERE id=". $idcomentario ." AND idusuario=". $_COOKIE["usuario"] .";");
+			$res = $db->prepare("SELECT id FROM comentariosrequisiciones WHERE id=". $idcomentario ." AND idusuario=". usuarioId() .";");
 			$res->execute();
 			while ($row = $res->fetch()) {
 				if ( $row[0] == $idcomentario ) {
@@ -787,34 +1072,85 @@
 		return $resultado;
 	}
 
+	function MostrarCampo($etiqueta, $texto) {
+		if ( strlen($texto) == 0 ) {
+			$texto="&nbsp;";
+		}
+		$resultado="";
+		$resultado .= "<table class=\"campo\">";
+		$resultado .= "<tr><td><small>". $etiqueta ."<small></td></tr>";
+		$resultado .= "<tr><td>". $texto ."</td></tr>";
+		$resultado .= "</table>";
+		return $resultado;
+	}
+
 	function MostrarPartidas($idrequisicion, $q) {
 		global $db;
 		$resultado="";
+		$partida = 0;
 		$res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion=". $idrequisicion .";");
 		$res->execute();
 		$resultado .= "<table>";
 		$resultado .= "<tr><td width=\"90%\"><small>Partida</small></td><td width=\"10%\"><small>Acciones</small></td></tr>";
 		while ($row = $res->fetch()) {
-			$clase="part";
+			$partida = $partida +1;
+			$clase = "part";
+			$estado = "";
 			if ( strval($row[7]) == 1 ) {
 				$clase .= " partprinted";
+				$estado .= "I";
 			}
 			if ( strval($row[6]) == 1 ) {
 				$clase .= " partsupplied";
+				$estado .= "S";
 			}
 			if ( strval($row[5]) == 0 ) {
 				$clase .= " partdeleted";
+				$estado .= "E";
 			}
 			$resultado .= "<tr id=\"part". $row[0] ."\" class=\"". $clase ."\"><td>";
+			$resultado .= "<table>";
+			$resultado .= "<tr>";
+			$resultado .= "<td>";
 			$resultado .= "<table id=\"corepart". $row[0] ."\">";
-			$resultado .= "<tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr>";
-			$resultado .= "<tr><td>". (float)$row[2] ."</td><td>". ObtenerDescripcionDesdeID("unidades",$row[3],"unidad") ."</td><td>". resaltarBusqueda($row[4], $q) ."</td><td>". ObtenerDescripcionDesdeID("centroscostos",$row[9],"descripcion") ."</td></tr>";
+			$resultado .= "<tr>";
+			$resultado .= "<td width=\"12.5%\">". MostrarCampo("Cantidad",(float)$row[2]) ."</td>";
+			$resultado .= "<td width=\"12.5%\">". MostrarCampo("Unidad",ObtenerDescripcionDesdeID("unidades",$row[3],"unidad")) ."</td>";
+			$resultado .= "<td width=\"75%\" colspan=5>". MostrarCampo("Descripcion",resaltarBusqueda($row[4], $q)) ."</td>";
+			$resultado .= "</tr>";
+			$resultado .= "<tr>";
+			//$resultado .= "<td width=\"12.5%\">". MostrarCampo("Partida",$partida) ."</td>";
+			$resultado .= "<td width=\"16.6%\">". MostrarCampo("CentroCostos",ObtenerDescripcionDesdeID("centroscostos",$row[16],"descripcion")) ."</td>";
+			$resultado .= "<td width=\"16.6%\">". MostrarCampo("Solicitante",ObtenerDescripcionDesdeID("usuarios",$row[19],"nombre")) ."</td>";
+			$resultado .= "<td width=\"16.6%\">". MostrarCampo("Eliminada",$row[8]) ."</td>";
+			$resultado .= "<td width=\"16.6%\">". MostrarCampo("Surtida",$row[9]) ."</td>";
+			$resultado .= "<td width=\"16.6%\">". MostrarCampo("Modificada",$row[11]) ."</td>";
+			$resultado .= "<td width=\"8.3%\">". MostrarCampo("Importancia",$row[18]) ."</td>";
+			$resultado .= "<td width=\"8.3%\">". MostrarCampo("Estado",$estado) ."</td>";
+			$resultado .= "</tr>";
+			//$resultado .= "<tr>";
+			//$resultado .= "<td>". (float)$row[2] ."</td><td>". ObtenerDescripcionDesdeID("unidades",$row[3],"unidad") ."</td><td>". resaltarBusqueda($row[4], $q) ."</td><td>". ObtenerDescripcionDesdeID("centroscostos",$row[9],"descripcion") ."</td>";
+			//$resultado .= "</tr>";
 			$resultado .= "</table>";
+			$resultado .= "</tr>";
+			/////////////$resultado .= "</td>";
+			$resultado .= "<tr>";
+			$resultado .= "<td>";
 			$resultado .= MostrarComentariosPartida($row[0], $q);
+			$resultado .= "</td>";
+			$resultado .= "</tr>";
+			/////////////$resultado .= "</td>";
+			$resultado .= "<tr>";
+			$resultado .= "<td>";
 			$resultado .= MostrarAdjuntosPartida($row[0], $q);
-			$resultado .= "</td><td>";
+			$resultado .= "</td>";
+			$resultado .= "</tr>";
+			$resultado .= "</table>";
+			$resultado .= "</td>";
+			$resultado .= "<td>";
 			$resultado .= AccionesPartida($row[0]);
-			$resultado .= "</td></tr>";
+			$resultado .= "</td>";
+			$resultado .= "</tr>";
 		}
 		$resultado .= "</table>";
 		return $resultado;
@@ -866,7 +1202,7 @@
 		global $db;
 		$resultado=false;
 		if ( usuarioEsLogeado() ) {
-			$res = $db->prepare("SELECT id FROM requisiciones WHERE id=". $idrequisicion ." AND (idsolicitante=". $_COOKIE["usuario"] ." OR idusuario=". $_COOKIE["usuario"] .");");
+			$res = $db->prepare("SELECT id FROM requisiciones WHERE id=". $idrequisicion ." AND (idsolicitante=". usuarioId() ." OR idusuario=". usuarioId() .");");
 			$res->execute();
 			while ($row = $res->fetch()) {
 				if ( $row[0] == $idrequisicion ) {
@@ -891,7 +1227,7 @@
 	function AccionesRequisicion($idrequisicion) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
-			$resultado .= '<button onClick="appCopiaRequisicion('. $idrequisicion .');">Copiar</button>';
+			$resultado .= '<button onClick="appCopiaRequisicion('. $idrequisicion .');">Clonar</button>';
 		}
 		if ( RequisicionEsMia($idrequisicion) || usuarioEsSuper() ) {
 			if ( !(RequisicionEsSurtida($idrequisicion)) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
@@ -939,9 +1275,16 @@
 		$resultado .="<table id=\"marcorequisicion". $idrequisicion ."\" class=\"". $clase ."\">";
 		$resultado .="<tr>";
 		$resultado .="<td width=\"90%\">";
-		$resultado .=MostrarRequisicion($idrequisicion, $q);
+		$resultado .="<small>Requisicion</small>";
 		$resultado .="</td>";
 		$resultado .="<td width=\"10%\">";
+		$resultado .="<small>Acciones</small>";
+		$resultado .="</td>";
+		$resultado .="<tr>";
+		$resultado .="<td>";
+		$resultado .=MostrarRequisicion($idrequisicion, $q);
+		$resultado .="</td>";
+		$resultado .="<td>";
 		$resultado .=AccionesRequisicion($idrequisicion);
 		$resultado .="</td>";
 		$resultado .="</tr>";
@@ -949,7 +1292,90 @@
 		return $resultado;
 	}
 
-	function ResumenRequisicion($idrequisicion) {
+	// function ResumenRequisicion($idrequisicion) {
+		// global $db;
+		// $resultado="";
+		// $res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
+		// $res->execute();
+		// while ($row = $res->fetch()) {
+			// $status="";
+			// $clase="req";
+			// if ( RequisicionEsImpresa($idrequisicion) ) {
+				// $clase .= " printed";
+			// }
+			// if ( RequisicionEsSurtida($idrequisicion) ) {
+				// $clase .= " supplied";
+			// }
+			// if ( !RequisicionEsActiva($idrequisicion) ) {
+				// $clase .= " deleted";
+			// }
+			// if ( RequisicionEsImpresa($idrequisicion) ) {
+				// $status .= "I";
+			// }
+			// if ( RequisicionEsSurtida($idrequisicion) ) {
+				// $status .= "S";
+			// }
+			// if ( !RequisicionEsActiva($idrequisicion) ) {
+				// $status .= "E";
+			// }
+			// $resultado .= "<table id=\"mostrarrequisicion". $idrequisicion ."\"  class=\"". $clase ."\">";
+			// $resultado .= "<tr>";
+			// $resultado .= "<td width=\"7%\"><small>Id:</small></td><td width=\"13%\">". $row[0] ."</td>";
+			// $resultado .= "<td width=\"7%\"><small>Requisicion:</small></td><td width=\"13%\">". $row[2] ."</td>";
+			// $resultado .= "<td width=\"7%\"><small>Fecha:</small></td><td width=\"13%\">". $row[1] ."</td>";
+			// $resultado .= "<td width=\"7%\"><small>Importancia:</small></td><td width=\"13%\">TODO</td>";
+			// $resultado .= "</tr>";
+			// $resultado .= "<tr>";
+			// $resultado .= "<td width=\"10%\"><small>Departamento:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("departamentos",$row[9],"departamento") ."</td>";
+			// $resultado .= "<td width=\"10%\"><small>Area:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("areas",$row[10],"area") ."</td><td width=\"10%\"><small>Surtir:</small></td><td width=\"15%\">TODO</td><td width=\"10%\"><small>Estado:</small></td><td width=\"15%\">". $status ."</td></tr>";
+			// $resultado .="<tr><td colspan=8>";
+			// $resultado .= ResumenPartidas($idrequisicion);
+			// $resultado .="</td></tr>";
+			// $resultado .="<tr><td colspan=8>";
+			// $resultado .=MostrarComentariosRequisicion($idrequisicion);
+			// $resultado .="</td></tr>";
+			// $resultado .="<tr><td colspan=8>";
+			// $resultado .=MostrarAdjuntosRequisicion($idrequisicion);
+			// $resultado .="</td></tr>";
+			// $resultado .="<tr><td width=\"10%\"><small>Surtida:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[7],"nombre") ."</td><td width=\"10%\"><small>Imprime:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[8],"nombre") ."</td><td width=\"10%\"><small>Solicitante:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre") ."</td><td width=\"10%\"><small>Autor:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[14],"nombre") ."</td></tr>";
+			// $resultado .="</table>";
+		// }
+		// return $resultado;
+	// }
+
+	// function ResumenPartidas($idrequisicion) {
+		// global $db;
+		// $resultado="";
+		// $res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion=". $idrequisicion .";");
+		// $res->execute();
+		// $resultado .= "<table>";
+		// $resultado .= "<tr><td width=\"90%\"><small>Partida</small></td><td width=\"10%\"><small>Acciones</small></td></tr>";
+		// while ($row = $res->fetch()) {
+			// $clase="part";
+			// if ( strval($row[7]) == 1 ) {
+				// $clase .= " partprinted";
+			// }
+			// if ( strval($row[6]) == 1 ) {
+				// $clase .= " partsupplied";
+			// }
+			// if ( strval($row[5]) == 0 ) {
+				// $clase .= " partdeleted";
+			// }
+			// $resultado .= "<tr id=\"corepart". $row[0] ."\" class=\"". $clase ."\"><td>";
+			// $resultado .= "<table id=\"corepart". $row[0] ."\">";
+			// $resultado .= "<tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr>";
+			// $resultado .= "<tr><td>". (float)$row[2] ."</td><td>". ObtenerDescripcionDesdeID("unidades",$row[3],"unidad") ."</td><td>". $row[4] ."</td><td>". ObtenerDescripcionDesdeID("centroscostos",$row[9],"descripcion") ."</td></tr>";
+			// $resultado .= "</table>";
+			// $resultado .= MostrarComentariosPartida($row[0]);
+			// $resultado .= MostrarAdjuntosPartida($row[0]);
+			// $resultado .= "</td><td>";
+			// $resultado .= "</td></tr>";
+		// }
+		// $resultado .= "</table>";
+		// return $resultado;
+	// }
+
+	function MostrarRequisicion($idrequisicion, $q) {
 		global $db;
 		$resultado="";
 		$res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
@@ -966,72 +1392,6 @@
 			if ( !RequisicionEsActiva($idrequisicion) ) {
 				$clase .= " deleted";
 			}
-			if ( RequisicionEsImpresa($idrequisicion) ) {
-				$status .= "I";
-			}
-			if ( RequisicionEsSurtida($idrequisicion) ) {
-				$status .= "S";
-			}
-			if ( !RequisicionEsActiva($idrequisicion) ) {
-				$status .= "E";
-			}
-			$resultado .="<table id=\"mostrarrequisicion". $idrequisicion ."\"  class=\"". $clase ."\">";
-			$resultado .= "<tr><td width=\"10%\"><small>Id:</small></td><td width=\"15%\">". $row[0] ."</td><td width=\"10%\"><small>Requisicion:</small></td><td width=\"15%\">". $row[2] ."</td><td width=\"10%\"><small>Fecha:</small></td><td width=\"15%\">". $row[1] ."</td><td width=\"10%\"><small>Importancia:</small></td><td width=\"15%\">TODO</td></tr>";
-			$resultado .= "<tr><td width=\"10%\"><small>Departamento:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("departamentos",$row[9],"departamento") ."</td><td width=\"10%\"><small>Area:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("areas",$row[10],"area") ."</td><td width=\"10%\"><small>Surtir:</small></td><td width=\"15%\">TODO</td><td width=\"10%\"><small>Estado:</small></td><td width=\"15%\">". $status ."</td></tr>";
-			$resultado .="<tr><td colspan=8>";
-			$resultado .= ResumenPartidas($idrequisicion);
-			$resultado .="</td></tr>";
-			$resultado .="<tr><td colspan=8>";
-			$resultado .=MostrarComentariosRequisicion($idrequisicion);
-			$resultado .="</td></tr>";
-			$resultado .="<tr><td colspan=8>";
-			$resultado .=MostrarAdjuntosRequisicion($idrequisicion);
-			$resultado .="</td></tr>";
-			$resultado .="<tr><td width=\"10%\"><small>Surtida:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[7],"nombre") ."</td><td width=\"10%\"><small>Imprime:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[8],"nombre") ."</td><td width=\"10%\"><small>Solicitante:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre") ."</td><td width=\"10%\"><small>Autor:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[14],"nombre") ."</td></tr>";
-			$resultado .="</table>";
-		}
-		return $resultado;
-	}
-
-	function ResumenPartidas($idrequisicion) {
-		global $db;
-		$resultado="";
-		$res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion=". $idrequisicion .";");
-		$res->execute();
-		$resultado .= "<table>";
-		$resultado .= "<tr><td width=\"90%\"><small>Partida</small></td><td width=\"10%\"><small>Acciones</small></td></tr>";
-		while ($row = $res->fetch()) {
-			$clase="part";
-			if ( strval($row[7]) == 1 ) {
-				$clase .= " partprinted";
-			}
-			if ( strval($row[6]) == 1 ) {
-				$clase .= " partsupplied";
-			}
-			if ( strval($row[5]) == 0 ) {
-				$clase .= " partdeleted";
-			}
-			$resultado .= "<tr id=\"corepart". $row[0] ."\" class=\"". $clase ."\"><td>";
-			$resultado .= "<table id=\"corepart". $row[0] ."\">";
-			$resultado .= "<tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr>";
-			$resultado .= "<tr><td>". (float)$row[2] ."</td><td>". ObtenerDescripcionDesdeID("unidades",$row[3],"unidad") ."</td><td>". $row[4] ."</td><td>". ObtenerDescripcionDesdeID("centroscostos",$row[9],"descripcion") ."</td></tr>";
-			$resultado .= "</table>";
-			$resultado .= MostrarComentariosPartida($row[0]);
-			$resultado .= MostrarAdjuntosPartida($row[0]);
-			$resultado .= "</td><td>";
-			$resultado .= "</td></tr>";
-		}
-		$resultado .= "</table>";
-		return $resultado;
-	}
-
-	function MostrarRequisicion($idrequisicion, $q) {
-		global $db;
-		$resultado="";
-		$res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
-		$res->execute();
-		while ($row = $res->fetch()) {
-			$status="";
 			if ( RequisicionEsMia($idrequisicion) ) {
 				$status .= "M";
 			}
@@ -1044,20 +1404,45 @@
 			if ( !RequisicionEsActiva($idrequisicion) ) {
 				$status .= "E";
 			}
-			$resultado .="<table id=\"mostrarrequisicion". $idrequisicion ."\">";
-			$resultado .= "<tr><td width=\"10%\"><small>Id:</small></td><td width=\"15%\">". resaltarBusqueda($row[0], $q) ."</td><td width=\"10%\"><small>Requisicion:</small></td><td width=\"15%\">". resaltarBusqueda($row[2], $q) ."</td><td width=\"10%\"><small>Fecha:</small></td><td width=\"15%\">". $row[1] ."</td><td width=\"10%\"><small>Importancia:</small></td><td width=\"15%\">TODO</td></tr>";
-			$resultado .= "<tr><td width=\"10%\"><small>Departamento:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("departamentos",$row[9],"departamento") ."</td><td width=\"10%\"><small>Area:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("areas",$row[10],"area") ."</td><td width=\"10%\"><small>Surtir:</small></td><td width=\"15%\">TODO</td><td width=\"10%\"><small>Estado:</small></td><td width=\"15%\">". $status ."</td></tr>";
-			$resultado .="<tr><td colspan=8>";
+			$resultado .= "<table id=\"mostrarrequisicion". $idrequisicion ."\"  class=\"". $clase ."\">";
+			$resultado .= "<tr>";
+			$resultado .= "<td width=\"6%\"><small>Id:</small></td><td width=\"14%\">". resaltarBusqueda($row[0], $q) ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Empresa:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("empresas",$row[15],"nombre") ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Requisicion:</small></td><td width=\"14%\">". resaltarBusqueda($row[2], $q) ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Fecha:</small></td><td width=\"14%\">". $row[1] ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Estado:</small></td><td width=\"14%\">". $status ."</td>";
+			$resultado .= "</tr>";
+			$resultado .= "<tr>";
+			$resultado .= "<td width=\"6%\"><small>Departamento:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("departamentos",$row[16],"departamento") ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Area:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("areas",$row[17],"area") ."</td>";
+			$resultado .= "<td width=\"6%\"><small>CentroCostos:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("centroscostos",$row[18],"descripcion") ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Solicitante:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("usuarios",$row[20],"nombre") ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Importancia:</small></td><td width=\"14%\">". $row[19] ."</td>";
+			$resultado .= "</tr>";
+			$resultado .= "<tr><td colspan=10>";
 			$resultado .= MostrarPartidas($idrequisicion, $q);
-			$resultado .="</td></tr>";
-			$resultado .="<tr><td colspan=8>";
-			$resultado .=MostrarComentariosRequisicion($idrequisicion, $q);
-			$resultado .="</td></tr>";
-			$resultado .="<tr><td colspan=8>";
-			$resultado .=MostrarAdjuntosRequisicion($idrequisicion, $q);
-			$resultado .="</td></tr>";
-			$resultado .="<tr><td width=\"10%\"><small>Surtida:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[7],"nombre") ."</td><td width=\"10%\"><small>Imprime:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[8],"nombre") ."</td><td width=\"10%\"><small>Solicitante:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre") ."</td><td width=\"10%\"><small>Autor:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[14],"nombre") ."</td></tr>";
-			$resultado .="</table>";
+			$resultado .= "</td></tr>";
+			$resultado .= "<tr><td colspan=10>";
+			$resultado .= MostrarComentariosRequisicion($idrequisicion, $q);
+			$resultado .= "</td></tr>";
+			$resultado .= "<tr><td colspan=10>";
+			$resultado .= MostrarAdjuntosRequisicion($idrequisicion, $q);
+			$resultado .= "</td></tr>";
+			$resultado .= "<tr>";
+			$resultado .= "<td width=\"6%\"><small>Creada:</small></td><td width=\"14%\">". $row[10] ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Eliminada:</small></td><td width=\"14%\">". $row[6] ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Impresa:</small></td><td width=\"14%\">". $row[8] ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Surtida:</small></td><td width=\"14%\">". $row[7] ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Modificada:</small></td><td width=\"14%\">". $row[9] ."</td>";
+			$resultado .= "</tr>";
+			$resultado .= "<tr>";
+			$resultado .= "<td width=\"6%\"><small>Creada:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("usuarios",$row[21],"nombre") ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Eliminada:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("usuarios",$row[11],"nombre") ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Impresa:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre") ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Surtida:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("usuarios",$row[12],"nombre") ."</td>";
+			$resultado .= "<td width=\"6%\"><small>Modificada:</small></td><td width=\"14%\">". ObtenerDescripcionDesdeID("usuarios",$row[14],"nombre") ."</td>";
+			$resultado .= "</tr>";
+			$resultado .= "</table>";
 		}
 		return $resultado;
 	}
@@ -1072,10 +1457,16 @@
 		$resultado .="	<td width=\"90%\">";
 		$resultado .="	<table>";
 		$resultado .="		<tr>";
-		$resultado .="			<td width=\"20%\"><small>Departamento:</small></td><td width=\"80%\"><select name = \"departamento\">". ObtenerOpcionesSelect("departamentos","departamento") ."</select></td>";
+		$resultado .="			<td width=\"20%\"><small>Empresa:</small></td><td width=\"80%\"><select name = \"empresa\" onchange=\"populate(this)\">". ObtenerOpcionesSelect("empresas","nombre") ."</select></td>";
 		$resultado .="		</tr>";
 		$resultado .="		<tr>";
-		$resultado .="			<td width=\"20%\"><small>Area:</small></td><td width=\"80%\"><select name = \"area\">". ObtenerOpcionesSelect("areas","area") ."</select></td>";
+		$resultado .="			<td width=\"20%\"><small>Departamento:</small></td><td width=\"80%\"><select name = \"departamento\">". ObtenerOpcionesSelectGroup("departamentos","departamento","empresas","idempresa") ."</select></td>";
+		$resultado .="		</tr>";
+		$resultado .="		<tr>";
+		$resultado .="			<td width=\"20%\"><small>Area:</small></td><td width=\"80%\"><select name = \"area\">". ObtenerOpcionesSelectGroup("areas","area","empresas","idempresa") ."</select></td>";
+		$resultado .="		</tr>";
+		$resultado .="		<tr>";
+		$resultado .="			<td width=\"20%\"><small>CentroCostos:</small></td><td width=\"80%\"><select name = \"centrocostosreq\" id=\"centrocostosreq\">". ObtenerOpcionesSelectGroup("centroscostos","descripcion","empresas","idempresa") ."</select></td>";
 		$resultado .="		</tr>";
 		$resultado .="		<tr>";
 		$resultado .="			<td colspan=2>";
