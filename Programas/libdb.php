@@ -8,10 +8,9 @@
 	if ( isset($_GET["action"]) && $_GET["action"] == "getoptions" ) {
 		$tabla=$_GET["table"];
 		$descripcion=$_GET["description"];
-		$sel = $_GET["seleccionado"];
 		$resultado="";
-		if ( isset($_GET["seleccionado"]) ) {
-			$seleccionado = $_GET["seleccionado"];
+		if ( isset($_GET["sel"]) ) {
+			$seleccionado = $_GET["sel"];
 			$resultado= ObtenerOpcionesSelect($tabla, $descripcion, $seleccionado);
 		} else {
 			$resultado= ObtenerOpcionesSelect($tabla, $descripcion);
@@ -24,8 +23,8 @@
 		$descripcion = $_GET["description"];
 		$grouptable = $_GET["grouptable"];
 		$groupfield = $_GET["groupfield"];
-		if ( isset($_GET["seleccionado"]) ) {
-			$seleccionado = $_GET["seleccionado"];
+		if ( isset($_GET["sel"]) ) {
+			$seleccionado = $_GET["sel"];
 			$resultado = ObtenerOpcionesSelectGroup($tabla, $descripcion, $grouptable, $groupfield, $seleccionado);
 		}else{
 			$resultado = ObtenerOpcionesSelectGroup($tabla, $descripcion, $grouptable, $groupfield);

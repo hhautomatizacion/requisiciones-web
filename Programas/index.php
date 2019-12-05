@@ -30,20 +30,20 @@
 		<style type="text/css">
 			* {
 				font-family: 'Arial';
-				font-size: '15px';
+				font-size: 15px;
 			}
 			b {
 				border-radius: 3px;
 				border: 0px solid white;
 				padding: 0px;
-				width:100%;
-				color:white;
-				background:red;
+				width: 100%;
+				color: white;
+				background: red;
 			}
 			table {
 				border-radius: 5px;
 				border: 2px solid gray;
-				width:100%;
+				width: 100%;
 				margin-bottom: 1px;
 			}
 			td {
@@ -188,12 +188,11 @@
 			.comdeleted {opacity: 0.5;}
 		</style>
 		<script language="JavaScript" type="text/javascript">
-			var ocupado=false;
+			var ocupado = false;
 			var requisiciones = [];
 			var requisicion = 0;
-			var busquedarequisiciones="";
+			var busquedarequisiciones = "";
 			var file_upload_max_size = 0;
-
 			function formatBytes(bytes) {
 				if (typeof bytes !== 'number') {
 					return '';
@@ -809,26 +808,28 @@
 					};
 					var sel = "";
 					if ( seleccionado > 0 ) {
-						sel = "&seleccionado="+seleccionado;
+						sel = "&sel="+seleccionado;
 					}
 					xmlhttp.open("GET","libdb.php?action=getoptions&table="+ tabla +"&description="+ campo + sel,true);
 					xmlhttp.send();
 				}
 			}
 
-			function populateSelectGroup(el, tabla, campo, tablagrupos, campogrupo){
+			function populateSelectGroup(el, tabla, campo, tablagrupos, campogrupo, seleccionado = 0){
 				if ( el.options.length == 0 ) {
+					var sel = "";
 					xmlhttp = new XMLHttpRequest();
 					xmlhttp.onreadystatechange = function() {
 						if (this.readyState == 4 && this.status == 200) {
 							if ( this.responseText.length > 0 ) {
-								console.log(this.responseText);
 								el.innerHTML = this.responseText;
 							}
 						}
 					};
-					console.log(tablagrupos);
-					xmlhttp.open("GET","libdb.php?action=getgroupoptions&table="+ tabla +"&description="+ campo +"&grouptable="+ tablagrupos +"&groupfield="+ campogrupo,true);
+					if ( seleccionado != 0 ) {
+						sel = "&sel="+seleccionado;
+					}
+					xmlhttp.open("GET","libdb.php?action=getgroupoptions&table="+ tabla +"&description="+ campo +"&grouptable="+ tablagrupos +"&groupfield="+ campogrupo + sel,true);
 					xmlhttp.send();
 				}
 			}
@@ -839,6 +840,9 @@
 				var row = table.insertRow(newRow);
 				row.insertCell(0).innerHTML = "<input type='hidden' name='totalpartidas[]' value='"+ newRow +"'><table><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>CentroCostos</small></td></tr><tr><td><input id = 'cantidad"+newRow+"' type = 'number' min='0' step='0.001' name = 'cantidad["+newRow+"]' /></td><td><select id = 'unidad"+newRow+"' name = 'unidad["+newRow+"]' onfocus=\"populateSelect(this,'unidades','unidad');\"></select></td><td><input id = 'descripcion"+newRow+"' type = 'text' name = 'descripcion["+newRow+"]' /></td><td><select id = 'centrocostos"+newRow+"' name = 'centrocostos["+newRow+"]' onfocus=\"populateSelectGroup(this, 'centroscostos','descripcion','empresas','idempresa')\" ></select></td></tr></table><table id='tablacomentarios"+newRow+"'><tr><td width=\"80%\"><small>Comentarios</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addComentarioPartidaNewReq(\"tablacomentarios"+newRow+"\");'></td></tr></table><table id='tablaadjuntos"+newRow+"'><tr><td width=\"60%\"><small>Adjuntos</small></td><td width=\"20%\"><small>Tama&ntilde;o</small></td><td width=\"20%\"><input type = 'button' value='Agregar' onclick='addAdjuntoPartidaNewReq(\"tablaadjuntos"+newRow+"\");'></td></tr></table>";
 				row.insertCell(1).innerHTML = "<input type = 'button' value='Quitar' onclick='removeRow(\"tablapartidas\","+ newRow +");'>";
+				var el = document.getElementById("centrocostos"+newRow);
+				var sel = document.getElementById("centrocostosreq").value;
+				populateSelectGroup(el, 'centroscostos','descripcion','empresas','idempresa', sel);
 			}
 
 			function addAdjuntoReq(idrequisicion) {

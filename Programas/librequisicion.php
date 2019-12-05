@@ -1223,11 +1223,33 @@
 		}
 		return $resultado;
 	}
+	
+	function soySeguidorRequisicion($idrequisicion) {
+		global $db;
+		$resultado=false;
+		if ( usuarioEsLogeado() ) {
+			$res = $db->prepare("SELECT id FROM seguidoresrequisiciones WHERE idrequisicion=? AND idusuario=? AND activo=1;");
+			$res->execute([$idrequisicion, usuarioId()]);
+			while ($row = $res->fetch()) {
+				writelog("si soy seguidor");
+				$resultado=true;
+			}
+		}
+		return $resultado;
+	}
 
 	function AccionesRequisicion($idrequisicion) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
 			$resultado .= '<button onClick="appCopiaRequisicion('. $idrequisicion .');">Clonar</button>';
+			if ( soySeguidorRequisicion($idrequisicion) ) {
+				$resultado .= '<button onClick="appAbandonarRequisicion('. $idrequisicion .');">Abandonar</button>';
+			}
+		}
+		if ( usuarioEsLogeado() && RequisicionEsActiva($idrequisicion) ) {
+			if ( !soySeguidorRequisicion($idrequisicion) && !RequisicionEsMia($idrequisicion) ) {
+				$resultado .= '<button onClick="appSeguirRequisicion('. $idrequisicion .');">Seguir</button>';
+			}
 		}
 		if ( RequisicionEsMia($idrequisicion) || usuarioEsSuper() ) {
 			if ( !(RequisicionEsSurtida($idrequisicion)) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
@@ -1240,6 +1262,7 @@
 				$resultado .= '<button onClick="appEditarImpresa(this, '. $idrequisicion .');">Editar</button>';
 			}
 			if ( RequisicionEsActiva($idrequisicion) && !RequisicionEsSurtida($idrequisicion) ) {
+				$resultado .= '<button onClick="appIncluirRequisicion('. $idrequisicion .');">Incluir</button>';
 				$resultado .= '<button onClick="appBorraRequisicion('. $idrequisicion .');">Eliminar</button>';
 			}
 		}
@@ -1403,6 +1426,9 @@
 			}
 			if ( !RequisicionEsActiva($idrequisicion) ) {
 				$status .= "E";
+			}
+			if ( soySeguidorRequisicion($idrequisicion) ) {
+				$status .= "F";
 			}
 			$resultado .= "<table id=\"mostrarrequisicion". $idrequisicion ."\"  class=\"". $clase ."\">";
 			$resultado .= "<tr>";
