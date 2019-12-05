@@ -136,6 +136,14 @@
 			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
+	
+	if ( isset($_REQUEST["includeusers"]) ) {
+		$idrequisicion = intval($_REQUEST["idreq"]);
+		foreach( $_REQUEST["user"] as $idusuario) {
+			SeguirRequisicion($idrequisicion, $idusuario);
+		}
+		echo "OK";
+	}
 
 	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntoreq" ) {
 		$idrequisicion=$_POST["requisicion"];
@@ -171,6 +179,11 @@
 			$resultado = formLoginForm();
 		}
 		echo $resultado;
+	}
+
+	if ( isset($_GET["action"]) && $_GET["action"] == "showincludeuserform" ) {
+		$idrequisicion = intval($_GET["idreq"]);
+		echo formIncludeUserInReqForm($idrequisicion);
 	}
 
 	function ListaRequisiciones($view=0, $user=-1, $q="") {
@@ -276,10 +289,7 @@
 			$q="";
 		}
 		$resultado=ListaRequisiciones($view, $user, $q);
-		writelog($resultado);
 		$pdf = new PDF("L");
-		//$pdf->SetFont('Arial','',6);
-		//$pdf->AddPage();
 		ExportarEncabezados($pdf);
 		$listarequisiciones= explode(" ",$resultado);
 		foreach ($listarequisiciones as $idrequisicion) {
@@ -360,7 +370,41 @@
 				$res->execute();
 				echo "OK";
 				break;
+			case "follow":
+				SeguirRequisicion($idrequisicion);
+				echo "OK";
+				break;
+			case "unfollow":
+				AbandonarRequisicion($idrequisicion);
+				echo "OK";
+				break;
 		}
+	}
+
+	function SeguirRequisicion($idrequisicion, $idusuario=0) {
+		global $db;
+		$idsiguiendo = 0;
+		if ( $idusuario == 0) {
+			$idusuario = usuarioId();
+		}
+		$res= $db->prepare("SELECT id FROM seguidoresrequisiciones WHERE idrequisicion=? AND idusuario=?;");
+		$res->execute([$idrequisicion, $idusuario]);
+		while ($row = $res->fetch()) {
+			$idsiguiendo = $row[0];
+		}
+		if ( $idsiguiendo == 0 ) {
+			$res= $db->prepare("INSERT INTO seguidoresrequisiciones VALUES (0,?,?,1);");
+			$res->execute([$idrequisicion, $idusuario]);
+		} else {
+			$res= $db->prepare("UPDATE seguidoresrequisiciones SET activo=1 WHERE id=?;");
+			$res->execute([$idsiguiendo]);
+		}
+	}
+	
+	function AbandonarRequisicion($idrequisicion) {
+		global $db;
+		$res= $db->prepare("UPDATE seguidoresrequisiciones SET activo=0 WHERE idrequisicion=? AND idusuario=?;");
+		$res->execute([$idrequisicion, usuarioId() ]);
 	}
 
 	function CopiarRequisicion($idrequisicion) {
@@ -485,12 +529,11 @@
 		$comentario = 'Copia de la requisicion Id='. $idrequisicion ;
 		$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(), 0);");
 		$res->execute([$ultimoidreq, $comentario, usuarioId()]);
-		return "OK";
+		return json_encode(array('succes' => 1, 'id' => $ultimoidreq));
 	}
 
 	function ExportarRequisicion($pdf, $idrequisicion) {
 		global $db;
-		//$y=$pdf->LastY();
 		$req="";
 		$fecha="";
 		$solicitante="";
@@ -510,13 +553,13 @@
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$estado="";
-			//$pdf->SetLineWidth(0.20);
-			//$pdf->Line(4,$y,285,$y);
 			$y=$pdf->GetY();
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionFontSize', '8');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionFontName', 'Arial');
 			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionAncho', '69');
+			$pdf->SetFont($fontname,'', $fontsize);
 			$alto = $pdf->MeassureRows($row[4] , $ancho,5);
 			if ( $y + $alto > 210 ) {
-				//$pdf->AddPage();
 				ExportarEncabezados($pdf);
 				$y=$pdf->GetY();
 			}
@@ -533,9 +576,7 @@
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoIdFontSize', '8');
 				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoIdFontName', 'Arial');
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoIdX', '5');
-				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoIdY', '5');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoIdAncho', '14');
-				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoIdEtiqueta', 'Id');
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, $idrequisicion , $ancho);
 			}
@@ -544,21 +585,17 @@
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoFechaFontSize', '8');
 				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoFechaFontName', 'Arial');
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoFechaX', '20');
-				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoFechaY', '5');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoFechaAncho', '29');
-				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoFechaEtiqueta', 'Fecha');
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, $fecha, $ancho);
 			}
-			//$pdf->PutRows(5,$y,$idrequisicion);
+
 			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaVisible', '1');
 			if ( $visible == "1" ) {
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaFontSize', '8');
 				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaFontName', 'Arial');
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaX', '20');
-				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaY', '5');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaAncho', '29');
-				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoEmpresaEtiqueta', 'Empresa');
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, $empresa, $ancho);
 			}
@@ -567,92 +604,58 @@
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionFontSize', '8');
 				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionFontName', 'Arial');
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionX', '50');
-				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionY', '5');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionAncho', '14');
-				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoRequisicionEtiqueta', 'Requisicion');
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, $req, $ancho);
 			}
-			//$pdf->PutRows(19,$y,$req);
-			
-			//$pdf->PutRows(33,$y,$fecha);
 			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadVisible', '1');
 			if ( $visible == "1" ) {
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadFontSize', '8');
 				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadFontName', 'Arial');
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadX', '95');
-				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadY', '5');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadAncho', '14');
-				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoCantidadEtiqueta', 'Cantidad');
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, (float)$row[2], $ancho);
 			}
-			//$pdf->PutRows(61,$y,(float)$row[2]);
+
 			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadVisible', '1');
 			if ( $visible == "1" ) {
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadFontSize', '8');
 				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadFontName', 'Arial');
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadX', '100');
-				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadY', '5');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadAncho', '14');
-				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadEtiqueta', 'Unidad');
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, ObtenerDescripcionDesdeID("unidades",$row[3],"unidad"), $ancho);
 			}
-			//$pdf->PutRows(75,$y,ObtenerDescripcionDesdeID("unidades",$row[3],"unidad"));
 			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionVisible', '1');
 			if ( $visible == "1" ) {
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionFontSize', '8');
 				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionFontName', 'Arial');
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionX', '115');
-				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionY', '5');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionAncho', '69');
-				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionEtiqueta', 'Descripcion');
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, $row[4], $ancho,5);
 			}
-			//$pdf->PutRows(89,$y,$row[4] ,135,5);
 			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoVisible', '1');
 			if ( $visible == "1" ) {
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoFontSize', '8');
 				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoFontName', 'Arial');
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoX', '240');
-				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoY', '5');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoAncho', '14');
-				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoEtiqueta', 'Estado');
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, $estado, $ancho);
 			}
-			//$pdf->PutRows(229,$y,$estado);
 			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteVisible', '1');
 			if ( $visible == "1" ) {
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteFontSize', '8');
 				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteFontName', 'Arial');
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteX', '255');
-				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteY', '5');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteAncho', '34');
-				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoSolicitanteEtiqueta', 'Solicitante');
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, $solicitante, $ancho);
 			}
-			//$pdf->PutRows(257,$y,$solicitante);
-			
-			//$y=$y+ ($pdf->MeassureRows($row[4] ,135,5));
-			/* writelog("------------");
-			writelog("desc ". $row[4]);
-			writelog("y ". $y);
-			writelog("alto ". $alto ); */
 			$pdf->SetY($y + $alto);
-			//$y = $y + $alto;
-			// /* /* writelog("newy ". $y); */ */
-			//$pdf->SetLineWidth(0.20);
-			//$pdf->Line(4,$y-5,285,$y-5);
-			
 		}
-		//$y = $y + $alto +5;
-		//$pdf->SetLineWidth(0.40);
-		//$pdf->Line(4,$y-5,285,$y-5);
-		
 	}
 
 	function ExportarEncabezados($pdf) {
@@ -767,7 +770,7 @@
 			$pdf->SetFont($fontname,'', $fontsize);
 			$pdf->PutRows($x, $y,  $etiqueta , $ancho);
 		}
-		$pdf->SetY(10);
+		$pdf->SetY($y +5);
 	}
 
 	function ImprimirRequisicion($pdf, $idrequisicion, $modoprueba=0) {
@@ -813,15 +816,6 @@
 		while ($row = $res->fetch()) {
 			$comentario= $row[3];
 		}
-		// if ( strlen($comentario) == 0 ) {
-			// $res = $db->prepare("SELECT comentariospartidas.comentario, comentariospartidas.activo FROM comentariospartidas INNER JOIN partidas ON (comentariospartidas.idpartida=partidas.id) WHERE (comentariospartidas.idusuario=". $solicitante ." OR comentariospartidas.idusuario=". $idusuario .") AND partidas.activo=1 AND partidas.idrequisicion=". $idrequisicion .";");
-			// $res->execute();
-			// while ($row = $res->fetch()) {
-				// if ( $row[1] == '1' ) {
-					// $comentario= $row[0];
-				// }
-			// }
-		// }
 		if ( $modoprueba == 1 ) {
 			$comentario = str_replace(' ',' prueba ', $comentario);
 		}
@@ -924,7 +918,6 @@
 
 	function ImprimirPartidas($pdf, $idrequisicion, $modoprueba) {
 		global $db;
-
 		$empresa= ObtenerEmpresaRequisicion($idrequisicion);
 		$fontsize = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasFontSize', '12');
 		$fontname = obtenerPreferenciaGlobal('empresa'. $empresa, 'FormatoPartidasFontName', 'Arial');
@@ -1016,9 +1009,6 @@
 					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioReq(this, ". $idcomentario .");\">";
 				}
 			}
-			if ( ComentarioReqEsActivo($idcomentario) ) {
-				$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioReq(". $idcomentario .");\">";
-			}
 			if ( !ComentarioReqEsActivo($idcomentario) && usuarioEsSuper() ) {
 				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioReq(this, ". $idcomentario .");\">";
 			}
@@ -1108,6 +1098,9 @@
 				$clase .= " partdeleted";
 				$estado .= "E";
 			}
+			if ( soySeguidorPartida($row[0]) ) {
+				$estado .= "F";
+			}
 			$resultado .= "<tr id=\"part". $row[0] ."\" class=\"". $clase ."\"><td>";
 			$resultado .= "<table>";
 			$resultado .= "<tr>";
@@ -1119,7 +1112,6 @@
 			$resultado .= "<td width=\"75%\" colspan=5>". MostrarCampo("Descripcion",resaltarBusqueda($row[4], $q)) ."</td>";
 			$resultado .= "</tr>";
 			$resultado .= "<tr>";
-			//$resultado .= "<td width=\"12.5%\">". MostrarCampo("Partida",$partida) ."</td>";
 			$resultado .= "<td width=\"16.6%\">". MostrarCampo("CentroCostos",ObtenerDescripcionDesdeID("centroscostos",$row[16],"descripcion")) ."</td>";
 			$resultado .= "<td width=\"16.6%\">". MostrarCampo("Solicitante",ObtenerDescripcionDesdeID("usuarios",$row[19],"nombre")) ."</td>";
 			$resultado .= "<td width=\"16.6%\">". MostrarCampo("Eliminada",$row[8]) ."</td>";
@@ -1128,18 +1120,13 @@
 			$resultado .= "<td width=\"8.3%\">". MostrarCampo("Importancia",$row[18]) ."</td>";
 			$resultado .= "<td width=\"8.3%\">". MostrarCampo("Estado",$estado) ."</td>";
 			$resultado .= "</tr>";
-			//$resultado .= "<tr>";
-			//$resultado .= "<td>". (float)$row[2] ."</td><td>". ObtenerDescripcionDesdeID("unidades",$row[3],"unidad") ."</td><td>". resaltarBusqueda($row[4], $q) ."</td><td>". ObtenerDescripcionDesdeID("centroscostos",$row[9],"descripcion") ."</td>";
-			//$resultado .= "</tr>";
 			$resultado .= "</table>";
 			$resultado .= "</tr>";
-			/////////////$resultado .= "</td>";
 			$resultado .= "<tr>";
 			$resultado .= "<td>";
 			$resultado .= MostrarComentariosPartida($row[0], $q);
 			$resultado .= "</td>";
 			$resultado .= "</tr>";
-			/////////////$resultado .= "</td>";
 			$resultado .= "<tr>";
 			$resultado .= "<td>";
 			$resultado .= MostrarAdjuntosPartida($row[0], $q);
@@ -1231,7 +1218,6 @@
 			$res = $db->prepare("SELECT id FROM seguidoresrequisiciones WHERE idrequisicion=? AND idusuario=? AND activo=1;");
 			$res->execute([$idrequisicion, usuarioId()]);
 			while ($row = $res->fetch()) {
-				writelog("si soy seguidor");
 				$resultado=true;
 			}
 		}
@@ -1262,19 +1248,19 @@
 				$resultado .= '<button onClick="appEditarImpresa(this, '. $idrequisicion .');">Editar</button>';
 			}
 			if ( RequisicionEsActiva($idrequisicion) && !RequisicionEsSurtida($idrequisicion) ) {
-				$resultado .= '<button onClick="appIncluirRequisicion('. $idrequisicion .');">Incluir</button>';
+				$resultado .= '<button onClick="appIncluirEnRequisicion('. $idrequisicion .');">Incluir</button>';
 				$resultado .= '<button onClick="appBorraRequisicion('. $idrequisicion .');">Eliminar</button>';
+			}
+			if ( !(RequisicionEsActiva($idrequisicion)) ) {
+				$resultado .= '<button onClick="appRestauraRequisicion('. $idrequisicion .');">Restaurar</button>';
 			}
 		}
 		if ( usuarioEsSuper() ) {
 			if ( RequisicionEsSurtida($idrequisicion) && RequisicionEsActiva($idrequisicion)  ) {
-				$resultado .= '<button onClick="appPorsurtirRequisicion('. $idrequisicion .');">Por surtir</button>';
+				$resultado .= '<button onClick="appPorSurtirRequisicion('. $idrequisicion .');">Por surtir</button>';
 			}
 			if ( RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion)  ) {
 				$resultado .= '<button onClick="appImprimeRequisicion('. $idrequisicion .');">Reimprimir</button>';
-			}
-			if ( !(RequisicionEsActiva($idrequisicion)) ) {
-				$resultado .= '<button onClick="appRestauraRequisicion('. $idrequisicion .');">Restaurar</button>';
 			}
 		}
 		return $resultado;
@@ -1315,90 +1301,7 @@
 		return $resultado;
 	}
 
-	// function ResumenRequisicion($idrequisicion) {
-		// global $db;
-		// $resultado="";
-		// $res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
-		// $res->execute();
-		// while ($row = $res->fetch()) {
-			// $status="";
-			// $clase="req";
-			// if ( RequisicionEsImpresa($idrequisicion) ) {
-				// $clase .= " printed";
-			// }
-			// if ( RequisicionEsSurtida($idrequisicion) ) {
-				// $clase .= " supplied";
-			// }
-			// if ( !RequisicionEsActiva($idrequisicion) ) {
-				// $clase .= " deleted";
-			// }
-			// if ( RequisicionEsImpresa($idrequisicion) ) {
-				// $status .= "I";
-			// }
-			// if ( RequisicionEsSurtida($idrequisicion) ) {
-				// $status .= "S";
-			// }
-			// if ( !RequisicionEsActiva($idrequisicion) ) {
-				// $status .= "E";
-			// }
-			// $resultado .= "<table id=\"mostrarrequisicion". $idrequisicion ."\"  class=\"". $clase ."\">";
-			// $resultado .= "<tr>";
-			// $resultado .= "<td width=\"7%\"><small>Id:</small></td><td width=\"13%\">". $row[0] ."</td>";
-			// $resultado .= "<td width=\"7%\"><small>Requisicion:</small></td><td width=\"13%\">". $row[2] ."</td>";
-			// $resultado .= "<td width=\"7%\"><small>Fecha:</small></td><td width=\"13%\">". $row[1] ."</td>";
-			// $resultado .= "<td width=\"7%\"><small>Importancia:</small></td><td width=\"13%\">TODO</td>";
-			// $resultado .= "</tr>";
-			// $resultado .= "<tr>";
-			// $resultado .= "<td width=\"10%\"><small>Departamento:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("departamentos",$row[9],"departamento") ."</td>";
-			// $resultado .= "<td width=\"10%\"><small>Area:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("areas",$row[10],"area") ."</td><td width=\"10%\"><small>Surtir:</small></td><td width=\"15%\">TODO</td><td width=\"10%\"><small>Estado:</small></td><td width=\"15%\">". $status ."</td></tr>";
-			// $resultado .="<tr><td colspan=8>";
-			// $resultado .= ResumenPartidas($idrequisicion);
-			// $resultado .="</td></tr>";
-			// $resultado .="<tr><td colspan=8>";
-			// $resultado .=MostrarComentariosRequisicion($idrequisicion);
-			// $resultado .="</td></tr>";
-			// $resultado .="<tr><td colspan=8>";
-			// $resultado .=MostrarAdjuntosRequisicion($idrequisicion);
-			// $resultado .="</td></tr>";
-			// $resultado .="<tr><td width=\"10%\"><small>Surtida:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[7],"nombre") ."</td><td width=\"10%\"><small>Imprime:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[8],"nombre") ."</td><td width=\"10%\"><small>Solicitante:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[13],"nombre") ."</td><td width=\"10%\"><small>Autor:</small></td><td width=\"15%\">". ObtenerDescripcionDesdeID("usuarios",$row[14],"nombre") ."</td></tr>";
-			// $resultado .="</table>";
-		// }
-		// return $resultado;
-	// }
-
-	// function ResumenPartidas($idrequisicion) {
-		// global $db;
-		// $resultado="";
-		// $res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion=". $idrequisicion .";");
-		// $res->execute();
-		// $resultado .= "<table>";
-		// $resultado .= "<tr><td width=\"90%\"><small>Partida</small></td><td width=\"10%\"><small>Acciones</small></td></tr>";
-		// while ($row = $res->fetch()) {
-			// $clase="part";
-			// if ( strval($row[7]) == 1 ) {
-				// $clase .= " partprinted";
-			// }
-			// if ( strval($row[6]) == 1 ) {
-				// $clase .= " partsupplied";
-			// }
-			// if ( strval($row[5]) == 0 ) {
-				// $clase .= " partdeleted";
-			// }
-			// $resultado .= "<tr id=\"corepart". $row[0] ."\" class=\"". $clase ."\"><td>";
-			// $resultado .= "<table id=\"corepart". $row[0] ."\">";
-			// $resultado .= "<tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr>";
-			// $resultado .= "<tr><td>". (float)$row[2] ."</td><td>". ObtenerDescripcionDesdeID("unidades",$row[3],"unidad") ."</td><td>". $row[4] ."</td><td>". ObtenerDescripcionDesdeID("centroscostos",$row[9],"descripcion") ."</td></tr>";
-			// $resultado .= "</table>";
-			// $resultado .= MostrarComentariosPartida($row[0]);
-			// $resultado .= MostrarAdjuntosPartida($row[0]);
-			// $resultado .= "</td><td>";
-			// $resultado .= "</td></tr>";
-		// }
-		// $resultado .= "</table>";
-		// return $resultado;
-	// }
-
-	function MostrarRequisicion($idrequisicion, $q) {
+	function MostrarRequisicion($idrequisicion, $q="") {
 		global $db;
 		$resultado="";
 		$res = $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion .";");
@@ -1483,7 +1386,7 @@
 		$resultado .="	<td width=\"90%\">";
 		$resultado .="	<table>";
 		$resultado .="		<tr>";
-		$resultado .="			<td width=\"20%\"><small>Empresa:</small></td><td width=\"80%\"><select name = \"empresa\" onchange=\"populate(this)\">". ObtenerOpcionesSelect("empresas","nombre") ."</select></td>";
+		$resultado .="			<td width=\"20%\"><small>Empresa:</small></td><td width=\"80%\"><select name = \"empresa\">". ObtenerOpcionesSelect("empresas","nombre") ."</select></td>";
 		$resultado .="		</tr>";
 		$resultado .="		<tr>";
 		$resultado .="			<td width=\"20%\"><small>Departamento:</small></td><td width=\"80%\"><select name = \"departamento\">". ObtenerOpcionesSelectGroup("departamentos","departamento","empresas","idempresa") ."</select></td>";
@@ -1536,6 +1439,46 @@
 		$resultado .="	</tr>";
 		$resultado .="	</table>";
 		$resultado .="	</div>";
+		$resultado .="</form>";
+		return $resultado;
+	}
+	
+	function formIncludeUserInReqForm($idrequisicion) {
+		global $db;
+		$resultado="";
+		$resultado .="<form id=\"includeuserform\" method = \"POST\" enctype=\"multipart/form-data\">";
+		$resultado .="	<input type=\"hidden\" name=\"includeusers\" value=\"1\">";
+		$resultado .="	<input type=\"hidden\" name=\"idreq\" value=\"". $idrequisicion ."\">";
+		$resultado .="	<div>";
+		$resultado .="		<table>";
+		$resultado .="			<tr>";
+		$resultado .="				<td width=\"90%\">";
+		$resultado .="					<small>Usuario</small>";
+		$resultado .="				</td>";
+		$resultado .="				<td width=\"10%\">";
+		$resultado .="					<small>Acciones</small>";
+		$resultado .="				</td>";
+		$resultado .="			</tr>";
+		$resultado .="			<tr>";
+		$resultado .="				<td>";
+		$resultado .="					<table>";
+		$res = $db->prepare("SELECT id, nombre FROM usuarios WHERE activo=1 ORDER BY nombre;");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$resultado .="						<tr>";
+			$resultado .="						<td>";
+			$resultado .="							<input type=\"checkbox\" name=\"user[]\" value=\"". $row[0] ."\"> ". $row[1];
+			$resultado .="						</td>";
+			$resultado .="						</tr>";
+		}
+		$resultado .="					</table>";
+		$resultado .="				</td>";
+		$resultado .="				<td>";
+		$resultado .="					<button id=\"botonsaveincludeuser\" onClick=\"event.preventDefault();appSaveIncludeUser();\">Incluir</button>";
+		$resultado .="				</td>";
+		$resultado .="			</tr>";
+		$resultado .="		<table>";
+		$resultado .="	<div>";
 		$resultado .="</form>";
 		return $resultado;
 	}

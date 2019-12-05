@@ -3,6 +3,7 @@
 
 	require_once "PHPMailer.php";
 	require_once "SMTP.php";
+	require_once "Exception.php";
 	require_once "libconfig.php";
 	require_once "libdb.php";
 	require_once "libphp.php";
@@ -41,11 +42,12 @@
 		return $resultado;
 	}
 	
-	function EnviarNotificacionRequisicion($idnotificacion, $idrequisicion) {
+	function EnviarNotificacionRequisicion($idnotificacion, $idrequisicion, $destinatarios = array()) {
 		global $db;
 		$idusuario=0;
 		$idsolicitante=0;
-		$destinatarios=array();
+		//$destinatarios = array();
+		$direcciones = array();
 		$res= $db->prepare("SELECT idusuario, clave FROM notificacionesrequisiciones WHERE id=". $idnotificacion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -68,22 +70,36 @@
 		$res= $db->prepare("SELECT idsolicitante, idusuario FROM requisiciones WHERE id=". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
-			if ( $idusuario != $row[0] ) {
+			if ( $idusuario != $row[0] && !in_array($row[0], $destinatarios) ) {
 				$destinatarios[] = $row[0];
 			}
-			if ( $idusuario != $row[1] && $row[0] != $row[1]) {
+			if ( $idusuario != $row[1] && !in_array($row[1], $destinatarios) ) {
 				$destinatarios[] = $row[1];
+			}
+		}
+		writelog("Notificar ". $idrequisicion);
+		$res= $db->prepare("SELECT idusuario FROM seguidoresrequisiciones WHERE idrequisicion=? AND activo=1;");
+		$res->execute([$idrequisicion]);
+		while ($row = $res->fetch()) {
+			if ( !in_array($row[0], $destinatarios) ) {
+				$destinatarios[] = $row[0];
+				writelog($row[0] ." es seguidor");
 			}
 		}
 		foreach ($destinatarios as $dest) {
 			$direccion = ObtenerDescripcionDesdeID("usuarios", $dest, "email");
-			$mensaje=ObtenerDescripcionDesdeID("usuarios", $idusuario , "nombre") ." reporta la requisicion Id=". $idrequisicion ." como ". $tiponotificacion;
 			if ( $direccion != '') {
-				enviarRequisicionPorCorreo($idrequisicion, $direccion, "Requisicion Id=". $idrequisicion ." ". $tiponotificacion, $mensaje);
+				writelog("direccion ". $direccion);
+				$direcciones[] = $direccion;
 			}
 		}
+		
+		if ( count($direcciones) ) {
+			$mensaje = ObtenerDescripcionDesdeID("usuarios", $idusuario , "nombre") ." reporta la requisicion Id=". $idrequisicion ." como ". $tiponotificacion;
+			enviarRequisicionPorCorreo($idrequisicion, $direcciones, "Requisicion Id=". $idrequisicion ." ". $tiponotificacion, $mensaje);
+		}
+		writelog("---");
 	}
-
 	function obtenerAdjuntosRequisicion($idrequisicion) {
 		global $db;
 		$mail_attachmentsize = obtenerPreferenciaGlobal("mail","attachmentsize","10485760");
@@ -120,8 +136,8 @@
 		}
 		return $resultado;
 	}
-
-	function enviarRequisicionPorCorreo($idrequisicion, $direccion, $asunto, $mensaje) {
+	function enviarRequisicionPorCorreo($idrequisicion, $direcciones, $asunto, $mensaje) {
+		$direccion = '';
 		$mail_server = obtenerPreferenciaGlobal("mail","server","128.128.5.243");
 		$mail_port = obtenerPreferenciaGlobal("mail","port","25");
 		$mail_user = obtenerPreferenciaGlobal("mail","user","mttocl");
@@ -165,10 +181,9 @@
 		$message .= MostrarRequisicion($idrequisicion);
 		$message .= '</body>';
 		$message .= '</html>';
-		writelog($message);
-		$mail = new PHPMailer(true);
 		try 
 		{
+			$mail = new PHPMailer(true);
 			$mail->IsSMTP();
 			$mail->Host = $mail_server;
 			$mail->SMTPAuth = true;
@@ -177,7 +192,9 @@
 			$mail->SMTPSecure = 'tls';
 			$mail->port = $mail_port;
 			$mail->setFrom($mail_fromaddress,$mail_fromname);
-			$mail->addAddress($direccion);
+			foreach ($direcciones as $direccion) {
+				$mail->addAddress($direccion);
+			}
 			$mail->IsHTML(true);
 			$mail->CharSet = 'utf-8';
 			$mail->Subject=$asunto;
@@ -189,14 +206,17 @@
 		}
 		catch (Exception $e)
 		{
-			writelog('Error al enviar correo: '. $asunto . ' a '. $direccion);
+			foreach ($direcciones as $direccion) {
+				writelog('Error al enviar correo: '. $asunto . ' a '. $direccion);
+			}
 		}
 	}
+	
 	function notificarPartidas() {
 		global $db;
 		$partidas = array();
 		$requisiciones = array();
-		
+		$destinatarios = array();
 		foreach ( NotificacionesPartidas() as $item ) {
 			$res= $db->prepare("SELECT idpartida FROM notificacionespartidas WHERE id=". $item .";");
 			$res->execute();
@@ -212,10 +232,29 @@
 				if ( !in_array($req, $requisiciones) ) {
 					$requisiciones[] = $req;
 				}
-			}	
+			}
 		}
 		foreach ( $requisiciones as $item ) {
-			EnviarNotificacionRequisicion(0, $item);
+			$destinatarios = array();
+			foreach ($partidas as $idpartida ) {
+				$partida = 0;
+				$res= $db->prepare("SELECT id FROM partidas WHERE id=". $idpartida ." AND idrequisicion=". $item .";");
+				$res->execute();
+				while ($row = $res->fetch()) {
+					$partida=$row[0];
+				}
+				if ( $partida != 0 ) {
+					$res= $db->prepare("SELECT idusuario FROM seguidorespartidas WHERE idpartida=? AND activo=1;");
+					$res->execute([$partida]);
+					while ($row = $res->fetch()) {
+						if ( !in_array($row[0], $destinatarios) ) {
+							$destinatarios[] = $row[0];
+							writelog($row[0] ." es seguidor de la partida". $partida );
+						}
+					}
+				}
+			}
+			EnviarNotificacionRequisicion(0, $item, $destinatarios);
 		}
 	}
 	notificarPartidas();

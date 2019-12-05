@@ -3,6 +3,7 @@
 
 	require_once "PHPMailer.php";
 	require_once "SMTP.php";
+	require_once "Exception.php";
 	require_once "libconfig.php";
 	require_once "libdb.php";
 	require_once "libphp.php";
@@ -29,7 +30,6 @@
 
 	if ( isset($_GET["action"]) && $_GET["action"] == "logout" ) {
 		setcookie("usuario","");
-		//usuarioDesactivarToken();
 		echo "OK";
 	}
 
@@ -51,9 +51,6 @@
 		if ( count($errores) == 0 ) {
 			if (usuarioDarEntrada(usuarioVerificarCredenciales($nombre, $password)) > 0) {
 				echo json_encode(array('succes' => 1));
-				/* if ( isset($_POST["autologin"]) && $_POST["autologin"] == "on" ) {
-					usuarioActivarToken();
-				} */
 			}else{
 				$errores[]="loginform";
 				echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
@@ -499,16 +496,11 @@
 	function usuarioEsSuper() {
 		global $db;
 		$resultado=false;
-		/* if ( usuarioEsLogeado() ) {
-			if ( $idusuario == "" ) {
-				$idusuario =usuarioId();
-			} */
 		$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND su=1 AND activo=1");
 		$res->execute([usuarioId()]);
 		while ($row = $res->fetch()) {
 			$resultado=true;
 		}
-		//}
 		return $resultado;
 	}
 	
@@ -531,16 +523,6 @@
 	function usuarioDarEntrada($idusuario) {
 		global $db;
 		$resultado = 0;
-		$usuarios = 1;
-		/* while ($usuarios > 0) {
-			$usuarios = 0;
-			$token = randomString(8);
-			$res = $db->prepare("SELECT COUNT(id) FROM usuarios WHERE token = ?;");
-			$res->execute([$token]);
-			while ($row = $res->fetch()) {
-				$usuarios = $row[0];
-			}
-		} */
 		$token = crearToken();
 		$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND activo=1");
 		$res->execute([$idusuario]);
@@ -553,38 +535,6 @@
 		}
 		return $resultado;
 	}
-
-	/* function usuarioDesactivarToken() {
-		global $db;
-		$db->prepare("DELETE FROM tokensusuarios WHERE cliente=?")->execute([$_SERVER["REMOTE_ADDR"]]);
-		setcookie("token", "");
-	}
-
-	function usuarioActivarToken() {
-		global $db;
-		$tokenNuevo = "";
-		$tokenNuevo=randomString(40);
-		$db->prepare("INSERT INTO tokensusuarios VALUES (0,?,?,?,DATE_ADD(NOW(), INTERVAL 7 DAY)")->execute([$_COOKIE["usuario"], $_SERVER["REMOTE_ADDR"], $tokenNuevo]);
-		setcookie("token", $tokenNuevo, time()+604800);
-	} */
-
-/* 	function userAutoLogin() {
-		global $db;
-		$token = "";
-		$userId = "";
-		if ( !usuarioEsLogeado() ) {
-			$res = $db->prepare("SELECT idusuario, token FROM tokensusuarios WHERE cliente = ? AND expira > NOW()");
-			$res->execute([$_SERVER["REMOTE_ADDR"]]);
-			while ($row = $res->fetch()) {
-				$userId = $row[0];
-				$token = $row[1];
-			}
-			if ( isset($_COOKIE["token"]) && $_COOKIE["token"] == $token ) {
-				usuarioActivarToken();
-				usuarioDarEntrada($userId);
-			}
-		}
-	} */
 
 	function guardarPreferencia($seccion, $clave, $valor) {
 		global $db;
@@ -609,7 +559,6 @@
 		global $db;
 		$resultado = $default;
 		$encontrado = false;
-		//if ( isset($_COOKIE["usuario"]) ) {
 		$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
 		$res->execute([usuarioId(), $seccion, $clave]);
 		while ($row = $res->fetch()) {
@@ -619,7 +568,6 @@
 		if (!$encontrado) {
 			guardarPreferencia($seccion, $clave, $resultado);
 		}
-		//}
 		return $resultado;
 	}
 ?>

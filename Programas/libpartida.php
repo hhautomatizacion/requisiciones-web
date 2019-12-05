@@ -29,6 +29,33 @@
 			echo "OK";
 		}	
 	}
+	
+	if ( isset($_POST["accion"]) && $_POST["accion"] == "saveeditpart" ) {
+		$errores=array();
+		$validos=array();
+		$idpartida=$_POST["partida"];
+		$cantidad = $_POST["cantidad"];
+		$unidad=$_POST["unidad"];
+		$descripcion=$_POST["descripcion"];
+		$centrocostos=$_POST["centrocostos"];
+		if ( (float)$cantidad <= 0 ) {
+			$errores[] = "cantidad". $idpartida;
+		} else {
+			$validos[] = "cantidad". $idpartida;
+		}
+		if ( strlen($descripcion) == 0) {
+			$errores[] = "descripcion". $idpartida;
+		} else {
+			$validos[] = "descripcion". $idpartida;
+		}
+		if ( count($errores) == 0 ) {
+			$res = $db->prepare("UPDATE partidas SET cantidad=?, idunidad=?, descripcion=?, idcentrocostos=?, fechamodificacion=NOW(), idmodificacion=? WHERE id= ?;");
+			$res->execute([$cantidad, $unidad, $descripcion, $centrocostos, usuarioId() ,$idpartida]);
+			echo json_encode(array('succes' => 1));
+		} else {
+			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
+		}
+	}
 
 	if ( isset($_GET["id"]) ) {
 		$idpartida=$_GET["id"];
@@ -59,7 +86,44 @@
 				$res->execute([$idpartida]);
 				echo "OK";
 				break;
+			case "editpart":
+				echo formEditPartForm($idpartida);
+				break;
+			case "follow":
+				SeguirPartida($idpartida);
+				echo "OK";
+				break;
+			case "unfollow":
+				AbandonarPartida($idpartida);
+				echo "OK";
+				break;
 		}
+	}
+
+	function SeguirPartida($idpartida, $idusuario=0) {
+		global $db;
+		$idsiguiendo = 0;
+		if ( $idusuario == 0) {
+			$idusuario = usuarioId();
+		}
+		$res= $db->prepare("SELECT id FROM seguidorespartidas WHERE idpartida=? AND idusuario=?;");
+		$res->execute([$idpartida, $idusuario]);
+		while ($row = $res->fetch()) {
+			$idsiguiendo = $row[0];
+		}
+		if ( $idsiguiendo == 0 ) {
+			$res= $db->prepare("INSERT INTO seguidorespartidas VALUES (0,?,?,1);");
+			$res->execute([$idpartida, $idusuario]);
+		} else {
+			$res= $db->prepare("UPDATE seguidorespartidas SET activo=1 WHERE id=?;");
+			$res->execute([$idsiguiendo]);
+		}
+	}
+	
+	function AbandonarPartida($idpartida) {
+		global $db;
+		$res= $db->prepare("UPDATE seguidorespartidas SET activo=0 WHERE idpartida=? AND idusuario=?;");
+		$res->execute([$idpartida, usuarioId() ]);
 	}
 
 	function PartidaEsActiva($idpartida) {
@@ -89,6 +153,19 @@
 		return $resultado;
 	}
 
+	function soySeguidorPartida($idpartida) {
+		global $db;
+		$resultado=false;
+		if ( usuarioEsLogeado() ) {
+			$res = $db->prepare("SELECT id FROM seguidorespartidas WHERE idpartida=? AND idusuario=? AND activo=1;");
+			$res->execute([$idpartida, usuarioId()]);
+			while ($row = $res->fetch()) {
+				$resultado=true;
+			}
+		}
+		return $resultado;
+	}
+
 	function AccionesPartida($idpartida) {
 		global $db;
 		$idrequisicion=0;
@@ -105,15 +182,27 @@
 			if ( RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && !PartidaEsSurtida($idpartida) ) {
 				$resultado .= "<button onClick=\"appBorraPartida(". $idpartida .",". $idrequisicion .");\">Eliminar</button>";
 			}
+			if ( ( !RequisicionEsImpresa($idrequisicion) || usuarioEsSuper() ) && PartidaEsActiva($idpartida) ) {
+				$resultado .= "<button onClick=\"appEditPart(this,". $idpartida .",". $idrequisicion .");\">Editar</button>";
+			}
+			if ( ( !RequisicionEsImpresa($idrequisicion) || usuarioEsSuper() ) && !PartidaEsActiva($idpartida) && RequisicionEsActiva($idrequisicion) ) {
+				$resultado .= "<button onClick=\"appRestauraPartida(". $idpartida .",". $idrequisicion .");\">Restaurar</button>";
+			}
+		}
+		if ( usuarioEsLogeado() ) {
+			if ( soySeguidorPartida($idpartida) ) {
+				$resultado .= '<button onClick="appAbandonarPartida('. $idpartida .','. $idrequisicion .');">Abandonar</button>';
+			}
+		}
+		if ( usuarioEsLogeado() && RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) ) {
+			if ( !soySeguidorPartida($idpartida) && !RequisicionEsMia($idrequisicion) ) {
+				$resultado .= '<button onClick="appSeguirPartida('. $idpartida .','. $idrequisicion .');">Seguir</button>';
+			}
 		}
 		if ( usuarioEsSuper() ) {
 			if ( RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && PartidaEsSurtida($idpartida) ) {
-				$resultado .= "<button onClick=\"appPorsurtirPartida(". $idpartida .",". $idrequisicion .");\">Por surtir</button>";
+				$resultado .= "<button onClick=\"appPorSurtirPartida(". $idpartida .",". $idrequisicion .");\">Por surtir</button>";
 			}
-			if ( !PartidaEsActiva($idpartida) && RequisicionEsActiva($idrequisicion) ) {
-				$resultado .= "<button onClick=\"appRestauraPartida(". $idpartida .",". $idrequisicion .");\">Restaurar</button>";
-			}
-			$resultado .= "<button onClick=\"appEditarPartida(". $idpartida .",". $idrequisicion .");\">Editar</button>";
 		}
 		return $resultado;
 	}
@@ -215,6 +304,35 @@
 			}
 			$resultado .= "<tr class=\"". $clase ."\"><td>". resaltarBusqueda($row[3], $q) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>". AccionesComentarioPartida($row[0]) ."</td></tr>";
 		}
+		$resultado .= "</table>";
+		return $resultado;
+	}
+	
+	function formEditPartForm($idpartida) {
+		global $db;
+		$resultado="";
+		$res = $db->prepare("SELECT cantidad, idunidad, descripcion, idcentrocostos FROM partidas WHERE id=?;");
+		$res->execute([$idpartida]);
+		while ($row = $res->fetch()) {
+			$cantidad = $row[0];
+			$unidad = $row[1];
+			$descripcion = $row[2];
+			$centrocostos = $row[3];
+		}
+		$resultado .= "";
+		$resultado .= "<table>";
+		$resultado .= "<tr>";
+		$resultado .= "<td width=\"10%\"><small>Cantidad</small></td>";
+		$resultado .= "<td width=\"10%\"><small>Unidad</small></td>";
+		$resultado .= "<td width=\"65%\"><small>Descripcion</small></td>";
+		$resultado .= "<td width=\"15%\"><small>CentroCostos</small></td>";
+		$resultado .= "</tr>";
+		$resultado .= "<tr>";
+		$resultado .= "<td><input id = 'cantidad". $idpartida ."' type = 'number' min='0' step='0.001' name = 'cantidad[". $idpartida ."]' value=\"". $cantidad ."\"/></td>";
+		$resultado .= "<td><select id = 'unidad". $idpartida ."' name = 'unidad[". $idpartida ."]'>". ObtenerOpcionesSelect("unidades", "unidad", $unidad) ."</select></td>";
+		$resultado .= "<td><input id = 'descripcion". $idpartida ."' type = 'text' name = 'descripcion[". $idpartida ."]' value = '". $descripcion ."' /></td>";
+		$resultado .= "<td><select id = 'centrocostos". $idpartida ."' name = 'centrocostos[". $idpartida ."]'>". ObtenerOpcionesSelectGroup("centroscostos","descripcion","empresas","idempresa", $centrocostos) ."</select></td>";
+		$resultado .= "</tr>";
 		$resultado .= "</table>";
 		return $resultado;
 	}

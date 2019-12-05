@@ -7,7 +7,7 @@
 	if ( isset($_GET["action"]) && $_GET["action"] == "showheader" ) {
 		if ( usuarioEsLogeado() ) {
 			echo "<button onClick=\"event.preventDefault();appHome();\">Requisiciones</button>";
-			echo "<button onClick=\"event.preventDefault();appPrefereces();\">Preferencias ". usuarioNombre() ."</button>";
+			echo "<button onClick=\"event.preventDefault();appPrefereces();\">Preferencias ". ObtenerDescripcionDesdeID("usuarios", usuarioId() ,"usuario") ."</button>";
 			if ( usuarioEsSuper() ) {
 				echo "<button onClick=\"event.preventDefault();appSettings();\">Configuracion</button>";
 			}
