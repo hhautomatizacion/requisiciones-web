@@ -476,11 +476,13 @@
 	function usuarioId() {
 		global $db;
 		$resultado = 0;
-		$token = $_COOKIE["usuario"];
-		$res = $db->prepare("SELECT id FROM usuarios WHERE token = ? AND activo = 1;");
-		$res->execute([$token]);
-		while ($row = $res->fetch()) {
-			$resultado = $row[0];
+		if ( isset($_COOKIE["usuario"])) {
+			$token = $_COOKIE["usuario"];
+			$res = $db->prepare("SELECT id FROM usuarios WHERE token = ? AND activo = 1;");
+			$res->execute([$token]);
+			while ($row = $res->fetch()) {
+				$resultado = $row[0];
+			}
 		}
 		return $resultado;
 	}

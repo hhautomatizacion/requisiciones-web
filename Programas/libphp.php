@@ -40,17 +40,13 @@
 	}
 
 	function file_upload_max_size() {
-		// static $max_size = -1;
-		$max_size = -1;
-		if ($max_size < 0) {
-			$post_max_size = parse_size(ini_get('post_max_size'));
-			if ($post_max_size > 0) {
-				$max_size = $post_max_size;
-			}
-			$upload_max_size = parse_size(ini_get('upload_max_filesize'));
-			if ($upload_max_size > 0 && $upload_max_size < $max_size) {
-				$max_size = $upload_max_size;
-			}
+		$post_max_size = parse_size(ini_get('post_max_size'));
+		if ($post_max_size > 0) {
+			$max_size = $post_max_size;
+		}
+		$upload_max_size = parse_size(ini_get('upload_max_filesize'));
+		if ($upload_max_size > 0 && $upload_max_size < $max_size) {
+			$max_size = $upload_max_size;
 		}
 		return $max_size;
 	}
@@ -70,7 +66,7 @@
 		$date = date("Y-m-d");
 		$time = date("Y-m-d H:i:s");
 		if ( is_array( $output ) ) {
-			$output = implode(',', $output);
+			$output = print_r($output, true);
 		}
 		$myfile = fopen("uploads/". $date .".log", "a") ;
 		fwrite($myfile, $time ." ". $output ."\n");

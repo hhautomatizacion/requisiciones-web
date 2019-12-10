@@ -156,6 +156,9 @@
 			#usuariosrequisiciones {
 				width: 15%;
 			}
+			#ordenrequisiciones {
+				width: 15%;
+			}
 			#busquedarequisiciones {
 				width: 15%;
 				height: 26px;
@@ -259,12 +262,12 @@
 					if (this.readyState == 4 && this.status == 200) {
 						var respuesta = JSON.parse(this.responseText);
 						if ( respuesta.succes == 1 ) {
+							t = setInterval(tik, 10);
 							requisiciones[requisiciones.length] = respuesta.id;
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
 							document.title = "Requisiciones - "+ requisiciones.length +" mostradas";
 							window.scrollTo(0, window.scrollHeight);
-							t = setInterval(tik, 10);
 						} else {
 							elementoHabilitar("botonenviarnewreq");
 							for (var iter=0; iter < respuesta.validos.length; iter++) {
@@ -326,7 +329,9 @@
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
 							appHeader();
-							appActualizaVista();
+							requisicion=0;
+							t = setInterval(tik, 10);
+							//appActualizaVista();
 						} else {
 							for (var iter=0; iter < respuesta.validos.length; iter++) {
 								var el=document.getElementById(respuesta.validos[iter]);
@@ -428,7 +433,7 @@
 				appMenu();
 				appActualizaVista();
 				getServerInfo();
-				f = setInterval(tok, 60000);
+				// f = setInterval(tok, 60000);
 			}
 
 			function getServerInfo() {
@@ -442,15 +447,15 @@
 				xmlhttp.send();
 			}
 
-			function tok() {
-				xmlhttp = new XMLHttpRequest();
-				xmlhttp.onreadystatechange = function() {
-					if (this.readyState == 4 && this.status == 200) {
-					}
-				};
-				xmlhttp.open("GET", "libnotificaciones.php", true);
-				xmlhttp.send();
-			}
+			// function tok() {
+				// xmlhttp = new XMLHttpRequest();
+				// xmlhttp.onreadystatechange = function() {
+					// if (this.readyState == 4 && this.status == 200) {
+					// }
+				// };
+				// xmlhttp.open("GET", "libnotificaciones.php", true);
+				// xmlhttp.send();
+			// }
 
 			function tik() {
 				var divContenido = document.getElementById("contenido");
@@ -473,8 +478,10 @@
 			function appActualizaVista() {
 				var mostrarusuarios = 0;
 				var mostrarvista = 0;
+				var mostrarorden = 0;
 				var usuarios = '';
 				var busqueda = '';
+				var orden = '';
 				requisicion = 0;
 				requisiciones = [];
 				if ( document.getElementById("mostrarrequisiciones") ) {
@@ -485,6 +492,9 @@
 				}
 				if ( document.getElementById("busquedarequisiciones") ) {
 					document.getElementById("busquedarequisiciones").value = busquedarequisiciones;
+				}
+				if ( document.getElementById("ordenrequisiciones") ) {
+					mostrarorden = document.getElementById("ordenrequisiciones").value;
 				}
 				var divContenido = document.getElementById("contenido");
 				if ( !ocupado) {
@@ -512,7 +522,10 @@
 					if ( busquedarequisiciones.length > 0 ) {
 						busqueda = '&q='+ busquedarequisiciones;
 					}
-					xmlhttp.open("GET","librequisicion.php?action=list"+ usuarios +"&view="+ mostrarvista + busqueda ,true);
+					if ( mostrarorden ) {
+						orden = '&s='+ mostrarorden;
+					}
+					xmlhttp.open("GET","librequisicion.php?action=list"+ usuarios +"&view="+ mostrarvista + busqueda + orden,true);
 					xmlhttp.send();
 				}
 			}
@@ -705,7 +718,9 @@
 				elementoOcultar("formulario");
 				elementoMostrar("contenido");
 				appHeader();
-				appActualizaVista();
+				requisicion=0;
+				t = setInterval(tik, 10);
+				//appActualizaVista();
 			}
 
 			function appPrefereces() {
@@ -1021,14 +1036,39 @@
 				row.insertCell(3).innerHTML = "<button onClick=\"event.preventDefault();appSaveSetting('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
 			}
 
-			function addSettingEmpresa(tableID,numero,descripcion) {
+			function addSettingEmpresa(tableID,descripcion) {
+				var table = document.getElementById(tableID);
+				var newRow = table.rows.length;
+				var row = table.insertRow(newRow);
+				row.insertCell(0).innerHTML = "<input type='hidden' name='total"+ tableID +"[]' value='"+ newRow +"'>";
+				row.insertCell(1).innerHTML = '<select id = "'+ tableID +'empresa'+ newRow +'"></select>';
+				row.insertCell(2).innerHTML = '<input type = "text" id = "'+ tableID +'descripcion'+ newRow +'" />';
+				row.insertCell(3).innerHTML = "<button onClick=\"event.preventDefault();appSaveSetting('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
+				var sel = document.getElementById(tableID +'empresa'+ newRow );
+				populateSelect(sel, "empresas", "nombre")
+			}
+			
+			function addSettingCodigo(tableID,descripcion) {
 				var table = document.getElementById(tableID);
 				var newRow = table.rows.length;
 				var row = table.insertRow(newRow);
 				row.insertCell(0).innerHTML = "<input type='hidden' name='total"+ tableID +"[]' value='"+ newRow +"'>";
 				row.insertCell(1).innerHTML = '<input type = "text" id = "'+ tableID +'codigo'+ newRow +'" />';
 				row.insertCell(2).innerHTML = '<input type = "text" id = "'+ tableID +'descripcion'+ newRow +'" />';
-				row.insertCell(3).innerHTML = "<button onClick=\"event.preventDefault();appSaveSettingEmpresa('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
+				row.insertCell(3).innerHTML = "<button onClick=\"event.preventDefault();appSaveSetting('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
+			}
+
+			function addSettingEmpresaNumero(tableID,numero,descripcion) {
+				var table = document.getElementById(tableID);
+				var newRow = table.rows.length;
+				var row = table.insertRow(newRow);
+				row.insertCell(0).innerHTML = "<input type='hidden' name='total"+ tableID +"[]' value='"+ newRow +"'>";
+				row.insertCell(1).innerHTML = '<select id = "'+ tableID +'empresa'+ newRow +'"></select>';
+				row.insertCell(2).innerHTML = '<input type = "number" id = "'+ tableID +'numero'+ newRow +'" />';
+				row.insertCell(3).innerHTML = '<input type = "text" id = "'+ tableID +'descripcion'+ newRow +'" />';
+				row.insertCell(4).innerHTML = "<button onClick=\"event.preventDefault();appSaveSetting('"+ tableID +"',"+ newRow +");\">Guardar</button><input type = 'button' value='Quitar' onclick='removeRow(\""+  tableID +"\","+ newRow +");'>";
+				var sel = document.getElementById(tableID +'empresa'+ newRow );
+				populateSelect(sel, "empresas", "nombre")
 			}
 
 			function appActivarSetting(setting, id) {
@@ -1059,11 +1099,55 @@
 				xmlhttp.send();
 			}
 
+			// function appSaveSetting(setting, row) {
+				// if ( document.getElementById(setting +"numero"+ row) ) {
+					// numero = "&number="+ document.getElementById(setting +"numero"+ row).value;
+				// }else{
+					// numero = "";
+				// }
+				// if ( document.getElementById(setting +"descripcion"+ row) ) {
+					// descripcion = "&description="+ document.getElementById(setting +"descripcion"+ row).value;
+				// }else{
+					// descripcion = "";
+				// }
+				// xmlhttp = new XMLHttpRequest();
+				// xmlhttp.onreadystatechange = function() {
+					// if (this.readyState == 4 && this.status == 200) {
+						// if ( this.responseText.length > 0 ) {
+							// alert(this.responseText);
+							// if ( document.getElementById(setting +"numero"+ row) ) {
+								// document.getElementById(setting +"numero"+ row).parentElement.innerHTML=document.getElementById(setting +"numero"+ row).value;
+							// }
+							// if ( document.getElementById(setting +"descripcion"+ row) ) {
+								// document.getElementById(setting +"descripcion"+ row).parentElement.innerHTML=document.getElementById(setting +"descripcion"+ row).value;
+							// }
+						// }
+					// }
+				// };
+				// xmlhttp.open("GET","libsettings.php?action=addsetting&setting="+ setting + descripcion + numero,true);
+				// xmlhttp.send();
+			// }
+
+
 			function appSaveSetting(setting, row) {
+				var empresa = "";
+				var codigo = "";
+				var numero = "";
+				var descripcion = "";
+				if ( document.getElementById(setting +"empresa"+ row) ) {
+					empresa = "&empresa="+ document.getElementById(setting +"empresa"+ row).value;
+				}else{
+					empresa = "";
+				}
 				if ( document.getElementById(setting +"numero"+ row) ) {
-					numero = "&number="+ document.getElementById(setting +"numero"+ row).value;
+					numero = "&numero="+ document.getElementById(setting +"numero"+ row).value;
 				}else{
 					numero = "";
+				}
+				if ( document.getElementById(setting +"codigo"+ row) ) {
+					codigo = "&codigo="+ document.getElementById(setting +"codigo"+ row).value;
+				}else{
+					codigo = "";
 				}
 				if ( document.getElementById(setting +"descripcion"+ row) ) {
 					descripcion = "&description="+ document.getElementById(setting +"descripcion"+ row).value;
@@ -1075,36 +1159,12 @@
 					if (this.readyState == 4 && this.status == 200) {
 						if ( this.responseText.length > 0 ) {
 							alert(this.responseText);
+							if ( document.getElementById(setting +"empresa"+ row) ) {
+								document.getElementById(setting +"empresa"+ row).parentElement.innerHTML=document.getElementById(setting +"empresa"+ row).value;
+							}
 							if ( document.getElementById(setting +"numero"+ row) ) {
 								document.getElementById(setting +"numero"+ row).parentElement.innerHTML=document.getElementById(setting +"numero"+ row).value;
 							}
-							if ( document.getElementById(setting +"descripcion"+ row) ) {
-								document.getElementById(setting +"descripcion"+ row).parentElement.innerHTML=document.getElementById(setting +"descripcion"+ row).value;
-							}
-						}
-					}
-				};
-				xmlhttp.open("GET","libsettings.php?action=addsetting&setting="+ setting + descripcion + numero,true);
-				xmlhttp.send();
-			}
-
-
-			function appSaveSettingEmpresa(setting, row) {
-				if ( document.getElementById(setting +"codigo"+ row) ) {
-					numero = "&codigo="+ document.getElementById(setting +"codigo"+ row).value;
-				}else{
-					numero = "";
-				}
-				if ( document.getElementById(setting +"descripcion"+ row) ) {
-					descripcion = "&description="+ document.getElementById(setting +"descripcion"+ row).value;
-				}else{
-					descripcion = "";
-				}
-				xmlhttp = new XMLHttpRequest();
-				xmlhttp.onreadystatechange = function() {
-					if (this.readyState == 4 && this.status == 200) {
-						if ( this.responseText.length > 0 ) {
-							alert(this.responseText);
 							if ( document.getElementById(setting +"codigo"+ row) ) {
 								document.getElementById(setting +"codigo"+ row).parentElement.innerHTML=document.getElementById(setting +"codigo"+ row).value;
 							}
@@ -1114,7 +1174,7 @@
 						}
 					}
 				};
-				xmlhttp.open("GET","libsettings.php?action=addsetting&setting="+ setting + descripcion + numero,true);
+				xmlhttp.open("GET","libsettings.php?action=addsetting&setting="+ setting + empresa + descripcion + codigo + numero,true);
 				xmlhttp.send();
 			}
 			
@@ -1167,13 +1227,14 @@
 				xmlhttp.send();
 			}
 			
-			function appSaveIncludeUser() {
+			function appSaveIncludeUser(idrequisicion) {
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if (this.responseText == "OK") {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
+							document.getElementById("mostrarrequisicion"+idrequisicion).scrollIntoView();
 						}
 					}
 				};
@@ -1232,13 +1293,6 @@
 				};
 				xmlhttp.open("GET","libpartida.php?action=partdelete&id="+idpartida,true);
 				xmlhttp.send();
-			}
-
-			function appEditarPartida(idpartida, idrequisicion) {
-				var tablapart = document.getElementById("corepart"+idpartida);
-				tablapart.innerHTML = "<tbody><tr><td width=\"10%\"><small>Cantidad</small></td><td width=\"10%\"><small>Unidad</small></td><td width=\"65%\"><small>Descripcion</small></td><td width=\"15%\"><small>C.R.</small></td></tr><tr><td><input id = 'cantidad"+idpartida+"' type = 'number' min='0' step='0.001' name = 'cantidad["+idpartida+"]' /></td><td><select id = 'unidad"+idpartida+"' name = 'unidad["+idpartida+"]' onfocus=\"populateSelect(this,'unidades','unidad');\"></select></td><td><input id = 'descripcion"+idpartida+"' type = 'text' name = 'descripcion["+idpartida+"]' value = 'toto' /></td><td><select id = 'centrocostos"+idpartida+"' name = 'centrocostos["+idpartida+"]' onfocus=\"populateSelect(this, 'centroscostos','descripcion')\" ></select></td></tr></tbody>";
-				var sel = document.getElementById("unidad"+idpartida);
-				populateSelect(sel,'unidades','unidad',3);
 			}
 
 			function appEditPart(el, idpartida, idrequisicion) {
@@ -1320,8 +1374,10 @@
 			function appExportar() {
 				var mostrarusuarios = 0;
 				var mostrarvista = 0;
+				var mostrarorden = 0;
 				var usuarios = '';
 				var busqueda = '';
+				var orden = '';
 				if ( document.getElementById("mostrarrequisiciones") ) {
 					mostrarvista = document.getElementById("mostrarrequisiciones").value;
 				}
@@ -1330,6 +1386,9 @@
 				}
 				if ( document.getElementById("busquedarequisiciones") ) {
 					document.getElementById("busquedarequisiciones").value = busquedarequisiciones;
+				}
+				if ( document.getElementById("ordenrequisiciones") ) {
+					mostrarorden = document.getElementById("ordenrequisiciones").value;
 				}
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
@@ -1345,12 +1404,15 @@
 				};
 				if ( mostrarusuarios ) {
 					usuarios='&user='+ mostrarusuarios;
-					}
+				}
 				if ( busquedarequisiciones.length > 0 ) {
 					busqueda='&q='+ busquedarequisiciones;
 				}
+				if ( mostrarorden ) {
+					orden='&s='+ mostrarorden;
+				}
 				xmlhttp.responseType="blob";
-				xmlhttp.open("GET","librequisicion.php?action=export"+ usuarios +"&view="+ mostrarvista + busqueda ,true);
+				xmlhttp.open("GET","librequisicion.php?action=export"+ usuarios +"&view="+ mostrarvista + busqueda + orden ,true);
 				xmlhttp.send();
 			}
 
@@ -1430,9 +1492,12 @@
 					if (this.readyState == 4 && this.status == 200) {
 						var respuesta = JSON.parse(this.responseText);
 						if ( respuesta.succes == 1 ) {
-							requisiciones[requisiciones.length] = respuesta.id;
 							t = setInterval(tik, 10);
-							window.scrollTo(0,document.body.scrollHeight);
+							requisiciones[requisiciones.length] = respuesta.id;
+							elementoOcultar("formulario");
+							elementoMostrar("contenido");
+							document.title = "Requisiciones - "+ requisiciones.length +" mostradas";
+							document.getElementById("mostrarrequisicion"+idrequisicion).scrollIntoView();
 						}
 					}
 				};

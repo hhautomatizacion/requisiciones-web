@@ -172,7 +172,7 @@
 	}
 
 	if ( isset($_GET["action"]) && $_GET["action"] == "showreqform" ) {
-		$resultado="";
+		$resultado = "";
 		if ( usuarioEsLogeado() ) {
 			$resultado = formNewReqForm();
 		}else{
@@ -186,88 +186,129 @@
 		echo formIncludeUserInReqForm($idrequisicion);
 	}
 
-	function ListaRequisiciones($view=0, $user=-1, $q="") {
+	function ListaRequisiciones($view=0, $user=-1, $q="", $order=0) {
 		global $db;
-		$usuario="";
-		$vista="";
-		$resultado="";
-		$tablatemp="temp". randomString(4);
-			switch ($view) {
-				case "0":
-					$vista = " (activo=1 AND impresa=1 AND surtida=0)";
-					break;
-				case "1":
-					$vista = " (activo=1 AND impresa=1 AND surtida=1)";
-					break;
-				case "2":
-					$vista = " (activo=1 AND impresa=0)";
-					break;
-				case "3":
-					$vista = " (activo=1 AND impresa=1)";
-					break;
-				case "4":
-					$vista = " (activo=0)";
-					break;
-				case "5":
-					$vista = " (id>0)";
-					break;
-			}
-			if ( $user > 0 ) {
-				$usuario=" AND (idsolicitante=". $user ." OR idusuario=". $user .")";
-			}
-			if ( strlen($q) == 0 ) {
-				$sql="SELECT DISTINCT(id) FROM requisiciones WHERE". $vista . $usuario ." ORDER BY id;"; 
-			}else{
-				$res = $db->prepare("DROP TABLE IF EXISTS ". $tablatemp .";");
-				$res->execute();
-				$res = $db->prepare("CREATE TABLE ". $tablatemp ." (id INT UNSIGNED) ENGINE MEMORY DEFAULT CHARSET utf8;");
-				$res->execute();
-				if ( is_numeric($q) ){
-					$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT id FROM requisiciones WHERE id=". $q .");");
-					$res->execute();
-				}
-				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT id FROM requisiciones WHERE requisicion LIKE '%". $q ."%');");
-				$res->execute();
-				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM partidas WHERE descripcion LIKE '%". $q ."%');");
-				$res->execute();
-				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM comentariosrequisiciones WHERE comentario LIKE '%". $q ."%');");
-				$res->execute();
-				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM adjuntosrequisiciones WHERE nombre LIKE '%". $q ."%');");
-				$res->execute();
-				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT partidas.idrequisicion AS id FROM partidas, comentariospartidas WHERE partidas.id=comentariospartidas.idpartida AND comentariospartidas.comentario LIKE '%". $q ."%');");
-				$res->execute();
-				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT partidas.idrequisicion AS id FROM partidas, adjuntospartidas WHERE partidas.id=adjuntospartidas.idpartida AND adjuntospartidas.nombre LIKE '%". $q ."%');");
-				$res->execute();
-				$sql="SELECT DISTINCT(id) FROM requisiciones INNER JOIN ". $tablatemp ." USING(id) WHERE". $vista . $usuario ." ORDER BY id;";
-			}
-			$res = $db->prepare($sql);
-			$res->execute();
-			while ($row = $res->fetch()) {
-				$resultado = $resultado ." ". $row[0];
-			}
+		$usuario = "";
+		$vista = "";
+		$resultado = "";
+		$tablatemp = "temp". randomString(4);
+		switch ($view) {
+			case "0":
+				$vista = " (activo=1 AND impresa=1 AND surtida=0)";
+				break;
+			case "1":
+				$vista = " (activo=1 AND impresa=1 AND surtida=1)";
+				break;
+			case "2":
+				$vista = " (activo=1 AND impresa=0)";
+				break;
+			case "3":
+				$vista = " (activo=1 AND impresa=1)";
+				break;
+			case "4":
+				$vista = " (activo=0)";
+				break;
+			case "5":
+				$vista = " (id>0)";
+				break;
+		}
+		if ( $user > 0 ) {
+			$usuario=" AND (idsolicitante=". $user ." OR idusuario=". $user .")";
+		}
+		switch ($order) {
+			case "0":
+				$orden = "id";
+				break;
+			case "1":
+				$orden = "idempresa, id";
+				break;
+			case "2":
+				$orden = "requisicion, id";
+				break;
+			case "3":
+				$orden = "fecha, id";
+				break;
+			case "4":
+				$orden = "id";
+				break;
+			case "5":
+				$orden = "iddepartamento, id";
+				break;
+			case "6":
+				$orden = "idarea, id";
+				break;
+			case "7":
+				$orden = "idcentrocostos, id";
+				break;
+			case "8":
+				$orden = "idsolicitante, id";
+				break;
+			case "9":
+				$orden = "importancia, id";
+				break;
+			case "10":
+				$orden = "idusuario, id";
+				break;
+		}
+		if ( strlen($q) == 0 ) {
+			$sql="SELECT DISTINCT(id) FROM requisiciones WHERE". $vista . $usuario ." ORDER BY ". $orden .";"; 
+		}else{
 			$res = $db->prepare("DROP TABLE IF EXISTS ". $tablatemp .";");
 			$res->execute();
-			$resultado = trim($resultado, " ");
+			$res = $db->prepare("CREATE TABLE ". $tablatemp ." (id INT UNSIGNED) ENGINE MEMORY DEFAULT CHARSET utf8;");
+			$res->execute();
+			if ( is_numeric($q) ){
+				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT id FROM requisiciones WHERE id=". $q .");");
+				$res->execute();
+			}
+			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT id FROM requisiciones WHERE requisicion LIKE '%". $q ."%');");
+			$res->execute();
+			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM partidas WHERE descripcion LIKE '%". $q ."%');");
+			$res->execute();
+			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM comentariosrequisiciones WHERE comentario LIKE '%". $q ."%');");
+			$res->execute();
+			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM adjuntosrequisiciones WHERE nombre LIKE '%". $q ."%');");
+			$res->execute();
+			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT partidas.idrequisicion AS id FROM partidas, comentariospartidas WHERE partidas.id=comentariospartidas.idpartida AND comentariospartidas.comentario LIKE '%". $q ."%');");
+			$res->execute();
+			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT partidas.idrequisicion AS id FROM partidas, adjuntospartidas WHERE partidas.id=adjuntospartidas.idpartida AND adjuntospartidas.nombre LIKE '%". $q ."%');");
+			$res->execute();
+			$sql="SELECT DISTINCT(id) FROM requisiciones INNER JOIN ". $tablatemp ." USING(id) WHERE". $vista . $usuario ." ORDER BY ". $orden .";";
+		}
+		writelog($sql);
+		$res = $db->prepare($sql);
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$resultado = $resultado ." ". $row[0];
+		}
+		$res = $db->prepare("DROP TABLE IF EXISTS ". $tablatemp .";");
+		$res->execute();
+		$resultado = trim($resultado, " ");
 		return $resultado;
 	}
 
 	if ( isset($_GET["action"]) && $_GET["action"] == "list" ) {
 		if ( isset($_GET["view"]) ){
-			$view=$_GET["view"];
-		}else{
-			$view=0;
+			$view = $_GET["view"];
+		} else {
+			$view = 0;
 		}
 		if ( isset($_GET["user"]) ){
-			$user=$_GET["user"];
-		}else{
+			$user = $_GET["user"];
+		} else {
 			$user=0;
 		}
 		if ( isset($_GET["q"]) ){
-			$q=$_GET["q"];
-		}else{
-			$q="";
+			$q = $_GET["q"];
+		} else {
+			$q= "";
 		}
-		$resultado=ListaRequisiciones($view, $user, $q);
+		if ( isset($_GET["s"]) ){
+			$s = $_GET["s"];
+		} else {
+			$s = 0;
+		}
+		$resultado = ListaRequisiciones($view, $user, $q, $s);
 		echo $resultado;
 	}
 
@@ -284,14 +325,19 @@
 			$user=0;
 		}
 		if ( isset($_GET["q"]) ){
-			$q=$_GET["q"];
+			$q = $_GET["q"];
 		}else{
-			$q="";
+			$q = "";
 		}
-		$resultado=ListaRequisiciones($view, $user, $q);
+		if ( isset($_GET["s"]) ){
+			$s = $_GET["s"];
+		}else{
+			$s = "";
+		}
+		$resultado = ListaRequisiciones($view, $user, $q, $s);
 		$pdf = new PDF("L");
 		ExportarEncabezados($pdf);
-		$listarequisiciones= explode(" ",$resultado);
+		$listarequisiciones = explode(" ",$resultado);
 		foreach ($listarequisiciones as $idrequisicion) {
 			ExportarRequisicion($pdf, $idrequisicion);
 		}
@@ -1009,6 +1055,9 @@
 					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioReq(this, ". $idcomentario .");\">";
 				}
 			}
+			//if ( ComentarioReqEsActivo($idcomentario) ) {
+			//	$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioReq(". $idcomentario .");\">";
+			//}
 			if ( !ComentarioReqEsActivo($idcomentario) && usuarioEsSuper() ) {
 				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioReq(this, ". $idcomentario .");\">";
 			}
@@ -1474,7 +1523,7 @@
 		$resultado .="					</table>";
 		$resultado .="				</td>";
 		$resultado .="				<td>";
-		$resultado .="					<button id=\"botonsaveincludeuser\" onClick=\"event.preventDefault();appSaveIncludeUser();\">Incluir</button>";
+		$resultado .="					<button id=\"botonsaveincludeuser\" onClick=\"event.preventDefault();appSaveIncludeUser(". $idrequisicion .");\">Incluir</button>";
 		$resultado .="				</td>";
 		$resultado .="			</tr>";
 		$resultado .="		<table>";
