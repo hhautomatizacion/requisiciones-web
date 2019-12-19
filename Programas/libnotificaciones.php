@@ -46,7 +46,6 @@
 		global $db;
 		$idusuario=0;
 		$idsolicitante=0;
-		//$destinatarios = array();
 		$direcciones = array();
 		$res= $db->prepare("SELECT idusuario, clave FROM notificacionesrequisiciones WHERE id=". $idnotificacion .";");
 		$res->execute();
@@ -77,28 +76,24 @@
 				$destinatarios[] = $row[1];
 			}
 		}
-		writelog("Notificar ". $idrequisicion);
 		$res= $db->prepare("SELECT idusuario FROM seguidoresrequisiciones WHERE idrequisicion=? AND activo=1;");
 		$res->execute([$idrequisicion]);
 		while ($row = $res->fetch()) {
 			if ( !in_array($row[0], $destinatarios) ) {
 				$destinatarios[] = $row[0];
-				writelog($row[0] ." es seguidor");
 			}
 		}
 		foreach ($destinatarios as $dest) {
 			$direccion = ObtenerDescripcionDesdeID("usuarios", $dest, "email");
 			if ( $direccion != '') {
-				writelog("direccion ". $direccion);
 				$direcciones[] = $direccion;
 			}
 		}
 		
 		if ( count($direcciones) ) {
-			$mensaje = ObtenerDescripcionDesdeID("usuarios", $idusuario , "nombre") ." reporta la requisicion Id=". $idrequisicion ." como ". $tiponotificacion;
-			enviarRequisicionPorCorreo($idrequisicion, $direcciones, "Requisicion Id=". $idrequisicion ." ". $tiponotificacion, $mensaje);
+			$asunto = ObtenerDescripcionDesdeID("usuarios", $idusuario , "nombre") ." reporta la requisicion Id=". $idrequisicion ." como ". $tiponotificacion;
+			enviarRequisicionPorCorreo($idrequisicion, $direcciones, $asunto);
 		}
-		writelog("---");
 	}
 	function obtenerAdjuntosRequisicion($idrequisicion) {
 		global $db;
@@ -136,7 +131,8 @@
 		}
 		return $resultado;
 	}
-	function enviarRequisicionPorCorreo($idrequisicion, $direcciones, $asunto, $mensaje) {
+
+	function enviarRequisicionPorCorreo($idrequisicion, $direcciones, $asunto) {
 		$direccion = '';
 		$mail_server = obtenerPreferenciaGlobal("mail","server","128.128.5.243");
 		$mail_port = obtenerPreferenciaGlobal("mail","port","25");

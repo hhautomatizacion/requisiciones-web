@@ -27,7 +27,7 @@
 			$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
 			$res->execute([$idpartida, $nombrearchivo, $longitudarchivo, usuarioId()]);
 			echo "OK";
-		}	
+		}
 	}
 	
 	if ( isset($_POST["accion"]) && $_POST["accion"] == "saveeditpart" ) {
@@ -51,6 +51,37 @@
 		if ( count($errores) == 0 ) {
 			$res = $db->prepare("UPDATE partidas SET cantidad=?, idunidad=?, descripcion=?, idcentrocostos=?, fechamodificacion=NOW(), idmodificacion=? WHERE id= ?;");
 			$res->execute([$cantidad, $unidad, $descripcion, $centrocostos, usuarioId() ,$idpartida]);
+			echo json_encode(array('succes' => 1));
+		} else {
+			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
+		}
+	}
+
+	if ( isset($_POST["accion"]) && $_POST["accion"] == "savepartreq" ) {
+		$errores=array();
+		$validos=array();
+		$idrequisicion=$_POST["idrequisicion"];
+		$cantidad = $_POST["cantidad"];
+		$unidad=$_POST["unidad"];
+		$descripcion=$_POST["descripcion"];
+		$centrocostos=$_POST["centrocostos"];
+		$importancia= 5;
+		$solicitante = usuarioId();
+		
+	
+		if ( (float)$cantidad <= 0 ) {
+			$errores[] = "cantidad". $idpartida;
+		} else {
+			$validos[] = "cantidad". $idpartida;
+		}
+		if ( strlen($descripcion) == 0) {
+			$errores[] = "descripcion". $idpartida;
+		} else {
+			$validos[] = "descripcion". $idpartida;
+		}
+		if ( count($errores) == 0 ) {
+			$res = $db->prepare("INSERT INTO partidas VALUES (0,NOW(), ?, ?, ?,1,0,0,NULL, NULL,NULL,NULL, NULL,NULL,NULL,NULL,?, ?, ?, ?, ?);");
+			$res->execute([$cantidad, $unidad, $descripcion, $centrocostos, $idrequisicion, $importancia, $solicitante, usuarioId()]);
 			echo json_encode(array('succes' => 1));
 		} else {
 			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
@@ -277,12 +308,20 @@
 					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioPart(this, ". $idcomentario .");\">";
 				}
 			}
-			if ( ComentarioPartEsActivo($idcomentario) ) {
-				$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioPart(". $idcomentario .");\">";
-			}
 			if ( !ComentarioPartEsActivo($idcomentario) && usuarioEsSuper() ) {
 				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioPart(this, ". $idcomentario .");\">";
 			}
+		}
+		return $resultado;
+	}
+
+	function UltimoComentarioPartida($idpartida) {
+		global $db;	
+		$resultado = "";
+		$res = $db->prepare("SELECT comentario FROM comentariospartidas WHERE idpartida=". $idpartida .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			$resultado = $row[0];
 		}
 		return $resultado;
 	}

@@ -229,7 +229,7 @@
 				$orden = "fecha, id";
 				break;
 			case "4":
-				$orden = "id";
+				$orden = "4*activo + 2*surtida + impresa, id";
 				break;
 			case "5":
 				$orden = "iddepartamento, id";
@@ -275,7 +275,6 @@
 			$res->execute();
 			$sql="SELECT DISTINCT(id) FROM requisiciones INNER JOIN ". $tablatemp ." USING(id) WHERE". $vista . $usuario ." ORDER BY ". $orden .";";
 		}
-		writelog($sql);
 		$res = $db->prepare($sql);
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -598,13 +597,24 @@
 		$res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion = ". $idrequisicion .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
-			$estado="";
+			$estado = "";
+			$comentario = UltimoComentarioPartida($row[0]);
 			$y=$pdf->GetY();
 			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionFontSize', '8');
 			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionFontName', 'Arial');
 			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionAncho', '69');
 			$pdf->SetFont($fontname,'', $fontsize);
 			$alto = $pdf->MeassureRows($row[4] , $ancho,5);
+			$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioFontSize', '8');
+			$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioFontName', 'Arial');
+			//$x = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioX', '195');
+			//$y = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioY', '5');
+			$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioAncho', '54');
+			//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioEtiqueta', 'Comentario');
+			$pdf->SetFont($fontname,'', $fontsize);
+			if ($alto < $pdf->MeassureRows($comentario, $ancho,5)) {
+				$alto = $pdf->MeassureRows($comentario, $ancho,5);
+			}
 			if ( $y + $alto > 210 ) {
 				ExportarEncabezados($pdf);
 				$y=$pdf->GetY();
@@ -680,7 +690,18 @@
 				$x = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionX', '115');
 				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoDescripcionAncho', '69');
 				$pdf->SetFont($fontname,'', $fontsize);
-				$pdf->PutRows($x, $y, $row[4], $ancho,5);
+				$pdf->PutRows($x, $y, $row[4], $ancho, 5);
+			}
+			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioVisible', '1');
+			if ( $visible == "1" ) {
+				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioFontSize', '8');
+				$fontname = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioFontName', 'Arial');
+				$x = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioX', '195');
+				//$y = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioY', '5');
+				$ancho = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioAncho', '54');
+				//$etiqueta = obtenerPreferenciaGlobal('reporte', 'FormatoComentarioEtiqueta', 'Comentario');
+				$pdf->SetFont($fontname,'', $fontsize);
+				$pdf->PutRows($x, $y,  $comentario , $ancho, 5);
 			}
 			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoEstadoVisible', '1');
 			if ( $visible == "1" ) {
@@ -1055,9 +1076,6 @@
 					$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteComentarioReq(this, ". $idcomentario .");\">";
 				}
 			}
-			//if ( ComentarioReqEsActivo($idcomentario) ) {
-			//	$resultado .= "<input type=\"button\" value=\"Responder\" onclick=\"replyComentarioReq(". $idcomentario .");\">";
-			//}
 			if ( !ComentarioReqEsActivo($idcomentario) && usuarioEsSuper() ) {
 				$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteComentarioReq(this, ". $idcomentario .");\">";
 			}
@@ -1110,6 +1128,16 @@
 		$resultado .= "</table>";
 		return $resultado;
 	}
+	
+	function AgregarPartidasRequisicion($idrequisicion) {
+		$resultado="";
+		if ( (usuarioEsSuper() && RequisicionEsActiva($idrequisicion) ) || (RequisicionEsMia($idrequisicion) && !RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion)) ) {
+			$resultado="<input type = \"button\" value=\"Agregar\" onclick=\"addPartidaReq(". $idrequisicion .");\">";
+		}else{
+			$resultado="<small>Acciones</small>";
+		}
+		return $resultado;
+	}
 
 	function MostrarCampo($etiqueta, $texto) {
 		if ( strlen($texto) == 0 ) {
@@ -1129,8 +1157,8 @@
 		$partida = 0;
 		$res = $db->prepare("SELECT * FROM partidas WHERE idrequisicion=". $idrequisicion .";");
 		$res->execute();
-		$resultado .= "<table>";
-		$resultado .= "<tr><td width=\"90%\"><small>Partida</small></td><td width=\"10%\"><small>Acciones</small></td></tr>";
+		$resultado .= "<table id='tablapartidasreq". $idrequisicion."'>";
+		$resultado .= "<tr><td width=\"90%\"><small>Partida</small></td><td width=\"10%\">". AgregarPartidasRequisicion($idrequisicion) ."</td></tr>";
 		while ($row = $res->fetch()) {
 			$partida = $partida +1;
 			$clase = "part";
@@ -1524,6 +1552,7 @@
 		$resultado .="				</td>";
 		$resultado .="				<td>";
 		$resultado .="					<button id=\"botonsaveincludeuser\" onClick=\"event.preventDefault();appSaveIncludeUser(". $idrequisicion .");\">Incluir</button>";
+		$resultado .="					<button id=\"botoncancelincludeuser\" onClick=\"event.preventDefault();appCancelIncludeUser(". $idrequisicion .");\">Cancelar</button>";
 		$resultado .="				</td>";
 		$resultado .="			</tr>";
 		$resultado .="		<table>";

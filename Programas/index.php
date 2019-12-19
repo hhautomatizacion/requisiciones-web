@@ -226,6 +226,16 @@
 				}
 			}
 
+			function randomString(length = 8) {
+				var pass = '';
+				var alphabet = "abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ";
+				var alphaLength = alphabet.length;
+				for (i = 0; i < length; i++) {
+					pass += alphabet.charAt(Math.floor(Math.random() * alphaLength));
+				}
+				return pass;
+			}
+
 			function elementoMostrar(idelemento) {
 				document.getElementById(idelemento).style.visibility="visible";
 			}
@@ -331,7 +341,6 @@
 							appHeader();
 							requisicion=0;
 							t = setInterval(tik, 10);
-							//appActualizaVista();
 						} else {
 							for (var iter=0; iter < respuesta.validos.length; iter++) {
 								var el=document.getElementById(respuesta.validos[iter]);
@@ -433,7 +442,6 @@
 				appMenu();
 				appActualizaVista();
 				getServerInfo();
-				// f = setInterval(tok, 60000);
 			}
 
 			function getServerInfo() {
@@ -446,16 +454,6 @@
 				xmlhttp.open("GET", "libphp.php?action=getserverinfo", true);
 				xmlhttp.send();
 			}
-
-			// function tok() {
-				// xmlhttp = new XMLHttpRequest();
-				// xmlhttp.onreadystatechange = function() {
-					// if (this.readyState == 4 && this.status == 200) {
-					// }
-				// };
-				// xmlhttp.open("GET", "libnotificaciones.php", true);
-				// xmlhttp.send();
-			// }
 
 			function tik() {
 				var divContenido = document.getElementById("contenido");
@@ -720,7 +718,6 @@
 				appHeader();
 				requisicion=0;
 				t = setInterval(tik, 10);
-				//appActualizaVista();
 			}
 
 			function appPrefereces() {
@@ -728,7 +725,6 @@
 				appPreferencesForm();
 				elementoMostrar("formulario");
 			}
-
 
 			function deleteComentarioReq(el, idcomentario){
 				var cell = el.parentElement;
@@ -858,7 +854,61 @@
 				var sel = document.getElementById("centrocostosreq").value;
 				populateSelectGroup(el, 'centroscostos','descripcion','empresas','idempresa', sel);
 			}
-
+			
+			function addPartidaReq(idrequisicion) {
+				var table = document.getElementById('tablapartidasreq'+ idrequisicion);
+				var newRow = table.rows.length;
+				var row = table.insertRow(newRow);
+				var token = randomString();
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText.length > 0 ) {
+							row.insertCell(0).innerHTML = this.responseText;
+							row.insertCell(1).innerHTML = "<input type = 'button' value='Guardar' onclick='appSavePartidaReq("+ idrequisicion +",\""+ token +"\");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablapartidasreq"+  idrequisicion +"\","+ newRow +");'>";
+						}
+					}
+				};
+				xmlhttp.open("GET","libpartida.php?action=editpart&id="+ token,true);
+				xmlhttp.send();
+			}
+			
+			function appSavePartidaReq(idrequisicion, token) {
+				console.log("here");
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						var respuesta = JSON.parse(this.responseText);
+						if ( respuesta.succes == 1 ) {
+							appActualizaRequisicion(idrequisicion);
+						} else {
+							for (var iter=0; iter < respuesta.validos.length; iter++) {
+								var el=document.getElementById(respuesta.validos[iter]);
+								if ( el ) {
+									el.style.outline = '0px';
+								}
+							}
+							for (var iter=0; iter < respuesta.errors.length; iter++) {
+								var el=document.getElementById(respuesta.errors[iter]);
+								if ( el ) {
+									el.style.outline = '#f00 solid 2px';
+								}
+							}
+						}
+					}
+				};
+				
+				var formdata = new FormData();
+				formdata.append("accion", "savepartreq");
+				formdata.append("idrequisicion", idrequisicion);
+				formdata.append("cantidad", document.getElementById("cantidad"+ token).value);
+				formdata.append("unidad", document.getElementById("unidad"+ token).value);
+				formdata.append("descripcion", document.getElementById("descripcion"+ token).value);
+				formdata.append("centrocostos", document.getElementById("centrocostos"+ token).value);
+				xmlhttp.open("POST", "libpartida.php");
+				xmlhttp.send(formdata);
+			}
+			
 			function addAdjuntoReq(idrequisicion) {
 				var table = document.getElementById('tablaadjuntosreq'+ idrequisicion);
 				var newRow = table.rows.length;
@@ -1099,36 +1149,6 @@
 				xmlhttp.send();
 			}
 
-			// function appSaveSetting(setting, row) {
-				// if ( document.getElementById(setting +"numero"+ row) ) {
-					// numero = "&number="+ document.getElementById(setting +"numero"+ row).value;
-				// }else{
-					// numero = "";
-				// }
-				// if ( document.getElementById(setting +"descripcion"+ row) ) {
-					// descripcion = "&description="+ document.getElementById(setting +"descripcion"+ row).value;
-				// }else{
-					// descripcion = "";
-				// }
-				// xmlhttp = new XMLHttpRequest();
-				// xmlhttp.onreadystatechange = function() {
-					// if (this.readyState == 4 && this.status == 200) {
-						// if ( this.responseText.length > 0 ) {
-							// alert(this.responseText);
-							// if ( document.getElementById(setting +"numero"+ row) ) {
-								// document.getElementById(setting +"numero"+ row).parentElement.innerHTML=document.getElementById(setting +"numero"+ row).value;
-							// }
-							// if ( document.getElementById(setting +"descripcion"+ row) ) {
-								// document.getElementById(setting +"descripcion"+ row).parentElement.innerHTML=document.getElementById(setting +"descripcion"+ row).value;
-							// }
-						// }
-					// }
-				// };
-				// xmlhttp.open("GET","libsettings.php?action=addsetting&setting="+ setting + descripcion + numero,true);
-				// xmlhttp.send();
-			// }
-
-
 			function appSaveSetting(setting, row) {
 				var empresa = "";
 				var codigo = "";
@@ -1204,14 +1224,12 @@
 				xmlhttp.send();
 			}
 			
-			
 			function appIncluirEnRequisicion(idrequisicion) {
 				appIncludeUserForm(idrequisicion);
 				elementoMostrar("formulario");
 				elementoOcultar("contenido");
 				window.scrollTo(0,0);
 			}
-			
 			
 			function appIncludeUserForm(idrequisicion) {
 				var divFormulario = document.getElementById("formulario");
@@ -1241,6 +1259,12 @@
 				elementoDeshabilitar("botonsaveincludeuser");
 				xmlhttp.open("POST", "librequisicion.php", true);
 				xmlhttp.send(new FormData(document.getElementById("includeuserform")));
+			}
+			
+			function appCancelIncludeUser(idrequisicion) {
+				elementoOcultar("formulario");
+				elementoMostrar("contenido");
+				document.getElementById("mostrarrequisicion"+idrequisicion).scrollIntoView();
 			}
 			
 			function appSeguirPartida(idpartida, idrequisicion) {
@@ -1337,10 +1361,10 @@
 				var formdata = new FormData();
 				formdata.append("accion", "saveeditpart");
 				formdata.append("partida", idpartida);
-				formdata.append("cantidad", document.getElementById("cantidad"+idpartida).value);
-				formdata.append("unidad", document.getElementById("unidad"+idpartida).value);
-				formdata.append("descripcion", document.getElementById("descripcion"+idpartida).value);
-				formdata.append("centrocostos", document.getElementById("centrocostos"+idpartida).value);
+				formdata.append("cantidad", document.getElementById("cantidad"+ idpartida).value);
+				formdata.append("unidad", document.getElementById("unidad"+ idpartida).value);
+				formdata.append("descripcion", document.getElementById("descripcion"+ idpartida).value);
+				formdata.append("centrocostos", document.getElementById("centrocostos"+ idpartida).value);
 				xmlhttp.open("POST", "libpartida.php");
 				xmlhttp.send(formdata);
 			}

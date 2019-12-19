@@ -41,7 +41,7 @@
 			$setting =$_GET["setting"];
 			switch ($setting) {
 				case "centroscostos":
-					$numero = $_GET["numero"];
+					$numero=$_GET["numero"];
 					$descripcion = $_GET["description"];
 					$empresa = $_GET["empresa"];
 					$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $empresa .",". $numero .",'". $descripcion ."',1)");

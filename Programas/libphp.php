@@ -4,12 +4,11 @@
 	}
 
 	function randomString($length = 6) {
-		$alphabet = "abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
+		$alphabet = "abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ";
 		$pass = array();
 		$alphaLength = strlen($alphabet) - 1;
 		for ($i = 0; $i < $length; $i++) {
-			$n = rand(0, $alphaLength);
-			$pass[] = $alphabet[$n];
+			$pass[] = $alphabet[rand(0, $alphaLength)];
 		}
 		return implode($pass);
 	}
