@@ -26,6 +26,7 @@
 			require_once "libdb.php";
 			require_once "libphp.php";
 			require_once "libuser.php";
+			require_once "libsettings.php";
 		?>
 		<style type="text/css">
 			* {
@@ -368,8 +369,8 @@
 						if (this.responseText == "OK") {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
-							appHeader();
-							appActualizaVista();
+							//appHeader();
+							//appActualizaVista();
 						}
 					}
 				};

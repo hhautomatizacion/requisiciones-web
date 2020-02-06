@@ -7,7 +7,8 @@
 	require_once "libconfig.php";
 	require_once "libdb.php";
 	require_once "libphp.php";
-
+	require_once "libsettings.php";
+	
 	if ( isset($_GET["action"]) && $_GET["action"] == "showpreferencesform" ) {
 		$resultado= formPreferencesForm();
 		echo $resultado;

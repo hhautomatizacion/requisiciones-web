@@ -7,6 +7,8 @@
 	require_once "libuser.php";
 	require_once "libsettings.php";
 	
+	$uploaddir = obtenerPreferenciaGlobal("uploads","uploaddir","uploads/");
+	
 	if ( isset($_REQUEST["posted"]) ) {
 		$errores=array();
 		$validos=array();
@@ -16,7 +18,6 @@
 		$solicitante=$_REQUEST["solicitante"];
 		$centrocostosreq = $_REQUEST["centrocostosreq"];
 		$importancia = 5;
-		$uploaddir="uploads/";
 		if ( !usuarioEsLogeado() ) {
 			$errores[]="newreqform";
 		}
@@ -148,7 +149,6 @@
 	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntoreq" ) {
 		$idrequisicion=$_POST["requisicion"];
 		$cntarchivoduplicado=0;
-		$uploaddir="uploads/";
 		$rutaupload=$uploaddir ."r". $idrequisicion;
 		if (!is_writeable($rutaupload)) {
 			mkdir($rutaupload);
@@ -194,7 +194,7 @@
 		$tablatemp = "temp". randomString(4);
 		switch ($view) {
 			case "0":
-				$vista = " (activo=1 AND impresa=1 AND surtida=0)";
+				$vista = " (activo=1 AND impresa=1 AND surtida=0 AND length(requisicion)<>0)";
 				break;
 			case "1":
 				$vista = " (activo=1 AND impresa=1 AND surtida=1)";
@@ -206,9 +206,15 @@
 				$vista = " (activo=1 AND impresa=1)";
 				break;
 			case "4":
-				$vista = " (activo=0)";
+				$vista = " (activo=1 AND impresa=1 AND length(requisicion)=0)";
 				break;
 			case "5":
+				$vista = " (activo=1 AND impresa=1 AND length(requisicion)<>0)";
+				break;
+			case "6":
+				$vista = " (activo=0)";
+				break;
+			case "7":
 				$vista = " (id>0)";
 				break;
 		}
@@ -454,15 +460,16 @@
 
 	function CopiarRequisicion($idrequisicion) {
 		global $db;
-		$uploaddir="uploads/";
+
+		$uploaddir = obtenerPreferenciaGlobal("uploads","uploaddir","uploads/");
 		$res= $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion);
 		$res->execute();
 		while ($row = $res->fetch()) {
-			$requisicion="";
-			$empresa=$row[15];
-			$departamento=$row[16];
-			$area=$row[17];
-			$solicitante=$row[20];
+			$requisicion = "";
+			$empresa = $row[15];
+			$departamento = $row[16];
+			$area = $row[17];
+			$solicitante = $row[20];
 			$centrocostos = $row[18];
 			$importancia = $row[19];
 		}
@@ -1233,6 +1240,19 @@
 		return $resultado;
 	}
 
+	function RequisicionTienePartidasSurtidas($idrequisicion) {
+		global $db;
+		$resultado=0;
+		$res = $db->prepare("SELECT surtida FROM partidas WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			if ( $row[0] == 1 ) {
+				$resultado=1;
+			}
+		}
+		return $resultado;
+	}
+
 	function RequisicionEsSurtida($idrequisicion) {
 		global $db;
 		$resultado=0;
@@ -1326,6 +1346,8 @@
 			}
 			if ( RequisicionEsActiva($idrequisicion) && !RequisicionEsSurtida($idrequisicion) ) {
 				$resultado .= '<button onClick="appIncluirEnRequisicion('. $idrequisicion .');">Incluir</button>';
+			}
+			if ( RequisicionEsActiva($idrequisicion) && !RequisicionTienePartidasSurtidas($idrequisicion) ) {
 				$resultado .= '<button onClick="appBorraRequisicion('. $idrequisicion .');">Eliminar</button>';
 			}
 			if ( !(RequisicionEsActiva($idrequisicion)) ) {
