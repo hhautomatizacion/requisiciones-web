@@ -103,7 +103,7 @@
 		$partidas = array();
 		$resultado = array();
 		$longitudmax = parse_size($mail_attachmentsize);
-		$uploaddir = "uploads/";
+		$uploaddir = obtenerPreferenciaGlobal("uploads","uploaddir","uploads/");
 		$res= $db->prepare("SELECT nombre, longitud FROM adjuntosrequisiciones WHERE idrequisicion=". $idrequisicion ." AND activo=1;");
 		$res->execute();
 		while ($row = $res->fetch()) {

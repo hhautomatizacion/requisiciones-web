@@ -9,36 +9,39 @@
 	require_once "libphp.php";
 	require_once "libsettings.php";
 	
-	if ( isset($_GET["action"]) && $_GET["action"] == "showpreferencesform" ) {
+	$accion = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS);
+	$action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_SPECIAL_CHARS);
+	
+	if ( $accion == "showpreferencesform" ) {
 		$resultado= formPreferencesForm();
 		echo $resultado;
 	}
 
-	if ( isset($_GET["action"]) && $_GET["action"] == "showsigninform" ) {
+	if ( $accion == "showsigninform" ) {
 		$resultado= formSigninForm();
 		echo $resultado;
 	}
 
-	if ( isset($_GET["action"]) && $_GET["action"] == "showlostpasswordform" ) {
+	if ( $accion == "showlostpasswordform" ) {
 		$resultado= formLostpasswordForm();
 		echo $resultado;
 	}
 
-	if ( isset($_GET["action"]) && $_GET["action"] == "showloginform" ) {
+	if ( $accion == "showloginform" ) {
 		$resultado= formLoginForm();
 		echo $resultado;
 	}
 
-	if ( isset($_GET["action"]) && $_GET["action"] == "logout" ) {
+	if ( $accion == "logout" ) {
 		setcookie("usuario","");
 		echo "OK";
 	}
 
-	if ( isset($_POST["action"]) && $_POST["action"] == "login" ) {
-		$errores=array();
-		$validos=array();
-		$nombre=$_POST["name"];
-		$password=$_POST["password"];
+	if ( $action == "login" ) {
+		$errores = array();
+		$validos = array();
+		$nombre = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_SPECIAL_CHARS);
+		$password = filter_input(INPUT_POST, 'password', FILTER_DEFAULT);
 		if ( strlen($nombre) == 0) {
 			$errores[] = "name";
 		} else {
@@ -53,25 +56,32 @@
 			if (usuarioDarEntrada(usuarioVerificarCredenciales($nombre, $password)) > 0) {
 				echo json_encode(array('succes' => 1));
 			}else{
-				$errores[]="loginform";
+				$errores[] = "loginform";
 				echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 			}
 		}else{
-			$validos[]="loginform";
+			$validos[] = "loginform";
 			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
 
-	if ( isset($_POST["action"]) && $_POST["action"] == "signin" ) {
+	if ( $action == "signin" ) {
 		$encontrado = false;
 		$errores = array();
 		$validos = array();
-		if ( intval($_REQUEST["numero"]) <= 0 ){
+		$numero = filter_input(INPUT_REQUEST, 'numero', FILTER_SANITIZE_NUMBER_INT);
+		$nombre = filter_input(INPUT_REQUEST, 'nombre', FILTER_SANITIZE_SPECIAL_CHARS);
+		$usuario = filter_input(INPUT_REQUEST, 'usuario', FILTER_SANITIZE_SPECIAL_CHARS);
+		$email = filter_input(INPUT_REQUEST, 'email', FILTER_SANITIZE_EMAIL);
+		$password1 = filter_input(INPUT_REQUEST, 'password1', FILTER_DEFAULT);
+		$password2 = filter_input(INPUT_REQUEST, 'password2', FILTER_DEFAULT);
+		
+		if ( $numero <= 0 ){
 			$errores[] = "numero";
 		} else {
 			$encontrado = false;
-			$res = $db->prepare("SELECT * FROM usuarios WHERE numero=" . intval($_REQUEST["numero"]) .";");
-			$res->execute();
+			$res = $db->prepare("SELECT * FROM usuarios WHERE numero=?;");
+			$res->execute([$numero]);
 			while ($row = $res->fetch()) {
 				$encontrado = true;
 			}
@@ -81,18 +91,18 @@
 				$validos[] = "numero";
 			}
 		}
-		if ( strlen($_REQUEST["nombre"]) == 0) {
+		if ( strlen($nombre) == 0) {
 			$errores[] = "nombre";
 		} else {
 			$validos[] = "nombre";
 		}
-		if ( strlen($_REQUEST["email"]) == 0) {
+		if ( strlen($email) == 0) {
 			$errores[] = "email";
 		} else {
 			$validos[] = "email";
 		}
 		$encontrado = false;
-		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["nombre"]."') OR LCASE(usuario)=LCASE('". $_REQUEST["nombre"] ."') OR LCASE(email)=LCASE('". $_REQUEST["nombre"] ."');");
+		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $nombre ."') OR LCASE(usuario)=LCASE('". $nombre ."') OR LCASE(email)=LCASE('". $nombre ."');");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$encontrado = true;
@@ -103,7 +113,7 @@
 			$validos[] = "nombre";
 		}
 		$encontrado = false;
-		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["usuario"]."') OR LCASE(usuario)=LCASE('". $_REQUEST["usuario"] ."') OR LCASE(email)=LCASE('". $_REQUEST["usuario"] ."');");
+		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $usuario ."') OR LCASE(usuario)=LCASE('". $usuario ."') OR LCASE(email)=LCASE('". $usuario ."');");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$encontrado = true;
@@ -114,7 +124,7 @@
 			$validos[] = "usuario";
 		}
 		$encontrado = false;
-		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $_REQUEST["email"]."') OR LCASE(usuario)=LCASE('". $_REQUEST["email"] ."') OR LCASE(email)=LCASE('". $_REQUEST["email"] ."');");
+		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $email ."') OR LCASE(usuario)=LCASE('". $email ."') OR LCASE(email)=LCASE('". $email ."');");
 		$res->execute();
 		while ($row = $res->fetch()) {
 			$encontrado = true;
@@ -124,18 +134,18 @@
 		} else {
 			$validos[] = "email";
 		}
-		if ( strlen($_REQUEST["password1"]) == 0 || $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
+		if ( strlen($password1) == 0 || $password1 <> $password2 ) {
 			$errores[] = "password1";
 		} else {
 			$validos[] = "password1";
 		}
-		if ( strlen($_REQUEST["password2"]) == 0 || $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
+		if ( strlen($password2) == 0 || $password1 <> $password2 ) {
 			$errores[] = "password2";
 		} else {
 			$validos[] = "password2";
 		}
 		if ( count($errores) == 0 ){
-			$res = $db->prepare("INSERT INTO usuarios VALUES (0,". $_REQUEST["numero"] .",'". $_REQUEST["nombre"] ."','". $_REQUEST["usuario"] ."','". $_REQUEST["email"] ."',SHA1('". $_REQUEST["password1"] ."'), NULL, NULL, '', 0, 0, 1);");
+			$res = $db->prepare("INSERT INTO usuarios VALUES (0,". $numero .",'". $nombre ."','". $usuario ."','". $email ."',SHA1('". $password1 ."'), NULL, NULL, '', 0, 0, 1);");
 			$res->execute();
 			echo json_encode(array('succes' => 1));
 		} else {
@@ -143,21 +153,23 @@
 		}
 	}
 
-	if ( isset($_POST["action"]) && $_POST["action"] == "editpassword" ) {
+	if ( $action == "editpassword" ) {
 		$errores = array();
 		$validos = array();
-		if ( strlen($_REQUEST["password1"]) == 0 || $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
-			$errores[]="password1";
+		$password1 = filter_input(INPUT_REQUEST, 'password1', FILTER_DEFAULT);
+		$password2 = filter_input(INPUT_REQUEST, 'password2', FILTER_DEFAULT);
+		if ( strlen($password1) == 0 || $password1 <> $password2 ) {
+			$errores[] = "password1";
 		} else {
-			$validos[]="password1";
+			$validos[] = "password1";
 		}
-		if ( strlen($_REQUEST["password2"]) == 0 || $_REQUEST["password1"] <> $_REQUEST["password2"] ) {
-			$errores[]="password2";
+		if ( strlen($password2) == 0 || $password1 <> $password2 ) {
+			$errores[] = "password2";
 		} else {
-			$validos[]="password2";
+			$validos[] = "password2";
 		}
 		if ( count($errores) == 0 ){
-			$res = $db->prepare("UPDATE usuarios SET password=SHA1('". $_REQUEST["password1"] ."') WHERE id=". usuarioId() .";");
+			$res = $db->prepare("UPDATE usuarios SET password=SHA1('". $password1 ."') WHERE id=". usuarioId() .";");
 			$res->execute();
 			echo json_encode(array('succes' => 1));
 		} else {
@@ -165,13 +177,13 @@
 		}
 	}
 
-	if ( isset($_POST["action"]) && $_POST["action"] == "edituser" ) {
+	if ( $action == "edituser" ) {
 		$errores = array();
 		$validos = array();
-		$numero = intval($_REQUEST["numero"]);
-		$nombre = $_REQUEST["nombre"];
-		$usuario = $_REQUEST["usuario"];
-		$email = $_REQUEST["email"];
+		$numero = filter_input(INPUT_REQUEST, 'numero', FILTER_SANITIZE_NUMBER_INT);
+		$nombre = filter_input(INPUT_REQUEST, 'nombre', FILTER_SANITIZE_SPECIAL_CHARS);
+		$usuario = filter_input(INPUT_REQUEST, 'usuario', FILTER_SANITIZE_SPECIAL_CHARS);
+		$email = filter_input(INPUT_REQUEST, 'email', FILTER_SANITIZE_EMAIL);
 		if ( $numero < 0 ){
 			$errores[] = "numero";
 		} else {
@@ -194,7 +206,7 @@
 			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $nombre ."') OR LCASE(usuario)=LCASE('". $nombre ."') OR LCASE(email)=LCASE('". $nombre ."');");
 			$res->execute();
 			while ($row = $res->fetch()) {
-				$id=$row[0];
+				$id = $row[0];
 			}
 			if ( $id == usuarioId() ) {
 				$validos[] = "nombre";
@@ -209,7 +221,7 @@
 			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $usuario ."') OR LCASE(usuario)=LCASE('". $usuario ."') OR LCASE(email)=LCASE('". $usuario ."');");
 			$res->execute();
 			while ($row = $res->fetch()) {
-				$id=$row[0];
+				$id = $row[0];
 			}
 			if ( $id == usuarioId() ) {
 				$validos[] = "usuario";
@@ -224,7 +236,7 @@
 			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $email ."') OR LCASE(usuario)=LCASE('". $email ."') OR LCASE(email)=LCASE('". $email ."');");
 			$res->execute();
 			while ($row = $res->fetch()) {
-				$id=$row[0];
+				$id = $row[0];
 			}
 			if ( $id == usuarioId() ) {
 				$validos[] = "email";
@@ -241,27 +253,25 @@
 		}
 	}
 
-	if ( isset($_POST["action"]) && $_POST["action"] == "lostpassword" ) {
-		if ( $_POST["name"] ) {
-			$resultado="";
-			$name=$_POST["name"];
-			$res = $db->prepare("SELECT id,email,activo FROM usuarios WHERE (numero=? OR LCASE(nombre)=LCASE(?) OR LCASE(usuario)=LCASE(?) OR LCASE(email)=LCASE(?))");
-			$res->execute([$name, $name, $name, $name]);
-			while ($row = $res->fetch()) {
-				if ($row[1]){
-					$recoverypw=randomString(6);
-					if ( intval($row[2]) ) {
-						$res = $db->prepare("UPDATE usuarios SET recovery=1, recoverypw=SHA1('". $recoverypw ."') WHERE id=". $row[0]);
-						$res->execute();
-						enviarPorCorreo($row[1],"Recuperacion de password","Su nuevo password temporal es ". $recoverypw ."\nEste password es valido solo por una ocasion.\nSi usted no ha solicitado esta informacion puede seguir usando su password actual.");
-					}else{
-						enviarPorCorreo($row[1],"Su cuenta esta desactivada","Su cuenta de usuario esta desactivada. Pongase en contacto con el administrador del sitio.");
-					}
-					$resultado="OK";
+	if ( $action == "lostpassword" ) {
+		$resultado = "";
+		$name = filter_input(INPUT_REQUEST, 'name', FILTER_SANITIZE_SPECIAL_CHARS);
+		$res = $db->prepare("SELECT id,email,activo FROM usuarios WHERE (numero=? OR LCASE(nombre)=LCASE(?) OR LCASE(usuario)=LCASE(?) OR LCASE(email)=LCASE(?))");
+		$res->execute([$name, $name, $name, $name]);
+		while ($row = $res->fetch()) {
+			if ($row[1]){
+				$recoverypw=randomString(6);
+				if ( intval($row[2]) ) {
+					$res = $db->prepare("UPDATE usuarios SET recovery=1, recoverypw=SHA1('". $recoverypw ."') WHERE id=". $row[0]);
+					$res->execute();
+					enviarPorCorreo($row[1],"Recuperacion de password","Su nuevo password temporal es ". $recoverypw ."\nEste password es valido solo por una ocasion.\nSi usted no ha solicitado esta informacion puede seguir usando su password actual.");
+				}else{
+					enviarPorCorreo($row[1],"Su cuenta esta desactivada","Su cuenta de usuario esta desactivada. Pongase en contacto con el administrador del sitio.");
 				}
+				$resultado = "OK";
 			}
-			echo $resultado;
 		}
+		echo $resultado;
 	}
 
 	function enviarPorCorreo($direccion, $asunto, $mensaje) {
@@ -271,7 +281,6 @@
 		$mail_pass = obtenerPreferenciaGlobal("mail","pass","lcottm");
 		$mail_fromaddress = obtenerPreferenciaGlobal("mail","fromaddres","mttocl@cualquierlavado.com.mx");
 		$mail_fromname = obtenerPreferenciaGlobal("mail","fromname","MantenimientoCL");
-
 		$mail = new PHPMailer(true);
 		try
 		{
@@ -301,7 +310,6 @@
 		$nombre = ObtenerDescripcionDesdeID("usuarios", usuarioId(), "nombre");
 		$usuario = ObtenerDescripcionDesdeID("usuarios", usuarioId(), "usuario");
 		$email = ObtenerDescripcionDesdeID("usuarios", usuarioId(), "email");
-
 		$resultado="";
 		$resultado .="<form id=\"edituserform\" method = \"POST\">";
 		$resultado .="	<input type=\"hidden\" name=\"action\" value=\"edituser\"/>";
@@ -458,17 +466,17 @@
 
 	function usuarioVerificarCredenciales($name, $password) {
 		global $db;
-		$resultado="";
+		$resultado = "";
 		$res = $db->prepare("SELECT id FROM usuarios WHERE (numero=? OR LCASE(nombre)=LCASE(?) OR LCASE(usuario)=LCASE(?) OR LCASE(email)=LCASE(?)) AND activo=1 AND password=SHA1(?)");
 		$res->execute([$name, $name, $name, $name, $password]);
 		while ($row = $res->fetch()) {
-			$resultado=$row[0];
+			$resultado = $row[0];
 		}
 		if ( strlen($resultado) == 0 ) {
 			$res = $db->prepare("SELECT id FROM usuarios WHERE (numero=? OR LCASE(nombre)=LCASE(?) OR LCASE(usuario)=LCASE(?) OR LCASE(email)=LCASE(?)) AND activo=1 AND recovery=1 AND recoverypw=SHA1(?)");
 			$res->execute([$name, $name, $name, $name, $password]);
 			while ($row = $res->fetch()) {
-				$resultado=$row[0];
+				$resultado = $row[0];
 			}
 		}
 		return $resultado;
@@ -477,13 +485,11 @@
 	function usuarioId() {
 		global $db;
 		$resultado = 0;
-		if ( isset($_COOKIE["usuario"])) {
-			$token = $_COOKIE["usuario"];
-			$res = $db->prepare("SELECT id FROM usuarios WHERE token = ? AND activo = 1;");
-			$res->execute([$token]);
-			while ($row = $res->fetch()) {
-				$resultado = $row[0];
-			}
+		$token = filter_input(INPUT_COOKIE, 'usuario', FILTER_SANITIZE_SPECIAL_CHARS);
+		$res = $db->prepare("SELECT id FROM usuarios WHERE token = ? AND activo = 1;");
+		$res->execute([$token]);
+		while ($row = $res->fetch()) {
+			$resultado = $row[0];
 		}
 		return $resultado;
 	}

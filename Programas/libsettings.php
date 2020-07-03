@@ -3,87 +3,70 @@
 	require_once "libuser.php";
 	require_once "libphp.php";
 	
-	if ( isset($_GET["action"]) && $_GET["action"] == "showsettingsform" ) {
-		$resultado="";
+	$accion = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS);
+	if ( $accion == "showsettingsform" ) {
+		$resultado = "";
 		$resultado .= TablaElementos2('usuarios','numero','nombre');
 		$resultado .= TablaElementos('unidades','unidad');
 		$resultado .= TablaEmpresas('empresas','codigo','nombre');
-		//$resultado .= TablaElementos('departamentos','departamento');
 		$resultado .= TablaDepartamentos('departamentos','departamento');
 		$resultado .= TablaAreas('areas','area');
-		//$resultado .= TablaElementos2('centroscostos','numero','descripcion');
 		$resultado .= TablaCentrosCostos('centroscostos','numero','descripcion');
 		echo $resultado;
 	}
 	
-	if ( isset($_GET["action"]) && $_GET["action"] == "activate" ) {
-		if ( isset($_GET["id"]) && isset($_GET["setting"]) ) {
-			$idelemento=$_GET["id"];
-			$setting = $_GET["setting"];
-			$res = $db->prepare("UPDATE ". $setting ." SET activo=1 WHERE id=". $idelemento .";");
-			$res->execute();
-			echo "Activado";
-		}
+	if ( $accion == "activate" ) {
+		$idelemento = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
+		$setting = filter_input(INPUT_GET, 'setting', FILTER_SANITIZE_SPECIAL_CHARS);
+		$res = $db->prepare("UPDATE ". $setting ." SET activo=1 WHERE id=". $idelemento .";");
+		$res->execute();
+		echo "Activado";
 	}
 	
-	if ( isset($_GET["action"]) && $_GET["action"] == "deactivate" ) {
-		if ( isset($_GET["id"]) && isset($_GET["setting"]) ) {
-			$idelemento=$_GET["id"];
-			$setting = $_GET["setting"];
-			$res = $db->prepare("UPDATE ". $setting ." SET activo=0 WHERE id=". $idelemento .";");
-			$res->execute();
-			echo "Desactivado";
-		}
+	if ( $accion == "deactivate" ) {
+		$idelemento = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
+		$setting = filter_input(INPUT_GET, 'setting', FILTER_SANITIZE_SPECIAL_CHARS);
+		$res = $db->prepare("UPDATE ". $setting ." SET activo=0 WHERE id=". $idelemento .";");
+		$res->execute();
+		echo "Desactivado";
+		
 	}
 	
-	if ( isset($_GET["action"]) && $_GET["action"] == "addsetting" ) {
-		if ( isset($_GET["setting"]) ) {
-			$setting =$_GET["setting"];
-			switch ($setting) {
-				case "centroscostos":
-					$numero=$_GET["numero"];
-					$descripcion = $_GET["description"];
-					$empresa = $_GET["empresa"];
-					$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $empresa .",". $numero .",'". $descripcion ."',1)");
-					$res->execute();
-					break;
-				case "areas":
-					$descripcion = $_GET["description"];
-					$empresa = $_GET["empresa"];
-					$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $empresa .",'". $descripcion ."',1)");
-					$res->execute();
-					break;
-				case "departamentos":
-					$descripcion = $_GET["description"];
-					$empresa = $_GET["empresa"];
-					$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $empresa .",'". $descripcion ."',1)");
-					$res->execute();
-					break;
-				case "empresas":
-					$descripcion = $_GET["description"];
-					$codigo = $_GET["codigo"];
-					$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $codigo .",'". $descripcion ."',1)");
-					$res->execute();
-					break;
-				case "unidades":
-					$descripcion = $_GET["description"];
-					$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,'". $descripcion ."',1)");
-					$res->execute();
-					break;
-			}
-			// if ( isset($_GET["description"]) &&  isset($_GET["codigo"]) ) {
-				// $codigo=$_GET["codigo"];
-				// $descripcion = $_GET["description"];
-				// $res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,'". $codigo ."','". $descripcion ."',1)");
-				// $res->execute();
-			// }elseif ( isset($_GET["description"]) &&  isset($_GET["number"]) ) {
-				// $numero=$_GET["number"];
-				// $descripcion = $_GET["description"];
-				// $res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $numero .",'". $descripcion ."',1)");
-				// $res->execute();
-			// }
-			echo "Ok";
+	if ( $accion == "addsetting" ) {
+		$setting = filter_input(INPUT_GET, 'setting', FILTER_SANITIZE_SPECIAL_CHARS);
+		switch ($setting) {
+			case "centroscostos":
+				$numero = filter_input(INPUT_GET, 'numero', FILTER_SANITIZE_NUMBER_INT);
+				$descripcion = filter_input(INPUT_GET, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+				$empresa = filter_input(INPUT_GET, 'empresa', FILTER_SANITIZE_NUMBER_INT);
+				$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $empresa .",". $numero .",'". $descripcion ."',1)");
+				$res->execute();
+				break;
+			case "areas":
+				$descripcion = filter_input(INPUT_GET, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+				$empresa = filter_input(INPUT_GET, 'empresa', FILTER_SANITIZE_NUMBER_INT);
+				$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $empresa .",'". $descripcion ."',1)");
+				$res->execute();
+				break;
+			case "departamentos":
+				$descripcion = filter_input(INPUT_GET, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+				$empresa = filter_input(INPUT_GET, 'empresa', FILTER_SANITIZE_NUMBER_INT);
+				$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $empresa .",'". $descripcion ."',1)");
+				$res->execute();
+				break;
+			case "empresas":
+				$descripcion = filter_input(INPUT_GET, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+				$codigo = filter_input(INPUT_GET, 'codigo', FILTER_SANITIZE_SPECIAL_CHARS);
+				$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $codigo .",'". $descripcion ."',1)");
+				$res->execute();
+				break;
+			case "unidades":
+				$descripcion = filter_input(INPUT_GET, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+				$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,'". $descripcion ."',1)");
+				$res->execute();
+				break;
 		}
+		echo "Ok";
 	}
 	
 	function TablaElementos($nombretabla,$descripcion) {

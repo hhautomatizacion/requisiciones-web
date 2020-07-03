@@ -10,12 +10,12 @@
 	$uploaddir = obtenerPreferenciaGlobal("uploads","uploaddir","uploads/");
 	
 	if ( isset($_REQUEST["posted"]) ) {
-		$errores=array();
-		$validos=array();
-		$empresa=$_REQUEST["empresa"];;
-		$departamento=$_REQUEST["departamento"];
-		$area=$_REQUEST["area"];
-		$solicitante=$_REQUEST["solicitante"];
+		$errores = array();
+		$validos = array();
+		$empresa = $_REQUEST["empresa"];;
+		$departamento = $_REQUEST["departamento"];
+		$area = $_REQUEST["area"];
+		$solicitante = $_REQUEST["solicitante"];
 		$centrocostosreq = $_REQUEST["centrocostosreq"];
 		$importancia = 5;
 		if ( !usuarioEsLogeado() ) {
@@ -72,6 +72,36 @@
 			$res->execute([$empresa, $departamento, $area, $centrocostosreq, $importancia, $solicitante, usuarioId()]);
 			$ultimoidreq = $db->lastInsertId();
 			if ( isset($_REQUEST["totalpartidas"]) ) {
+				
+				$f = array(
+				'posted'=>FILTER_SANITIZE_NUMBER_INT,
+				'empresa'=>FILTER_SANITIZE_NUMBER_INT,
+				'departamento'=>FILTER_SANITIZE_NUMBER_INT,
+				'area'=>FILTER_SANITIZE_NUMBER_INT,
+				'centrocostosreq'=>FILTER_SANITIZE_NUMBER_INT,
+				'totalpartidas'=>array(
+					'filter' => FILTER_SANITIZE_NUMBER_INT, 
+					'flags' => FILTER_REQUIRE_ARRAY),
+				'cantidad'=>array(
+					'filter' => FILTER_SANITIZE_NUMBER_FLOAT, 
+					'flags' => FILTER_REQUIRE_ARRAY | FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND),
+				'unidad'=>array(
+					'filter' => FILTER_SANITIZE_NUMBER_INT, 
+					'flags' => FILTER_REQUIRE_ARRAY),
+				'descripcion'=>array(
+					'filter' => FILTER_SANITIZE_ENCODED, 
+					'flags' => FILTER_REQUIRE_ARRAY),
+				'centrocostos'=>array(
+					'filter' => FILTER_SANITIZE_NUMBER_INT, 
+					'flags' => FILTER_REQUIRE_ARRAY),
+				'solicitante'=>FILTER_SANITIZE_NUMBER_INT);
+				$p = filter_input_array(INPUT_POST, $f);
+				writelog("Partidas");
+				writelog($p);
+				writelog(gettype($p));
+				writelog("----");
+				writelog($_REQUEST);
+				writelog(gettype($_REQUEST['totalpartidas']));
 				foreach( $_REQUEST["totalpartidas"] as $item) {
 					$cantidad = $_REQUEST["cantidad"][$item];
 					$unidad = $_REQUEST["unidad"][$item];
@@ -417,7 +447,9 @@
 				echo "OK";
 				break;
 			case "undelete":
-				$res = $db->prepare("UPDATE requisiciones SET activo=1 WHERE id=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE partidas SET activo=1, fechaactiva=NOW(), idactiva=". usuarioId() ." WHERE activo=0 AND idrequisicion=". $idrequisicion .";");
+				$res->execute();
+				$res = $db->prepare("UPDATE requisiciones SET activo=1, fechaactiva=NOW(), idactiva=". usuarioId() ." WHERE id=". $idrequisicion .";");
 				$res->execute();
 				echo "OK";
 				break;
@@ -1320,6 +1352,19 @@
 		}
 		return $resultado;
 	}
+	
+	function esSeguidorRequisicion($idusuario, $idrequisicion) {
+		global $db;
+		$resultado=false;
+		if ( usuarioEsLogeado() ) {
+			$res = $db->prepare("SELECT id FROM seguidoresrequisiciones WHERE idrequisicion=? AND idusuario=? AND activo=1;");
+			$res->execute([$idrequisicion, $idusuario]);
+			while ($row = $res->fetch()) {
+				$resultado=true;
+			}
+		}
+		return $resultado;
+	}
 
 	function AccionesRequisicion($idrequisicion) {
 		$resultado="";
@@ -1566,7 +1611,11 @@
 		while ($row = $res->fetch()) {
 			$resultado .="						<tr>";
 			$resultado .="						<td>";
-			$resultado .="							<input type=\"checkbox\" name=\"user[]\" value=\"". $row[0] ."\"> ". $row[1];
+			if ( esSeguidorRequisicion($row[0], $idrequisicion) ) {
+				$resultado .="							<input type=\"checkbox\" name=\"user[]\" value=\"". $row[0] ."\" checked> ". $row[1];
+			}else{
+				$resultado .="							<input type=\"checkbox\" name=\"user[]\" value=\"". $row[0] ."\"> ". $row[1];
+			}
 			$resultado .="						</td>";
 			$resultado .="						</tr>";
 		}

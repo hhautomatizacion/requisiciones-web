@@ -3,25 +3,28 @@
 	require_once "libdb.php";
 	require_once "libphp.php";
 	require_once "librequisicion.php";
+	
+	$uploaddir = obtenerPreferenciaGlobal("uploads","uploaddir","uploads/");
+	$action = filter_input(INPUT_POST, 'accion', FILTER_SANITIZE_SPECIAL_CHARS);
+	$accion = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS);
 
-	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntopart" ) {
-		$idpartida=$_POST["partida"];
-		$cntarchivoduplicado=0;
-		$uploaddir="uploads/";
-		$rutaupload=$uploaddir ."p". $idpartida;
+	if ( $action == "agregaradjuntopart" ) {
+		$idpartida = filter_input(INPUT_POST, 'partida', FILTER_SANITIZE_NUMBER_INT);
+		$cntarchivoduplicado = 0;
+		$rutaupload = $uploaddir ."p". $idpartida;
 		if (!is_writeable($rutaupload)) {
 			mkdir($rutaupload);
 		}
 		$nombrearchivo = $_FILES["archivo"]["name"];
 		$rutatemp = $_FILES["archivo"]["tmp_name"];
-		$longitudarchivo=$_FILES["archivo"]["size"];
-		$rutadestino=$rutaupload ."/". $nombrearchivo;
+		$longitudarchivo = $_FILES["archivo"]["size"];
+		$rutadestino = $rutaupload ."/". $nombrearchivo;
 		$nombrearchivooriginal = $nombrearchivo;
 		while(file_exists($rutadestino)) {
 			$cntarchivoduplicado = $cntarchivoduplicado + 1;
 			list($name, $ext) = explode(".", $nombrearchivooriginal);
 			$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
-			$rutadestino=$rutaupload ."/". $nombrearchivo;
+			$rutadestino = $rutaupload ."/". $nombrearchivo;
 		}
 		if (move_uploaded_file($rutatemp,$rutadestino)) {
 			$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
@@ -30,15 +33,15 @@
 		}
 	}
 	
-	if ( isset($_POST["accion"]) && $_POST["accion"] == "saveeditpart" ) {
-		$errores=array();
-		$validos=array();
-		$idpartida=$_POST["partida"];
-		$cantidad = $_POST["cantidad"];
-		$unidad=$_POST["unidad"];
-		$descripcion=$_POST["descripcion"];
-		$centrocostos=$_POST["centrocostos"];
-		if ( (float)$cantidad <= 0 ) {
+	if ( $action == "saveeditpart" ) {
+		$errores = array();
+		$validos = array();
+		$idpartida = filter_input(INPUT_POST, 'partida', FILTER_SANITIZE_NUMBER_INT);
+		$cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_SANITIZE_NUMBER_FLOAT);
+		$unidad = filter_input(INPUT_POST, 'unidad', FILTER_SANITIZE_NUMBER_INT);
+		$descripcion = filter_input(INPUT_POST, 'descripcion', FILTER_SANITIZE_STRING);
+		$centrocostos = filter_input(INPUT_POST, 'centrocostos', FILTER_SANITIZE_NUMBER_INT);
+		if ( $cantidad <= 0 ) {
 			$errores[] = "cantidad". $idpartida;
 		} else {
 			$validos[] = "cantidad". $idpartida;
@@ -57,18 +60,16 @@
 		}
 	}
 
-	if ( isset($_POST["accion"]) && $_POST["accion"] == "savepartreq" ) {
-		$errores=array();
-		$validos=array();
-		$idrequisicion=$_POST["idrequisicion"];
-		$cantidad = $_POST["cantidad"];
-		$unidad=$_POST["unidad"];
-		$descripcion=$_POST["descripcion"];
-		$centrocostos=$_POST["centrocostos"];
-		$importancia= 5;
+	if ( $action == "savepartreq" ) {
+		$errores = array();
+		$validos = array();
+		$idrequisicion = filter_input(INPUT_POST, 'idrequisicion', FILTER_SANITIZE_NUMBER_INT);
+		$cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_SANITIZE_NUMBER_FLOAT);
+		$unidad = filter_input(INPUT_POST, 'unidad', FILTER_SANITIZE_NUMBER_INT);
+		$descripcion = filter_input(INPUT_POST, 'descripcion', FILTER_SANITIZE_STRING);
+		$centrocostos = filter_input(INPUT_POST, 'centrocostos', FILTER_SANITIZE_NUMBER_INT);
+		$importancia = 5;
 		$solicitante = usuarioId();
-		
-	
 		if ( (float)$cantidad <= 0 ) {
 			$errores[] = "cantidad". $idpartida;
 		} else {
@@ -87,10 +88,10 @@
 			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
-
-	if ( isset($_GET["id"]) ) {
-		$idpartida=$_GET["id"];
-		switch ($_GET["action"]) {
+	
+	$idpartida = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
+	if ( $idpartida ) {
+		switch ($accion) {
 			case "parttobesupplied":
 				$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE id= ?;");
 				$res->execute([$idpartida]);
@@ -101,14 +102,14 @@
 			case "partsupplied":
 				$res = $db->prepare("UPDATE partidas SET surtida=1, fechasurtida=NOW() WHERE id= ?;");
 				$res->execute([$idpartida]);
-				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 5, ?,  ?,1)");
+				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 5, ?, ?,1)");
 				$res->execute([$idpartida, usuarioId()]);
 				echo "OK";
 				break;
 			case "partdelete":
 				$res = $db->prepare("UPDATE partidas SET activo=0, fechaactiva=NOW() WHERE id= ?;");
 				$res->execute([$idpartida]);
-				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 6, ?,  ?,1)");
+				$res = $db->prepare("INSERT INTO notificacionespartidas VALUES (0, NOW(), 6, ?, ?,1)");
 				$res->execute([$idpartida, usuarioId()]);
 				echo "OK";
 				break;
@@ -137,29 +138,29 @@
 		if ( $idusuario == 0) {
 			$idusuario = usuarioId();
 		}
-		$res= $db->prepare("SELECT id FROM seguidorespartidas WHERE idpartida=? AND idusuario=?;");
+		$res = $db->prepare("SELECT id FROM seguidorespartidas WHERE idpartida=? AND idusuario=?;");
 		$res->execute([$idpartida, $idusuario]);
 		while ($row = $res->fetch()) {
 			$idsiguiendo = $row[0];
 		}
 		if ( $idsiguiendo == 0 ) {
-			$res= $db->prepare("INSERT INTO seguidorespartidas VALUES (0,?,?,1);");
+			$res = $db->prepare("INSERT INTO seguidorespartidas VALUES (0,?,?,1);");
 			$res->execute([$idpartida, $idusuario]);
 		} else {
-			$res= $db->prepare("UPDATE seguidorespartidas SET activo=1 WHERE id=?;");
+			$res = $db->prepare("UPDATE seguidorespartidas SET activo=1 WHERE id=?;");
 			$res->execute([$idsiguiendo]);
 		}
 	}
 	
 	function AbandonarPartida($idpartida) {
 		global $db;
-		$res= $db->prepare("UPDATE seguidorespartidas SET activo=0 WHERE idpartida=? AND idusuario=?;");
+		$res = $db->prepare("UPDATE seguidorespartidas SET activo=0 WHERE idpartida=? AND idusuario=?;");
 		$res->execute([$idpartida, usuarioId() ]);
 	}
 
 	function PartidaEsActiva($idpartida) {
 		global $db;
-		$resultado=false;
+		$resultado = false;
 		$res = $db->prepare("SELECT activo FROM partidas WHERE id=". $idpartida .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -172,7 +173,7 @@
 
 	function PartidaEsSurtida($idpartida) {
 		global $db;
-		$resultado=0;
+		$resultado = 0;
 		
 		$res = $db->prepare("SELECT surtida FROM partidas WHERE activo=1 AND id=". $idpartida .";");
 		$res->execute();
@@ -199,12 +200,12 @@
 
 	function AccionesPartida($idpartida) {
 		global $db;
-		$idrequisicion=0;
-		$resultado="";
+		$idrequisicion = 0;
+		$resultado = "";
 		$res = $db->prepare("SELECT idrequisicion FROM partidas WHERE id=". $idpartida .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
-			$idrequisicion=$row[0];
+			$idrequisicion = $row[0];
 		}
 		if ( RequisicionEsMia($idrequisicion) || usuarioEsSuper() ) {
 			if ( !PartidaEsSurtida($idpartida) && PartidaEsActiva($idpartida) && RequisicionEsImpresa($idrequisicion) && RequisicionEsActiva($idrequisicion) ) {
@@ -239,7 +240,7 @@
 	}
 
 	function AgregarAdjuntosPartida($idpartida) {
-		$resultado="";
+		$resultado = "";
 		if ( usuarioEsLogeado() ) {
 			$resultado="<input type = \"button\" value=\"Agregar\" onclick=\"addAdjuntoPart(". $idpartida .");\">";
 		}else{
@@ -250,7 +251,7 @@
 
 	function MostrarAdjuntosPartida($idpartida,$q) {
 		global $db;
-		$resultado="";
+		$resultado = "";
 		$res = $db->prepare("SELECT * FROM adjuntospartidas WHERE idpartida=". $idpartida .";");
 		$res->execute();
 		$resultado .= "<table id=\"tablaadjuntospart". $idpartida ."\">";
@@ -264,18 +265,18 @@
 	}
 
 	function AgregarComentariosPartida($idpartida) {
-		$resultado="";
+		$resultado = "";
 		if ( usuarioEsLogeado() ) {
-			$resultado="<input type = \"button\" value=\"Agregar\" onclick=\"addComentarioPart(". $idpartida .");\">";
+			$resultado = "<input type = \"button\" value=\"Agregar\" onclick=\"addComentarioPart(". $idpartida .");\">";
 		}else{
-			$resultado="<small>Acciones</small>";
+			$resultado = "<small>Acciones</small>";
 		}
 		return $resultado;
 	}
 
 	function ComentarioPartEsActivo($idcomentario) {
 		global $db;
-		$resultado=false;
+		$resultado = false;
 		$res = $db->prepare("SELECT activo FROM comentariospartidas WHERE id=". $idcomentario .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -285,15 +286,16 @@
 		}
 		return $resultado;
 	}
+	
 	function ComentarioPartEsMio($idcomentario) {
 		global $db;
-		$resultado=false;
+		$resultado = false;
 		if ( usuarioEsLogeado() ) {
 			$res = $db->prepare("SELECT id FROM comentariospartidas WHERE id=". $idcomentario ." AND idusuario=". usuarioId() .";");
 			$res->execute();
 			while ($row = $res->fetch()) {
 				if ( $row[0] == $idcomentario ) {
-					$resultado=true;
+					$resultado = true;
 				}
 			}
 		}
@@ -328,7 +330,7 @@
 
 	function MostrarComentariosPartida($idpartida,$q) {
 		global $db;	
-		$resultado="";
+		$resultado = "";
 		$res = $db->prepare("SELECT * FROM comentariospartidas WHERE idpartida=". $idpartida .";");
 		$res->execute();
 		$resultado .= "<table id=\"tablacomentariospart". $idpartida ."\">";
@@ -349,7 +351,7 @@
 	
 	function formEditPartForm($idpartida) {
 		global $db;
-		$resultado="";
+		$resultado = "";
 		$res = $db->prepare("SELECT cantidad, idunidad, descripcion, idcentrocostos FROM partidas WHERE id=?;");
 		$res->execute([$idpartida]);
 		while ($row = $res->fetch()) {
