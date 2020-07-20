@@ -163,7 +163,7 @@
 				}
 			}
 			echo json_encode(array('succes' => 1, 'id' => $ultimoidreq));
-		}else{
+		} else {
 			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
@@ -492,6 +492,7 @@
 
 	function CopiarRequisicion($idrequisicion) {
 		global $db;
+		$errores = array();
 
 		$uploaddir = obtenerPreferenciaGlobal("uploads","uploaddir","uploads/");
 		$res= $db->prepare("SELECT * FROM requisiciones WHERE id=". $idrequisicion);
@@ -505,115 +506,110 @@
 			$centrocostos = $row[18];
 			$importancia = $row[19];
 		}
-		$iter=0;
-		$res= $db->prepare("SELECT * FROM partidas WHERE activo=1 AND idrequisicion=". $idrequisicion);
+		$partidasactivas = 0;
+		$res= $db->prepare("SELECT COUNT(*) FROM partidas WHERE activo=1 AND idrequisicion=". $idrequisicion);
 		$res->execute();
 		while ($row = $res->fetch()) {
-			$totalpartidas[]=$iter;
-			$cantidad[$iter] = $row[2];
-			$unidad[$iter] = $row[3];
-			$descripcion[$iter] = $row[4];
-			$centrocostospart[$iter] = $row[16];
-			$importanciapart[$iter] = $row[18];
-			$solicitantepart[$iter] = $row[19];
-			$iter2=0;
-			$res2= $db->prepare("SELECT * FROM comentariospartidas WHERE activo=1 AND idpartida=". $row[0]);
-			$res2->execute();
-			while ($row2 = $res2->fetch()) {
-				$totalpartcometarios[$iter][$iter2]=$iter2;
-				$partcomentario[$iter][$iter2]=$row2[3];
-				$partcomentarioautor[$iter][$iter2]=$row2[4];
-				$partcomentariofecha[$iter][$iter2]=$row2[5];
-				$iter2=$iter2+1;
-			}
-			$iter2=0;
-			$res2= $db->prepare("SELECT * FROM adjuntospartidas WHERE activo=1 AND idpartida=". $row[0]);
-			$res2->execute();
-			while ($row2 = $res2->fetch()) {
-				$totalpartadjuntos[$iter][$iter2]=$iter2;
-				$partadjuntoid[$iter][$iter2]=$row[0];
-				$partadjunto[$iter][$iter2]=$row2[2];
-				$partadjuntolongitud[$iter][$iter2]=$row2[3];
-				$partadjuntoautor[$iter][$iter2]=$row2[4];
-				$partadjuntofecha[$iter][$iter2]=$row2[5];
-				$iter2=$iter2+1;
-			}
-			$iter=$iter+1;
+			$partidasactivas = $row[0];
 		}
-		$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(), ?,1,0,0,NULL, NULL,NULL,NULL,NOW(),NULL,NULL,NULL,NULL, ?, ?, ?, ?, ?, ?, ?);");
-		$res->execute([$requisicion, $empresa, $departamento, $area, $centrocostos, $importancia, $solicitante, usuarioId()]);
-		$ultimoidreq = $db->lastInsertId();
-		foreach( $totalpartidas as $item) {
-			$res = $db->prepare("INSERT INTO partidas VALUES (0,NOW(), ?, ?, ?,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, ?, ?, ?, ?, ?);");
-			$res->execute([$cantidad[$item], $unidad[$item], $descripcion[$item], $centrocostospart[$item], $ultimoidreq, $importanciapart[$item], $solicitantepart[$item], usuarioId()]);
-			$ultimoidpart = $db->lastInsertId();
-			if ( isset($totalpartcometarios) ) {
-				foreach ( $totalpartcometarios[$item] as $item2 ) {
-					$comentario=$partcomentario[$item][$item2];
-					$comentarioautor=$partcomentarioautor[$item][$item2];
-					$comentariofecha=$partcomentariofecha[$item][$item2];
-					$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0, ?,0, ?, ?, ?,1);");
-					$res->execute([$ultimoidpart, $comentario, $comentarioautor, $comentariofecha]);
+		if ( $partidasactivas > 0 ) {
+			$iter=0;
+			$res= $db->prepare("SELECT * FROM partidas WHERE activo=1 AND idrequisicion=". $idrequisicion);
+			$res->execute();
+			while ($row = $res->fetch()) {
+				$totalpartidas[]=$iter;
+				$cantidad[$iter] = $row[2];
+				$unidad[$iter] = $row[3];
+				$descripcion[$iter] = $row[4];
+				$centrocostospart[$iter] = $row[16];
+				$importanciapart[$iter] = $row[18];
+				$solicitantepart[$iter] = $row[19];
+				$iter2=0;
+				$res2= $db->prepare("SELECT * FROM comentariospartidas WHERE activo=1 AND idpartida=". $row[0]);
+				$res2->execute();
+				while ($row2 = $res2->fetch()) {
+					$totalpartcometarios[$iter][$iter2]=$iter2;
+					$partcomentario[$iter][$iter2]=$row2[3];
+					$partcomentarioautor[$iter][$iter2]=$row2[4];
+					$partcomentariofecha[$iter][$iter2]=$row2[5];
+					$iter2=$iter2+1;
 				}
+				$iter2=0;
+				$res2= $db->prepare("SELECT * FROM adjuntospartidas WHERE activo=1 AND idpartida=". $row[0]);
+				$res2->execute();
+				while ($row2 = $res2->fetch()) {
+					$totalpartadjuntos[$iter][$iter2]=$iter2;
+					$partadjuntoid[$iter][$iter2]=$row[0];
+					$partadjunto[$iter][$iter2]=$row2[2];
+					$partadjuntolongitud[$iter][$iter2]=$row2[3];
+					$partadjuntoautor[$iter][$iter2]=$row2[4];
+					$partadjuntofecha[$iter][$iter2]=$row2[5];
+					$iter2=$iter2+1;
+				}
+				$iter=$iter+1;
 			}
-			if ( isset($totalpartadjuntos) ) {
-				foreach ( $totalpartadjuntos[$item] as $item2 ) {
-					$rutaupload=$uploaddir ."p". $ultimoidpart;
-					if (!is_writeable($rutaupload)) {
-						mkdir($rutaupload);
-					}
-					$rutaorigen=$uploaddir ."p". $partadjuntoid[$item][$item2] ."/". $partadjunto[$item][$item2];
-					$rutadestino=$uploaddir ."p". $ultimoidpart ."/". $partadjunto[$item][$item2];
-					if ( copy($rutaorigen,$rutadestino) ) {
-						$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?, ?,1);");
-						$res->execute([$ultimoidpart, $partadjunto[$item][$item2], $partadjuntolongitud[$item][$item2], $partadjuntoautor[$item][$item2], $partadjuntofecha[$item][$item2]]);
+			$res = $db->prepare("INSERT INTO requisiciones VALUES (0,NOW(), ?,1,0,0,NULL, NULL,NULL,NULL,NOW(),NULL,NULL,NULL,NULL, ?, ?, ?, ?, ?, ?, ?);");
+			$res->execute([$requisicion, $empresa, $departamento, $area, $centrocostos, $importancia, $solicitante, usuarioId()]);
+			$ultimoidreq = $db->lastInsertId();
+			foreach( $totalpartidas as $item) {
+				$res = $db->prepare("INSERT INTO partidas VALUES (0,NOW(), ?, ?, ?,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, ?, ?, ?, ?, ?);");
+				$res->execute([$cantidad[$item], $unidad[$item], $descripcion[$item], $centrocostospart[$item], $ultimoidreq, $importanciapart[$item], $solicitantepart[$item], usuarioId()]);
+				$ultimoidpart = $db->lastInsertId();
+				if ( isset($totalpartcometarios) ) {
+					foreach ( $totalpartcometarios[$item] as $item2 ) {
+						$comentario=$partcomentario[$item][$item2];
+						$comentarioautor=$partcomentarioautor[$item][$item2];
+						$comentariofecha=$partcomentariofecha[$item][$item2];
+						$res = $db->prepare("INSERT INTO comentariospartidas VALUES (0, ?,0, ?, ?, ?,1);");
+						$res->execute([$ultimoidpart, $comentario, $comentarioautor, $comentariofecha]);
 					}
 				}
+				if ( isset($totalpartadjuntos) ) {
+					foreach ( $totalpartadjuntos[$item] as $item2 ) {
+						$rutaupload=$uploaddir ."p". $ultimoidpart;
+						if (!is_writeable($rutaupload)) {
+							mkdir($rutaupload);
+						}
+						$rutaorigen=$uploaddir ."p". $partadjuntoid[$item][$item2] ."/". $partadjunto[$item][$item2];
+						$rutadestino=$uploaddir ."p". $ultimoidpart ."/". $partadjunto[$item][$item2];
+						if ( copy($rutaorigen,$rutadestino) ) {
+							$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?, ?,1);");
+							$res->execute([$ultimoidpart, $partadjunto[$item][$item2], $partadjuntolongitud[$item][$item2], $partadjuntoautor[$item][$item2], $partadjuntofecha[$item][$item2]]);
+						}
+					}
+				}
 			}
-		}
-		$iter=0;
-		$res= $db->prepare("SELECT * FROM comentariosrequisiciones WHERE activo=1 AND idrequisicion=". $idrequisicion);
-		$res->execute();
-		while ($row = $res->fetch()) {
-			$totalreqcomentarios[]=$iter;
-			$comentarioreq[$iter]=$row[3];
-			$comentarioreqautor[$iter]=$row[4];
-			$comentarioreqfecha[$iter]=$row[5];
-			$iter=$iter+1;
-		}
-		if ( isset($totalreqcomentarios) ) {
-			foreach( $totalreqcomentarios as $item) {
-				$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?, ?,1);");
-				$res->execute([$ultimoidreq, $comentarioreq[$item], $comentarioreqautor[$item], $comentarioreqfecha[$item]]);
+			$iter=0;
+			$res= $db->prepare("SELECT * FROM adjuntosrequisiciones WHERE activo=1 AND idrequisicion=". $idrequisicion);
+			$res->execute();
+			while ($row = $res->fetch()) {
+				$totalreqadjuntos[]=$iter;
+				$nombrearchivo[$iter]=$row[2];
+				$longitudarchivo[$iter]=$row[3];
+				$autor[$iter]=$row[4];
+				$fecha[$iter]=$row[5];
+				$iter=$iter+1;
 			}
-		}
-		$iter=0;
-		$res= $db->prepare("SELECT * FROM adjuntosrequisiciones WHERE activo=1 AND idrequisicion=". $idrequisicion);
-		$res->execute();
-		while ($row = $res->fetch()) {
-			$totalreqadjuntos[]=$iter;
-			$nombrearchivo[$iter]=$row[2];
-			$longitudarchivo[$iter]=$row[3];
-			$autor[$iter]=$row[4];
-			$fecha[$iter]=$row[5];
-			$iter=$iter+1;
-		}
-		foreach( $totalreqadjuntos as $item) {
-			$rutaupload=$uploaddir ."r". $ultimoidreq;
-			if (!is_writeable($rutaupload)) {
-				mkdir($rutaupload);
+			foreach( $totalreqadjuntos as $item) {
+				$rutaupload=$uploaddir ."r". $ultimoidreq;
+				if (!is_writeable($rutaupload)) {
+					mkdir($rutaupload);
+				}
+				$rutaorigen=$uploaddir ."r". $idrequisicion ."/". $nombrearchivo[$item];
+				$rutadestino=$uploaddir ."r". $ultimoidreq ."/". $nombrearchivo[$item];
+				if ( copy($rutaorigen,$rutadestino) ) {
+					$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?, ?,1);");
+					$res->execute([$ultimoidreq, $nombrearchivo[$item], $longitudarchivo[$item], $autor[$item], $fecha[$item]]);
+				}
 			}
-			$rutaorigen=$uploaddir ."r". $idrequisicion ."/". $nombrearchivo[$item];
-			$rutadestino=$uploaddir ."r". $ultimoidreq ."/". $nombrearchivo[$item];
-			if ( copy($rutaorigen,$rutadestino) ) {
-				$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?, ?,1);");
-				$res->execute([$ultimoidreq, $nombrearchivo[$item], $longitudarchivo[$item], $autor[$item], $fecha[$item]]);
-			}
+			$comentario = 'Copia de la requisicion Id='. $idrequisicion ;
+			$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(), 0);");
+			$res->execute([$ultimoidreq, $comentario, usuarioId()]);
+			return json_encode(array('succes' => 1, 'id' => $ultimoidreq));
+		} else {
+			$errores[] = 'mostrarrequisicion'. $idrequisicion;
+			return json_encode(array('succes' => 0, 'errors' => $errores));
 		}
-		$comentario = 'Copia de la requisicion Id='. $idrequisicion ;
-		$res = $db->prepare("INSERT INTO comentariosrequisiciones VALUES (0, ?,0, ?, ?,NOW(), 0);");
-		$res->execute([$ultimoidreq, $comentario, usuarioId()]);
-		return json_encode(array('succes' => 1, 'id' => $ultimoidreq));
 	}
 
 	function ExportarRequisicion($pdf, $idrequisicion) {
@@ -1369,7 +1365,9 @@
 	function AccionesRequisicion($idrequisicion) {
 		$resultado="";
 		if ( usuarioEsLogeado() ) {
-			$resultado .= '<button onClick="appCopiaRequisicion('. $idrequisicion .');">Clonar</button>';
+			if ( RequisicionEsActiva($idrequisicion) ) {
+				$resultado .= '<button onClick="appCopiaRequisicion('. $idrequisicion .');">Clonar</button>';
+			}
 			if ( soySeguidorRequisicion($idrequisicion) ) {
 				$resultado .= '<button onClick="appAbandonarRequisicion('. $idrequisicion .');">Abandonar</button>';
 			}

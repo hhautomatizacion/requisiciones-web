@@ -369,8 +369,6 @@
 						if (this.responseText == "OK") {
 							elementoOcultar("formulario");
 							elementoMostrar("contenido");
-							//appHeader();
-							//appActualizaVista();
 						}
 					}
 				};
@@ -1523,6 +1521,13 @@
 							elementoMostrar("contenido");
 							document.title = "Requisiciones - "+ requisiciones.length +" mostradas";
 							document.getElementById("mostrarrequisicion"+idrequisicion).scrollIntoView();
+						}else{
+							for (var iter=0; iter < respuesta.errors.length; iter++) {
+								var el=document.getElementById(respuesta.errors[iter]);
+								if ( el ) {
+									el.style.outline = '#f00 solid 2px';
+								}
+							}
 						}
 					}
 				};
