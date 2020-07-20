@@ -20,16 +20,20 @@
 		$longitudarchivo = $_FILES["archivo"]["size"];
 		$rutadestino = $rutaupload ."/". $nombrearchivo;
 		$nombrearchivooriginal = $nombrearchivo;
-		while(file_exists($rutadestino)) {
-			$cntarchivoduplicado = $cntarchivoduplicado + 1;
-			list($name, $ext) = explode(".", $nombrearchivooriginal);
-			$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
-			$rutadestino = $rutaupload ."/". $nombrearchivo;
-		}
-		if (move_uploaded_file($rutatemp,$rutadestino)) {
-			$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
-			$res->execute([$idpartida, $nombrearchivo, $longitudarchivo, usuarioId()]);
-			echo "OK";
+		if ( $longitudarchivo <= file_upload_max_size() ) {
+			while(file_exists($rutadestino)) {
+				$cntarchivoduplicado = $cntarchivoduplicado + 1;
+				list($name, $ext) = explode(".", $nombrearchivooriginal);
+				$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
+				$rutadestino = $rutaupload ."/". $nombrearchivo;
+			}
+			if (move_uploaded_file($rutatemp,$rutadestino)) {
+				$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
+				$res->execute([$idpartida, $nombrearchivo, $longitudarchivo, usuarioId()]);
+				echo json_encode(array('succes' => 1, 'nombrearchivo' => $nombrearchivo , 'usuario' => ObtenerDescripcionDesdeID("usuarios", usuarioId() ,"nombre")));
+			}
+		} else {
+			echo json_encode(array('succes' => 0));
 		}
 	}
 	

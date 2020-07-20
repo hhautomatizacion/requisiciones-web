@@ -917,20 +917,25 @@
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = fecha;
 				row.insertCell(3).innerHTML = "";
-				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoReq("+  idrequisicion +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntosreq"+  idrequisicion +"\","+ newRow +");'>";
+				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoReq(this, "+  idrequisicion +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntosreq"+  idrequisicion +"\","+ newRow +");'>";
 			}
 
-			function saveAdjuntoReq(idrequisicion, adjunto) {
+			function saveAdjuntoReq(el, idrequisicion, adjunto) {
 				var input = document.getElementById("adjuntosrequisicion"+ idrequisicion +"["+ adjunto +"]");
 				var file = input.files.item(0);
 				var celdas = document.getElementById('tablaadjuntosreq'+ idrequisicion).rows[adjunto].cells;
-				celdas[4].innerHTML="";
+				el.disabled = true;
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
-						if ( this.responseText == "OK" ) {
-							celdas[0].innerHTML = file.name;
-							celdas[4].innerHTML = "<button onClick=\"window.open('uploads/r"+ idrequisicion +"/"+ file.name +"');\">Abrir</button>";
+						var respuesta = JSON.parse(this.responseText);
+						console.log(respuesta);
+						if ( respuesta.succes == 1 ) {
+							celdas[0].innerHTML = respuesta.nombrearchivo;
+							celdas[3].innerHTML = respuesta.usuario;
+							celdas[4].innerHTML = "<button onClick=\"window.open('uploads/r"+ idrequisicion +"/"+ respuesta.nombrearchivo +"');\">Abrir</button>";
+						} else {
+							el.disabled = false;
 						}
 					}
 				};
@@ -951,20 +956,25 @@
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = fecha;
 				row.insertCell(3).innerHTML = "";
-				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoPart("+  idpartida +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntospart"+  idpartida +"\","+ newRow +");'>";
+				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoPart(this, "+  idpartida +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntospart"+  idpartida +"\","+ newRow +");'>";
 			}
 
-			function saveAdjuntoPart(idpartida, adjunto) {
+			function saveAdjuntoPart(el, idpartida, adjunto) {
 				var input = document.getElementById("adjuntospartida"+ idpartida +"["+ adjunto +"]");
 				var file = input.files.item(0);
 				var celdas = document.getElementById('tablaadjuntospart'+ idpartida).rows[adjunto].cells;
-				celdas[4].innerHTML="";
+				el.disabled = true; 
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
-						if ( this.responseText == "OK" ) {
-							celdas[0].innerHTML = file.name;
-							celdas[4].innerHTML = "<button onClick=\"window.open('uploads/p"+ idpartida +"/"+ file.name +"');\">Abrir</button>";
+						var respuesta = JSON.parse(this.responseText);
+						console.log(respuesta);
+						if ( respuesta.succes == 1 ) {
+							celdas[0].innerHTML = respuesta.nombrearchivo;
+							celdas[3].innerHTML = respuesta.usuario;
+							celdas[4].innerHTML = "<button onClick=\"window.open('uploads/p"+ idpartida +"/"+ respuesta.nombrearchivo +"');\">Abrir</button>";
+						} else {
+							el.disabled = false;
 						}
 					}
 				};

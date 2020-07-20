@@ -177,27 +177,31 @@
 	}
 
 	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntoreq" ) {
-		$idrequisicion=$_POST["requisicion"];
-		$cntarchivoduplicado=0;
-		$rutaupload=$uploaddir ."r". $idrequisicion;
+		$idrequisicion = filter_input(INPUT_POST, 'requisicion', FILTER_SANITIZE_NUMBER_INT);
+		$cntarchivoduplicado = 0;
+		$rutaupload = $uploaddir ."r". $idrequisicion;
 		if (!is_writeable($rutaupload)) {
 			mkdir($rutaupload);
 		}
 		$nombrearchivo = $_FILES["archivo"]["name"];
 		$rutatemp = $_FILES["archivo"]["tmp_name"];
-		$longitudarchivo=$_FILES["archivo"]["size"];
-		$rutadestino=$rutaupload ."/". $nombrearchivo;
+		$longitudarchivo = $_FILES["archivo"]["size"];
+		$rutadestino = $rutaupload ."/". $nombrearchivo;
 		$nombrearchivooriginal = $nombrearchivo;
-		while(file_exists($rutadestino)) {
-			$cntarchivoduplicado = $cntarchivoduplicado + 1;
-			list($name, $ext) = explode(".", $nombrearchivooriginal);
-			$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
-			$rutadestino=$rutaupload ."/". $nombrearchivo;
-		}
-		if (move_uploaded_file($rutatemp,$rutadestino)) {
-			$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
-			$res->execute([$idrequisicion, $nombrearchivo, $longitudarchivo, usuarioId()]);
-			echo "OK";
+		if ( $longitudarchivo <= file_upload_max_size() ) {
+			while(file_exists($rutadestino)) {
+				$cntarchivoduplicado = $cntarchivoduplicado + 1;
+				list($name, $ext) = explode(".", $nombrearchivooriginal);
+				$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
+				$rutadestino = $rutaupload ."/". $nombrearchivo;
+			}
+			if (move_uploaded_file($rutatemp,$rutadestino)) {
+				$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
+				$res->execute([$idrequisicion, $nombrearchivo, $longitudarchivo, usuarioId()]);
+				echo json_encode(array('succes' => 1, 'nombrearchivo' => $nombrearchivo , 'usuario' => ObtenerDescripcionDesdeID("usuarios", usuarioId() ,"nombre")));
+			}
+		} else {
+			echo json_encode(array('succes' => 0));
 		}
 	}
 
