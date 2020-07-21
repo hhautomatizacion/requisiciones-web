@@ -5,12 +5,14 @@
 
 	dbConectar();
 
-	if ( isset($_GET["action"]) && $_GET["action"] == "getoptions" ) {
-		$tabla=$_GET["table"];
-		$descripcion=$_GET["description"];
-		$resultado="";
-		if ( isset($_GET["sel"]) ) {
-			$seleccionado = $_GET["sel"];
+	$accion = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS);
+	if ( $accion == "getoptions" ) {
+		$tabla = filter_input(INPUT_GET, 'table', FILTER_SANITIZE_SPECIAL_CHARS);
+		$descripcion = filter_input(INPUT_GET, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+		$options = array('options' => array('default' => 0));
+		$seleccionado = filter_input(INPUT_GET, 'sel', FILTER_SANITIZE_SPECIAL_CHARS, $options);
+		$resultado = "";
+		if ( $seleccionado > 0 ) {
 			$resultado= ObtenerOpcionesSelect($tabla, $descripcion, $seleccionado);
 		} else {
 			$resultado= ObtenerOpcionesSelect($tabla, $descripcion);
@@ -18,15 +20,17 @@
 		echo $resultado;
 	}
 
-	if ( isset($_GET["action"]) && $_GET["action"] == "getgroupoptions" ) {
-		$tabla = $_GET["table"];
-		$descripcion = $_GET["description"];
-		$grouptable = $_GET["grouptable"];
-		$groupfield = $_GET["groupfield"];
-		if ( isset($_GET["sel"]) ) {
-			$seleccionado = $_GET["sel"];
+	if ( $accion == "getgroupoptions" ) {
+		$tabla = filter_input(INPUT_GET, 'table', FILTER_SANITIZE_SPECIAL_CHARS);
+		$descripcion = filter_input(INPUT_GET, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
+		$grouptable = filter_input(INPUT_GET, 'grouptable', FILTER_SANITIZE_SPECIAL_CHARS);
+		$groupfield = filter_input(INPUT_GET, 'groupfield', FILTER_SANITIZE_SPECIAL_CHARS);
+		$options = array('options' => array('default' => 0));
+		$seleccionado = filter_input(INPUT_GET, 'sel', FILTER_SANITIZE_SPECIAL_CHARS, $options);
+		$resultado = "";
+		if ( $seleccionado > 0 ) {
 			$resultado = ObtenerOpcionesSelectGroup($tabla, $descripcion, $grouptable, $groupfield, $seleccionado);
-		}else{
+		} else {
 			$resultado = ObtenerOpcionesSelectGroup($tabla, $descripcion, $grouptable, $groupfield);
 		}
 		echo $resultado;
@@ -90,7 +94,7 @@
 				$res->execute();
 				$res = $db->prepare("INSERT INTO usuarios VALUES (0,NULL,'root','root','',SHA1('manttocl'),'',NULL,'',0,1,1);");
 				$res->execute();
-				while (!$encontrado) {
+				while ( !$encontrado ) {
 					$res = $db->prepare("SELECT usuario FROM usuarios WHERE id=1;");
 					$res->execute();
 					while ($row = $res->fetch()) {
@@ -106,7 +110,7 @@
 	
 	function ObtenerDescripcionDesdeID($tabla, $id, $campo) {
 		global $db;
-		$temp="";
+		$temp = "";
 		$res = $db->prepare("SELECT ". $campo ." FROM ". $tabla ." WHERE id=". $id .";");
 		$res->execute();
 		while ($row = $res->fetch()) {
@@ -117,7 +121,7 @@
 	
 	function ObtenerUsuariosSelect() {
 		global $db;
-		$resultado="";
+		$resultado = "";
 		$res = $db->prepare("SELECT id, nombre FROM usuarios WHERE activo=1 ORDER BY nombre");
 		$res->execute();
 		while ($row = $res->fetch()) {

@@ -268,11 +268,13 @@
 			}
 
 			function appEnviarNewReq() {
+				var estado = document.getElementById("estado");
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						var respuesta = JSON.parse(this.responseText);
 						if ( respuesta.succes == 1 ) {
+							estado.value = 0;
 							t = setInterval(tik, 10);
 							requisiciones[requisiciones.length] = respuesta.id;
 							elementoOcultar("formulario");
@@ -296,6 +298,10 @@
 						}
 					}
 				};
+				xmlhttp.upload.addEventListener('progress', function(e) {
+					estado.value = e.loaded;
+					estado.max = e.total;
+				}, false);
 				elementoDeshabilitar("botonenviarnewreq");
 				xmlhttp.open("POST", "librequisicion.php", true);
 				xmlhttp.send(new FormData(document.getElementById("newreqform")));
@@ -873,7 +879,6 @@
 			}
 			
 			function appSavePartidaReq(idrequisicion, token) {
-				console.log("here");
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
@@ -917,34 +922,36 @@
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = fecha;
 				row.insertCell(3).innerHTML = "";
-				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoReq(this, "+  idrequisicion +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntosreq"+  idrequisicion +"\","+ newRow +");'>";
+				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoReq("+  idrequisicion +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntosreq"+  idrequisicion +"\","+ newRow +");'>";
 			}
 
-			function saveAdjuntoReq(el, idrequisicion, adjunto) {
+			function saveAdjuntoReq(idrequisicion, adjunto) {
 				var input = document.getElementById("adjuntosrequisicion"+ idrequisicion +"["+ adjunto +"]");
 				var file = input.files.item(0);
 				var celdas = document.getElementById('tablaadjuntosreq'+ idrequisicion).rows[adjunto].cells;
-				el.disabled = true;
-				xmlhttp = new XMLHttpRequest();
-				xmlhttp.onreadystatechange = function() {
-					if (this.readyState == 4 && this.status == 200) {
-						var respuesta = JSON.parse(this.responseText);
-						console.log(respuesta);
-						if ( respuesta.succes == 1 ) {
-							celdas[0].innerHTML = respuesta.nombrearchivo;
-							celdas[3].innerHTML = respuesta.usuario;
-							celdas[4].innerHTML = "<button onClick=\"window.open('uploads/r"+ idrequisicion +"/"+ respuesta.nombrearchivo +"');\">Abrir</button>";
-						} else {
-							el.disabled = false;
+				if ( file.size < file_upload_max_size ) {
+					xmlhttp = new XMLHttpRequest();
+					xmlhttp.onreadystatechange = function() {
+						if (this.readyState == 4 && this.status == 200) {
+							var respuesta = JSON.parse(this.responseText);
+							console.log(respuesta);
+							if ( respuesta.succes == 1 ) {
+								celdas[0].innerHTML = respuesta.nombrearchivo;
+								celdas[3].innerHTML = respuesta.usuario;
+								celdas[4].innerHTML = "<button onClick=\"window.open('uploads/r"+ idrequisicion +"/"+ respuesta.nombrearchivo +"');\">Abrir</button>";
+							}
 						}
-					}
+					};
+					xmlhttp.upload.addEventListener('progress', function(e) {
+						celdas[4].innerHTML = "<progress value='"+ e.loaded +"' max='"+ e.total +"'></progress>"
+					}, false);
+					var formdata = new FormData();
+					formdata.append("accion", "agregaradjuntoreq");
+					formdata.append("requisicion", idrequisicion);
+					formdata.append("archivo", file);
+					xmlhttp.open("POST","librequisicion.php");
+					xmlhttp.send(formdata);
 				};
-				var formdata = new FormData();
-				formdata.append("accion", "agregaradjuntoreq");
-				formdata.append("requisicion", idrequisicion);
-				formdata.append("archivo", file);
-				xmlhttp.open("POST","librequisicion.php");
-				xmlhttp.send(formdata);
 			}
 
 			function addAdjuntoPart(idpartida) {
@@ -956,34 +963,36 @@
 				row.insertCell(1).innerHTML = "";
 				row.insertCell(2).innerHTML = fecha;
 				row.insertCell(3).innerHTML = "";
-				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoPart(this, "+  idpartida +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntospart"+  idpartida +"\","+ newRow +");'>";
+				row.insertCell(4).innerHTML = "<input type = 'button' value='Guardar' onclick='saveAdjuntoPart("+  idpartida +","+ newRow +");'><input type = 'button' value='Quitar' onclick='removeRow(\"tablaadjuntospart"+  idpartida +"\","+ newRow +");'>";
 			}
 
-			function saveAdjuntoPart(el, idpartida, adjunto) {
+			function saveAdjuntoPart(idpartida, adjunto) {
 				var input = document.getElementById("adjuntospartida"+ idpartida +"["+ adjunto +"]");
 				var file = input.files.item(0);
 				var celdas = document.getElementById('tablaadjuntospart'+ idpartida).rows[adjunto].cells;
-				el.disabled = true; 
-				xmlhttp = new XMLHttpRequest();
-				xmlhttp.onreadystatechange = function() {
-					if (this.readyState == 4 && this.status == 200) {
-						var respuesta = JSON.parse(this.responseText);
-						console.log(respuesta);
-						if ( respuesta.succes == 1 ) {
-							celdas[0].innerHTML = respuesta.nombrearchivo;
-							celdas[3].innerHTML = respuesta.usuario;
-							celdas[4].innerHTML = "<button onClick=\"window.open('uploads/p"+ idpartida +"/"+ respuesta.nombrearchivo +"');\">Abrir</button>";
-						} else {
-							el.disabled = false;
+				if ( file.size < file_upload_max_size ) {
+					xmlhttp = new XMLHttpRequest();
+					xmlhttp.onreadystatechange = function() {
+						if (this.readyState == 4 && this.status == 200) {
+							var respuesta = JSON.parse(this.responseText);
+							console.log(respuesta);
+							if ( respuesta.succes == 1 ) {
+								celdas[0].innerHTML = respuesta.nombrearchivo;
+								celdas[3].innerHTML = respuesta.usuario;
+								celdas[4].innerHTML = "<button onClick=\"window.open('uploads/p"+ idpartida +"/"+ respuesta.nombrearchivo +"');\">Abrir</button>";
+							}
 						}
-					}
+					};
+					xmlhttp.upload.addEventListener('progress', function(e) {
+						celdas[4].innerHTML = "<progress value='"+ e.loaded +"' max='"+ e.total +"'></progress>"
+					}, false);
+					var formdata = new FormData();
+					formdata.append("accion", "agregaradjuntopart");
+					formdata.append("partida", idpartida);
+					formdata.append("archivo", file);
+					xmlhttp.open("POST","libpartida.php");
+					xmlhttp.send(formdata);
 				};
-				var formdata = new FormData();
-				formdata.append("accion", "agregaradjuntopart");
-				formdata.append("partida", idpartida);
-				formdata.append("archivo", file);
-				xmlhttp.open("POST","libpartida.php");
-				xmlhttp.send(formdata);
 			}
 
 			function addComentarioReq(tableID) {

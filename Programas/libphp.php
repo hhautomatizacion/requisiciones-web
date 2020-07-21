@@ -1,5 +1,6 @@
 <?php
-	if ( isset($_GET["action"]) && $_GET["action"] == "getserverinfo" ) {
+	$accion = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS);
+	if ( $accion == "getserverinfo" ) {
 		echo file_upload_max_size();
 	}
 

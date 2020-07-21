@@ -218,10 +218,10 @@
 			if ( RequisicionEsActiva($idrequisicion) && PartidaEsActiva($idpartida) && !PartidaEsSurtida($idpartida) ) {
 				$resultado .= "<button onClick=\"appBorraPartida(". $idpartida .",". $idrequisicion .");\">Eliminar</button>";
 			}
-			if ( ( !RequisicionEsImpresa($idrequisicion) || usuarioEsSuper() ) && PartidaEsActiva($idpartida) ) {
+			if ( (!RequisicionEsImpresa($idrequisicion) || usuarioEsSuper()) && PartidaEsActiva($idpartida) ) {
 				$resultado .= "<button onClick=\"appEditPart(this,". $idpartida .",". $idrequisicion .");\">Editar</button>";
 			}
-			if ( ( !RequisicionEsImpresa($idrequisicion) || usuarioEsSuper() ) && !PartidaEsActiva($idpartida) && RequisicionEsActiva($idrequisicion) ) {
+			if ( (!RequisicionEsImpresa($idrequisicion) || usuarioEsSuper()) && !PartidaEsActiva($idpartida) && RequisicionEsActiva($idrequisicion) ) {
 				$resultado .= "<button onClick=\"appRestauraPartida(". $idpartida .",". $idrequisicion .");\">Restaurar</button>";
 			}
 		}
