@@ -191,12 +191,12 @@
 
 	function soySeguidorPartida($idpartida) {
 		global $db;
-		$resultado=false;
+		$resultado = false;
 		if ( usuarioEsLogeado() ) {
 			$res = $db->prepare("SELECT id FROM seguidorespartidas WHERE idpartida=? AND idusuario=? AND activo=1;");
 			$res->execute([$idpartida, usuarioId()]);
-			while ($row = $res->fetch()) {
-				$resultado=true;
+			if ( $res->rowCount() ) {
+				$resultado = true;
 			}
 		}
 		return $resultado;

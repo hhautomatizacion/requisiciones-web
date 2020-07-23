@@ -75,7 +75,6 @@
 		$email = filter_input(INPUT_REQUEST, 'email', FILTER_SANITIZE_EMAIL);
 		$password1 = filter_input(INPUT_REQUEST, 'password1', FILTER_DEFAULT);
 		$password2 = filter_input(INPUT_REQUEST, 'password2', FILTER_DEFAULT);
-		
 		if ( $numero <= 0 ){
 			$errores[] = "numero";
 		} else {
@@ -91,12 +90,12 @@
 				$validos[] = "numero";
 			}
 		}
-		if ( strlen($nombre) == 0) {
+		if ( strlen($nombre) == 0 ) {
 			$errores[] = "nombre";
 		} else {
 			$validos[] = "nombre";
 		}
-		if ( strlen($email) == 0) {
+		if ( strlen($email) == 0 ) {
 			$errores[] = "email";
 		} else {
 			$validos[] = "email";
@@ -126,7 +125,7 @@
 		$encontrado = false;
 		$res = $db->prepare("SELECT * FROM usuarios WHERE LCASE(nombre)=LCASE('". $email ."') OR LCASE(usuario)=LCASE('". $email ."') OR LCASE(email)=LCASE('". $email ."');");
 		$res->execute();
-		while ($row = $res->fetch()) {
+		if ( $res->rowCount() ) {
 			$encontrado = true;
 		}
 		if ( $encontrado ) {
@@ -495,11 +494,16 @@
 	}
 
 	function usuarioNombre() {
-		return ObtenerDescripcionDesdeID("usuarios", usuarioId() ,"nombre");
+		$resultado = ObtenerDescripcionDesdeID("usuarios", usuarioId() ,"nombre");
+		return $resultado;
 	}
 
 	function usuarioEsLogeado() {
-		return ( usuarioId() != 0 );
+		$resultado = false;
+		if ( usuarioId() != 0 ) {
+			$resultado = true;
+		}
+		return $resultado;
 	}
 
 	function usuarioEsSuper() {
@@ -535,7 +539,7 @@
 		$token = crearToken();
 		$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND activo=1");
 		$res->execute([$idusuario]);
-		while ($row = $res->fetch()) {
+		while ( $row = $res->fetch() ) {
 			setcookie("usuario",$token);
 			$resultado = $row[0];
 			$res = $db->prepare("UPDATE usuarios SET token= ?, ultimologin=NOW(), recovery=0, recoverypw='' WHERE id=?" );
@@ -550,7 +554,7 @@
 		$resultado = 0;
 		$res = $db->prepare("SELECT id FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
 		$res->execute([usuarioId(), $seccion, $clave]);
-		while ($row = $res->fetch()) {
+		while ( $row = $res->fetch() ) {
 			$resultado = $row[0];
 		}
 		if ( $resultado > 0 ) {
@@ -570,11 +574,11 @@
 		$encontrado = false;
 		$res = $db->prepare("SELECT valor FROM opcionesusuarios WHERE idusuario= ? AND seccion= ? AND clave= ?;");
 		$res->execute([usuarioId(), $seccion, $clave]);
-		while ($row = $res->fetch()) {
+		while ( $row = $res->fetch() ) {
 			$encontrado = true;
 			$resultado = $row[0];
 		}
-		if (!$encontrado) {
+		if ( !$encontrado ) {
 			guardarPreferencia($seccion, $clave, $resultado);
 		}
 		return $resultado;
