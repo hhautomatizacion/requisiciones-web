@@ -18,12 +18,14 @@
 		$nombrearchivo = $_FILES["archivo"]["name"];
 		$rutatemp = $_FILES["archivo"]["tmp_name"];
 		$longitudarchivo = $_FILES["archivo"]["size"];
+		$nombrearchivo = remove_special_chars($nombrearchivo);
 		$rutadestino = $rutaupload ."/". $nombrearchivo;
 		$nombrearchivooriginal = $nombrearchivo;
 		if ( $longitudarchivo <= file_upload_max_size() ) {
 			while(file_exists($rutadestino)) {
 				$cntarchivoduplicado = $cntarchivoduplicado + 1;
-				list($name, $ext) = explode(".", $nombrearchivooriginal);
+				$name = filename_get_basename($nombrearchivooriginal);
+				$ext = filename_get_extension($nombrearchivooriginal);
 				$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
 				$rutadestino = $rutaupload ."/". $nombrearchivo;
 			}

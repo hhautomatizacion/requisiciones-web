@@ -121,17 +121,29 @@
 					}
 					if ( isset($_REQUEST["totalpartadjuntos"]) ) {
 						foreach ( $_REQUEST["totalpartadjuntos"]["tablaadjuntos". $item ] as $elemento ) {
+							$cntarchivoduplicado = 0;
 							$rutaupload=$uploaddir ."p". $ultimoidpart;
 							if (!is_writeable($rutaupload)) {
 								mkdir($rutaupload);
 							}
-							$nombrearchivo=$_FILES["partadjuntostablaadjuntos". $item]["name"][$elemento];
-							$rutatemp=$_FILES["partadjuntostablaadjuntos". $item]["tmp_name"][$elemento];
-							$longitudarchivo=$_FILES["partadjuntostablaadjuntos". $item]["size"][$elemento];
-							$rutadestino=$rutaupload ."/". $nombrearchivo;
-							if (move_uploaded_file($rutatemp,$rutadestino)) {
-								$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
-								$res->execute([$ultimoidpart, $nombrearchivo, $longitudarchivo, usuarioId()]);
+							$nombrearchivo = $_FILES["partadjuntostablaadjuntos". $item]["name"][$elemento];
+							$rutatemp = $_FILES["partadjuntostablaadjuntos". $item]["tmp_name"][$elemento];
+							$longitudarchivo = $_FILES["partadjuntostablaadjuntos". $item]["size"][$elemento];
+							$nombrearchivo = remove_special_chars($nombrearchivo);
+							$rutadestino = $rutaupload ."/". $nombrearchivo;
+							$nombrearchivooriginal = $nombrearchivo;
+							if ( $longitudarchivo <= file_upload_max_size() ) {
+								while(file_exists($rutadestino)) {
+									$cntarchivoduplicado = $cntarchivoduplicado + 1;
+									$name = filename_get_basename($nombrearchivooriginal);
+									$ext = filename_get_extension($nombrearchivooriginal);
+									$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
+									$rutadestino = $rutaupload ."/". $nombrearchivo;
+								}
+								if (move_uploaded_file($rutatemp,$rutadestino)) {
+									$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
+									$res->execute([$ultimoidpart, $nombrearchivo, $longitudarchivo, usuarioId()]);
+								}
 							}
 						}
 					}
@@ -148,6 +160,7 @@
 			}
 			if ( isset($_REQUEST["totalreqadjuntos"]) ) {
 				foreach( $_REQUEST["totalreqadjuntos"] as $item) {
+					$cntarchivoduplicado = 0;
 					$rutaupload=$uploaddir ."r". $ultimoidreq;
 					if (!is_writeable($rutaupload)) {
 						mkdir($rutaupload);
@@ -155,10 +168,21 @@
 					$nombrearchivo = $_FILES["reqadjuntos"]["name"][$item];
 					$rutatemp = $_FILES["reqadjuntos"]["tmp_name"][$item];
 					$longitudarchivo = $_FILES["reqadjuntos"]["size"][$item];
+					$nombrearchivo = remove_special_chars($nombrearchivo);
 					$rutadestino = $rutaupload ."/". $nombrearchivo;
-					if (move_uploaded_file($rutatemp,$rutadestino)) {
-						$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
-						$res->execute([$ultimoidreq, $nombrearchivo, $longitudarchivo, usuarioId()]);
+					$nombrearchivooriginal = $nombrearchivo;
+					if ( $longitudarchivo <= file_upload_max_size() ) {
+						while(file_exists($rutadestino)) {
+							$cntarchivoduplicado = $cntarchivoduplicado + 1;
+							$name = filename_get_basename($nombrearchivooriginal);
+							$ext = filename_get_extension($nombrearchivooriginal);
+							$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
+							$rutadestino = $rutaupload ."/". $nombrearchivo;
+						}
+						if (move_uploaded_file($rutatemp,$rutadestino)) {
+							$res = $db->prepare("INSERT INTO adjuntosrequisiciones VALUES (0, ?, ?, ?, ?,NOW(),1);");
+							$res->execute([$ultimoidreq, $nombrearchivo, $longitudarchivo, usuarioId()]);
+						}
 					}
 				}
 			}
@@ -186,12 +210,14 @@
 		$nombrearchivo = $_FILES["archivo"]["name"];
 		$rutatemp = $_FILES["archivo"]["tmp_name"];
 		$longitudarchivo = $_FILES["archivo"]["size"];
+		$nombrearchivo = remove_special_chars($nombrearchivo);
 		$rutadestino = $rutaupload ."/". $nombrearchivo;
 		$nombrearchivooriginal = $nombrearchivo;
 		if ( $longitudarchivo <= file_upload_max_size() ) {
 			while(file_exists($rutadestino)) {
 				$cntarchivoduplicado = $cntarchivoduplicado + 1;
-				list($name, $ext) = explode(".", $nombrearchivooriginal);
+				$name = filename_get_basename($nombrearchivooriginal);
+				$ext = filename_get_extension($nombrearchivooriginal);
 				$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
 				$rutadestino = $rutaupload ."/". $nombrearchivo;
 			}

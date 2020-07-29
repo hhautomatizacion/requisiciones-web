@@ -15,10 +15,10 @@
 	}
 
 	function resaltarBusqueda($dato, $q) {
-		if (strlen($dato) ==0 ) {
+		if (strlen($dato) == 0 ) {
 			return "";
 		}
-		if (strlen($q) ==0 ) {
+		if (strlen($q) == 0 ) {
 			return $dato;
 		}
 		if ( !is_int(strpos(strtolower($dato), strtolower($q))) ) {
@@ -59,6 +59,31 @@
 		} else {
 			return round($size);
 		}
+	}
+
+	function remove_special_chars($str) {
+		$resultado = preg_replace('/[^A-Za-z0-9. _-]/', '', $str);
+		return $resultado;
+	}
+
+	function filename_get_basename($filename) {
+		$resultado = "";
+		if ( strpos($filename, "." ) ) {
+			$resultado = substr($filename, 0, strrpos($filename, "."));
+		} else {
+			$resultado = $filename;
+		}
+		return $resultado;
+	}
+
+	function filename_get_extension($filename) {
+		$resultado = "";
+		if ( strpos($filename, "." ) ) {
+			$resultado = substr($filename, strrpos($filename, ".") + 1);
+		} else {
+			$resultado = "";
+		}
+		return $resultado;
 	}
 
 	function writelog( $data ) {
