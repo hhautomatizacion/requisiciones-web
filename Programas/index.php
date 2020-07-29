@@ -152,13 +152,10 @@
 				visibility: hidden;
 			}
 			#mostrarrequisiciones {
-				width: 15%;
+				width: 10%;
 			}
 			#usuariosrequisiciones {
-				width: 15%;
-			}
-			#ordenrequisiciones {
-				width: 15%;
+				width: 10%;
 			}
 			#busquedarequisiciones {
 				width: 15%;
@@ -166,8 +163,11 @@
 				vertical-align: -moz-middle-with-baseline;
 				vertical-align: middle;
 			}
+			#ordenrequisiciones {
+				width: 10%;
+			}
 			#estado {
-				width: 15%;
+				width: 20%;
 				float: right;
 				height: 26px;
 				vertical-align: -moz-middle-with-baseline;
@@ -731,6 +731,62 @@
 				elementoMostrar("formulario");
 			}
 
+			function deleteAdjuntoReq(el, idadjunto){
+				var cell = el.parentElement;
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							cell.innerHTML = "";
+						}
+					}
+				};
+				xmlhttp.open("GET","libadjunto.php?action=adjdelete&type=adjreq&idadj="+ idadjunto,true);
+				xmlhttp.send();
+			}
+
+			function deleteAdjuntoPart(el, idadjunto){
+				var cell = el.parentElement;
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							cell.innerHTML = "";
+						}
+					}
+				};
+				xmlhttp.open("GET","libadjunto.php?action=adjdelete&type=adjpart&idadj="+ idadjunto,true);
+				xmlhttp.send();
+			}
+
+			function undeleteAdjuntoReq(el, idadjunto){
+				var cell = el.parentElement;
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							cell.innerHTML = "";
+						}
+					}
+				};
+				xmlhttp.open("GET","libadjunto.php?action=adjundelete&type=adjreq&idadj="+ idadjunto,true);
+				xmlhttp.send();
+			}
+
+			function undeleteAdjuntoPart(el, idadjunto){
+				var cell = el.parentElement;
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+							cell.innerHTML = "";
+						}
+					}
+				};
+				xmlhttp.open("GET","libadjunto.php?action=adjundelete&type=adjpart&idadj="+ idadjunto,true);
+				xmlhttp.send();
+			}
+			
 			function deleteComentarioReq(el, idcomentario){
 				var cell = el.parentElement;
 				xmlhttp = new XMLHttpRequest();
@@ -1438,22 +1494,22 @@
 					if (this.readyState == 4 && this.status == 200) {
 						var fecha = new Date().toISOString().replace("T"," ").slice(0,19);
 						a = document.createElement("a");
-						a.href=window.URL.createObjectURL(this.response);
-						a.download="req "+ fecha +".pdf";
+						a.href = window.URL.createObjectURL(this.response);
+						a.download = "req "+ fecha +".pdf";
 						document.body.appendChild(a);
 						a.click();
 					}
 				};
 				if ( mostrarusuarios ) {
-					usuarios='&user='+ mostrarusuarios;
+					usuarios = '&user='+ mostrarusuarios;
 				}
 				if ( busquedarequisiciones.length > 0 ) {
-					busqueda='&q='+ busquedarequisiciones;
+					busqueda = '&q='+ busquedarequisiciones;
 				}
 				if ( mostrarorden ) {
-					orden='&s='+ mostrarorden;
+					orden = '&s='+ mostrarorden;
 				}
-				xmlhttp.responseType="blob";
+				xmlhttp.responseType = "blob";
 				xmlhttp.open("GET","librequisicion.php?action=export"+ usuarios +"&view="+ mostrarvista + busqueda + orden ,true);
 				xmlhttp.send();
 			}

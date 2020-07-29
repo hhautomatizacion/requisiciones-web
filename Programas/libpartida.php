@@ -252,17 +252,68 @@
 		}
 		return $resultado;
 	}
+	
+	function AdjuntoPartEsActivo($idadjunto) {
+		global $db;
+		$resultado = false;
+		$res = $db->prepare("SELECT activo FROM adjuntospartidas WHERE id=". $idadjunto .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			if ( $row[0] == 1 ) {
+				$resultado=true;
+			}
+		}
+		return $resultado;
+	}
+	
+	function AdjuntoPartEsMio($idadjunto) {
+		global $db;
+		$resultado = false;
+		if ( usuarioEsLogeado() ) {
+			$res = $db->prepare("SELECT id FROM adjuntospartidas WHERE id=". $idadjunto ." AND idusuario=". usuarioId() .";");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				if ( $row[0] == $idadjunto ) {
+					$resultado = true;
+				}
+			}
+		}
+		return $resultado;
+	}
+	
+	function AccionesAdjuntoPartida($idadjunto) {
+		global $db;
+		$resultado = "";
+		$res = $db->prepare("SELECT id, idpartida, nombre, longitud, idusuario, fecha, activo FROM adjuntospartidas WHERE id=". $idadjunto .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			if ( AdjuntoPartEsActivo($idadjunto) ) {
+				$rutaarchivo = "uploads/p". $row[1] ."/". $row[2];
+				$resultado .= "<button onClick=\"window.open('". $rutaarchivo ."');\">Abrir</button>";
+			}
+			if ( usuarioEsLogeado() ) {
+				if ( AdjuntoPartEsMio($idadjunto) || usuarioEsSuper() ) {
+					if ( AdjuntoPartEsActivo($idadjunto) ) {
+						$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteAdjuntoPart(this, ". $idadjunto .");\">";
+					}
+				}
+				if ( !AdjuntoPartEsActivo($idadjunto) && usuarioEsSuper() ) {
+					$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteAdjuntoPart(this, ". $idadjunto .");\">";
+				}
+			}
+		}
+		return $resultado;
+	}
 
 	function MostrarAdjuntosPartida($idpartida,$q) {
 		global $db;
 		$resultado = "";
-		$res = $db->prepare("SELECT * FROM adjuntospartidas WHERE idpartida=". $idpartida .";");
+		$res = $db->prepare("SELECT id, idpartida, nombre, longitud, idusuario, fecha, activo FROM adjuntospartidas WHERE idpartida=". $idpartida .";");
 		$res->execute();
 		$resultado .= "<table id=\"tablaadjuntospart". $idpartida ."\">";
 		$resultado .= "<tr><td width=\"50%\"><small>Archivo</small></td><td width=\"10%\"><small>Tama&ntilde;o</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\"><small>". AgregarAdjuntosPartida($idpartida) ."</small></td></tr>";
 		while ($row = $res->fetch()) {
-			$rutaarchivo = "uploads/p". $idpartida ."/". $row[2];
-			$resultado .= "<tr><td>". resaltarBusqueda($row[2], $q) ."</td><td>". formatBytes($row[3]) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td><button onClick=\"window.open('". $rutaarchivo ."');\">Abrir</button></td></tr>";
+			$resultado .= "<tr><td>". resaltarBusqueda($row[2], $q) ."</td><td>". formatBytes($row[3]) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>". AccionesAdjuntoPartida($row[0]) ."</td></tr>";
 		}
 		$resultado .= "</table>";
 		return $resultado;
@@ -307,7 +358,7 @@
 	}
 
 	function AccionesComentarioPartida($idcomentario) {
-		$resultado="";
+		$resultado = "";
 		if ( usuarioEsLogeado() ) {
 			if ( ComentarioPartEsMio($idcomentario) || usuarioEsSuper() ) {
 				if ( comentarioPartEsActivo($idcomentario) ) {

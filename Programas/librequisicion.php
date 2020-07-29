@@ -1153,6 +1153,58 @@
 		return $resultado;
 	}
 
+function AdjuntoReqEsActivo($idadjunto) {
+		global $db;
+		$resultado = false;
+		$res = $db->prepare("SELECT activo FROM adjuntosrequisiciones WHERE id=". $idadjunto .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			if ( $row[0] == 1 ) {
+				$resultado=true;
+			}
+		}
+		return $resultado;
+	}
+	
+	function AdjuntoReqEsMio($idadjunto) {
+		global $db;
+		$resultado = false;
+		if ( usuarioEsLogeado() ) {
+			$res = $db->prepare("SELECT id FROM adjuntosrequisiciones WHERE id=". $idadjunto ." AND idusuario=". usuarioId() .";");
+			$res->execute();
+			while ($row = $res->fetch()) {
+				if ( $row[0] == $idadjunto ) {
+					$resultado = true;
+				}
+			}
+		}
+		return $resultado;
+	}
+	
+	function AccionesAdjuntoRequisicion($idadjunto) {
+		global $db;
+		$resultado = "";
+		$res = $db->prepare("SELECT id, idrequisicion, nombre, longitud, idusuario, fecha, activo FROM adjuntosrequisiciones WHERE id=". $idadjunto .";");
+		$res->execute();
+		while ($row = $res->fetch()) {
+			if ( AdjuntoReqEsActivo($idadjunto) ) {
+				$rutaarchivo = "uploads/r". $row[1] ."/". $row[2];
+				$resultado .= "<button onClick=\"window.open('". $rutaarchivo ."');\">Abrir</button>";
+			}
+			if ( usuarioEsLogeado() ) {
+				if ( AdjuntoReqEsMio($idadjunto) || usuarioEsSuper() ) {
+					if ( AdjuntoReqEsActivo($idadjunto) ) {
+						$resultado .= "<input type=\"button\" value=\"Eliminar\" onclick=\"deleteAdjuntoReq(this, ". $idadjunto .");\">";
+					}
+				}
+				if ( !AdjuntoReqEsActivo($idadjunto) && usuarioEsSuper() ) {
+					$resultado .= "<input type=\"button\" value=\"Restaurar\" onclick=\"undeleteAdjuntoReq(this, ". $idadjunto .");\">";
+				}
+			}
+		}
+		return $resultado;
+	}
+
 	function MostrarAdjuntosRequisicion($idrequisicion,$q) {
 		global $db;
 		$resultado="";
@@ -1161,8 +1213,7 @@
 		$resultado .= "<table id=\"tablaadjuntosreq". $idrequisicion ."\">";
 		$resultado .= "<tr><td width=\"50%\"><small>Archivo</small></td><td width=\"10%\"><small>Tama&ntilde;o</small></td><td width=\"15%\"><small>Fecha</small></td><td width=\"15%\"><small>Autor</small></td><td width=\"10%\">". AgregarAdjuntosRequisicion($idrequisicion) ."</td></tr>";
 		while ($row = $res->fetch()) {
-			$rutaarchivo = "uploads/r". $idrequisicion ."/". $row[2];
-			$resultado .= "<tr><td>". resaltarBusqueda($row[2], $q) ."</td><td>". formatBytes($row[3]) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td><button onClick=\"window.open('". $rutaarchivo ."');\">Abrir</button></td></tr>";
+			$resultado .= "<tr><td>". resaltarBusqueda($row[2], $q) ."</td><td>". formatBytes($row[3]) ."</td><td>". $row[5] ."</td><td>". ObtenerDescripcionDesdeID("usuarios",$row[4],"nombre") ."</td><td>". AccionesAdjuntoRequisicion($row[0]) ."</td></tr>";
 		}
 		$resultado .= "</table>";
 		return $resultado;
