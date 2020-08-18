@@ -84,7 +84,7 @@
 					'flags' => FILTER_REQUIRE_ARRAY),
 				'cantidad'=>array(
 					'filter' => FILTER_SANITIZE_NUMBER_FLOAT, 
-					'flags' => FILTER_REQUIRE_ARRAY | FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND),
+					'flags' => FILTER_REQUIRE_ARRAY | FILTER_FLAG_ALLOW_FRACTION),
 				'unidad'=>array(
 					'filter' => FILTER_SANITIZE_NUMBER_INT, 
 					'flags' => FILTER_REQUIRE_ARRAY),

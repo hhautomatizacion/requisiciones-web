@@ -43,7 +43,7 @@
 		$errores = array();
 		$validos = array();
 		$idpartida = filter_input(INPUT_POST, 'partida', FILTER_SANITIZE_NUMBER_INT);
-		$cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_SANITIZE_NUMBER_FLOAT);
+		$cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 		$unidad = filter_input(INPUT_POST, 'unidad', FILTER_SANITIZE_NUMBER_INT);
 		$descripcion = filter_input(INPUT_POST, 'descripcion', FILTER_SANITIZE_STRING);
 		$centrocostos = filter_input(INPUT_POST, 'centrocostos', FILTER_SANITIZE_NUMBER_INT);
@@ -70,13 +70,13 @@
 		$errores = array();
 		$validos = array();
 		$idrequisicion = filter_input(INPUT_POST, 'idrequisicion', FILTER_SANITIZE_NUMBER_INT);
-		$cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_SANITIZE_NUMBER_FLOAT);
+		$cantidad = filter_input(INPUT_POST, 'cantidad', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 		$unidad = filter_input(INPUT_POST, 'unidad', FILTER_SANITIZE_NUMBER_INT);
 		$descripcion = filter_input(INPUT_POST, 'descripcion', FILTER_SANITIZE_STRING);
 		$centrocostos = filter_input(INPUT_POST, 'centrocostos', FILTER_SANITIZE_NUMBER_INT);
 		$importancia = 5;
 		$solicitante = usuarioId();
-		if ( (float)$cantidad <= 0 ) {
+		if ( $cantidad <= 0 ) {
 			$errores[] = "cantidad". $idpartida;
 		} else {
 			$validos[] = "cantidad". $idpartida;
