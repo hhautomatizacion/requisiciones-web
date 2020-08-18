@@ -1498,6 +1498,7 @@
 						a.download = "req "+ fecha +".pdf";
 						document.body.appendChild(a);
 						a.click();
+						document.body.removeChild(a);
 					}
 				};
 				if ( mostrarusuarios ) {
@@ -1524,6 +1525,7 @@
 						a.download="id"+ idrequisicion +".pdf";
 						document.body.appendChild(a);
 						a.click();
+						document.body.removeChild(a);
 						appActualizaRequisicion(idrequisicion);
 					}
 				};
