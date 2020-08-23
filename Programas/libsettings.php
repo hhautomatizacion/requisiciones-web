@@ -57,7 +57,7 @@
 			case "empresas":
 				$descripcion = filter_input(INPUT_GET, 'description', FILTER_SANITIZE_SPECIAL_CHARS);
 				$codigo = filter_input(INPUT_GET, 'codigo', FILTER_SANITIZE_SPECIAL_CHARS);
-				$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,". $codigo .",'". $descripcion ."',1)");
+				$res = $db->prepare("INSERT INTO ". $setting ." VALUES (0,'". $codigo ."','". $descripcion ."',1)");
 				$res->execute();
 				break;
 			case "unidades":
