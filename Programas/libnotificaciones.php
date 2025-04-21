@@ -245,7 +245,6 @@
 					while ($row = $res->fetch()) {
 						if ( !in_array($row[0], $destinatarios) ) {
 							$destinatarios[] = $row[0];
-							writelog($row[0] ." es seguidor de la partida". $partida );
 						}
 					}
 				}

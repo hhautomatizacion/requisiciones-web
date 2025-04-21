@@ -96,12 +96,6 @@
 					'flags' => FILTER_REQUIRE_ARRAY),
 				'solicitante'=>FILTER_SANITIZE_NUMBER_INT);
 				$p = filter_input_array(INPUT_POST, $f);
-				writelog("Partidas");
-				writelog($p);
-				writelog(gettype($p));
-				writelog("----");
-				writelog($_REQUEST);
-				writelog(gettype($_REQUEST['totalpartidas']));
 				foreach( $_REQUEST["totalpartidas"] as $item) {
 					$cantidad = $_REQUEST["cantidad"][$item];
 					$unidad = $_REQUEST["unidad"][$item];

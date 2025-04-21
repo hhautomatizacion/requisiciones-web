@@ -13,6 +13,7 @@
 * Control de requisiciones en web app
 
 ## Herramientas utilizadas
+* Ubuntu 18.04
 * Notepad++
 * MySQSL 5.5
 * PHP 5
