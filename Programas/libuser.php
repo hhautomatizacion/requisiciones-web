@@ -66,6 +66,8 @@
 	}
 
 	if ( $action == "signin" ) {
+		writelog('REQUEST:');
+		writelog($_REQUEST);
 		$encontrado = false;
 		$errores = array();
 		$validos = array();
