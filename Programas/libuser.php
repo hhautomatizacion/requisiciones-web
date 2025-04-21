@@ -66,15 +66,24 @@
 	}
 
 	if ( $action == "signin" ) {
+		writelog('REQUEST:');
+		writelog($_REQUEST);
 		$encontrado = false;
 		$errores = array();
 		$validos = array();
-		$numero = filter_input(INPUT_REQUEST, 'numero', FILTER_SANITIZE_NUMBER_INT);
-		$nombre = filter_input(INPUT_REQUEST, 'nombre', FILTER_SANITIZE_SPECIAL_CHARS);
-		$usuario = filter_input(INPUT_REQUEST, 'usuario', FILTER_SANITIZE_SPECIAL_CHARS);
-		$email = filter_input(INPUT_REQUEST, 'email', FILTER_SANITIZE_EMAIL);
-		$password1 = filter_input(INPUT_REQUEST, 'password1', FILTER_DEFAULT);
-		$password2 = filter_input(INPUT_REQUEST, 'password2', FILTER_DEFAULT);
+		$numero = filter_input(INPUT_POST, 'numero', FILTER_SANITIZE_NUMBER_INT);
+		$nombre = filter_input(INPUT_POST, 'nombre', FILTER_SANITIZE_SPECIAL_CHARS);
+		$usuario = filter_input(INPUT_POST, 'usuario', FILTER_SANITIZE_SPECIAL_CHARS);
+		$email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+		$password1 = filter_input(INPUT_POST, 'password1', FILTER_DEFAULT);
+		$password2 = filter_input(INPUT_POST, 'password2', FILTER_DEFAULT);
+		writelog('Dando de alta:');
+		writelog($numero);
+		writelog($nombre);
+		writelog($usuario);
+		writelog($email);
+		writelog($password1);
+		writelog($password2);
 		if ( $numero <= 0 ){
 			$errores[] = "numero";
 		} else {
@@ -155,8 +164,8 @@
 	if ( $action == "editpassword" ) {
 		$errores = array();
 		$validos = array();
-		$password1 = filter_input(INPUT_REQUEST, 'password1', FILTER_DEFAULT);
-		$password2 = filter_input(INPUT_REQUEST, 'password2', FILTER_DEFAULT);
+		$password1 = filter_input(INPUT_POST, 'password1', FILTER_DEFAULT);
+		$password2 = filter_input(INPUT_POST, 'password2', FILTER_DEFAULT);
 		if ( strlen($password1) == 0 || $password1 <> $password2 ) {
 			$errores[] = "password1";
 		} else {
@@ -179,10 +188,10 @@
 	if ( $action == "edituser" ) {
 		$errores = array();
 		$validos = array();
-		$numero = filter_input(INPUT_REQUEST, 'numero', FILTER_SANITIZE_NUMBER_INT);
-		$nombre = filter_input(INPUT_REQUEST, 'nombre', FILTER_SANITIZE_SPECIAL_CHARS);
-		$usuario = filter_input(INPUT_REQUEST, 'usuario', FILTER_SANITIZE_SPECIAL_CHARS);
-		$email = filter_input(INPUT_REQUEST, 'email', FILTER_SANITIZE_EMAIL);
+		$numero = filter_input(INPUT_POST, 'numero', FILTER_SANITIZE_NUMBER_INT);
+		$nombre = filter_input(INPUT_POST, 'nombre', FILTER_SANITIZE_SPECIAL_CHARS);
+		$usuario = filter_input(INPUT_POST, 'usuario', FILTER_SANITIZE_SPECIAL_CHARS);
+		$email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 		if ( $numero < 0 ){
 			$errores[] = "numero";
 		} else {
@@ -254,7 +263,7 @@
 
 	if ( $action == "lostpassword" ) {
 		$resultado = "";
-		$name = filter_input(INPUT_REQUEST, 'name', FILTER_SANITIZE_SPECIAL_CHARS);
+		$name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_SPECIAL_CHARS);
 		$res = $db->prepare("SELECT id,email,activo FROM usuarios WHERE (numero=? OR LCASE(nombre)=LCASE(?) OR LCASE(usuario)=LCASE(?) OR LCASE(email)=LCASE(?))");
 		$res->execute([$name, $name, $name, $name]);
 		while ($row = $res->fetch()) {
