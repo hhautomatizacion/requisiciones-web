@@ -196,6 +196,7 @@
 			var requisicion = 0;
 			var busquedarequisiciones = "";
 			var file_upload_max_size = 0;
+
 			function formatBytes(bytes) {
 				if (typeof bytes !== 'number') {
 					return '';
@@ -460,6 +461,18 @@
 				xmlhttp.send();
 			}
 
+			function checkForNotifications() {
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						if ( this.responseText == "OK" ) {
+						}
+					}
+				};
+				xmlhttp.open("GET", "libnotificaciones.php?action=checkfornotifications", true);
+				xmlhttp.send();
+			}
+
 			function tik() {
 				var divContenido = document.getElementById("contenido");
 				var estado = document.getElementById("estado");
@@ -473,6 +486,7 @@
 					requisicion++;
 				}
 				if ( requisicion >= requisiciones.length ) {
+					checkForNotifications();
 					clearInterval(t);
 					estado.value = 0;
 				}

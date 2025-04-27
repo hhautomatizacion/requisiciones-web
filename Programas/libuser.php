@@ -1,5 +1,6 @@
 <?php
 	use PHPMailer\PHPMailer\PHPMailer;
+	use PHPMailer\PHPMailer\SMTP;
 
 	require_once "PHPMailer.php";
 	require_once "SMTP.php";
@@ -33,7 +34,7 @@
 	}
 
 	if ( $accion == "logout" ) {
-		setcookie("usuario","");
+		setcookie("usuario", "");
 		echo "OK";
 	}
 
@@ -44,22 +45,26 @@
 		$password = filter_input(INPUT_POST, 'password', FILTER_DEFAULT);
 		if ( strlen($nombre) == 0) {
 			$errores[] = "name";
-		} else {
+		}
+		else {
 			$validos[] = "name";
 		}
 		if ( strlen($password) == 0) {
 			$errores[] = "password";
-		} else {
+		}
+		else {
 			$validos[] = "password";
 		}
 		if ( count($errores) == 0 ) {
 			if (usuarioDarEntrada(usuarioVerificarCredenciales($nombre, $password)) > 0) {
 				echo json_encode(array('succes' => 1));
-			}else{
+			}
+			else {
 				$errores[] = "loginform";
 				echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 			}
-		}else{
+		}
+		else {
 			$validos[] = "loginform";
 			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
@@ -79,7 +84,8 @@
 		$password2 = filter_input(INPUT_POST, 'password2', FILTER_DEFAULT);
 		if ( $numero <= 0 ){
 			$errores[] = "numero";
-		} else {
+		}
+		else {
 			$encontrado = false;
 			$res = $db->prepare("SELECT * FROM usuarios WHERE numero=?;");
 			$res->execute([$numero]);
@@ -88,18 +94,21 @@
 			}
 			if ( $encontrado ) {
 				$errores[] = "numero";
-			} else {
+			}
+			else {
 				$validos[] = "numero";
 			}
 		}
 		if ( strlen($nombre) == 0 ) {
 			$errores[] = "nombre";
-		} else {
+		}
+		else {
 			$validos[] = "nombre";
 		}
 		if ( strlen($email) == 0 ) {
 			$errores[] = "email";
-		} else {
+		}
+		else {
 			$validos[] = "email";
 		}
 		$encontrado = false;
@@ -110,7 +119,8 @@
 		}
 		if ( $encontrado ) {
 			$errores[] = "nombre";
-		} else {
+		}
+		else {
 			$validos[] = "nombre";
 		}
 		$encontrado = false;
@@ -121,7 +131,8 @@
 		}
 		if ( $encontrado ) {
 			$errores[] = "usuario";
-		} else {
+		}
+		else {
 			$validos[] = "usuario";
 		}
 		$encontrado = false;
@@ -132,24 +143,28 @@
 		}
 		if ( $encontrado ) {
 			$errores[] = "email";
-		} else {
+		}
+		else {
 			$validos[] = "email";
 		}
 		if ( strlen($password1) == 0 || $password1 <> $password2 ) {
 			$errores[] = "password1";
-		} else {
+		}
+		else {
 			$validos[] = "password1";
 		}
 		if ( strlen($password2) == 0 || $password1 <> $password2 ) {
 			$errores[] = "password2";
-		} else {
+		}
+		else {
 			$validos[] = "password2";
 		}
 		if ( count($errores) == 0 ){
 			$res = $db->prepare("INSERT INTO usuarios VALUES (0,". $numero .",'". $nombre ."','". $usuario ."','". $email ."',SHA1('". $password1 ."'), NULL, NULL, '', 0, 0, 1);");
 			$res->execute();
 			echo json_encode(array('succes' => 1));
-		} else {
+		}
+		else {
 			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
@@ -161,19 +176,22 @@
 		$password2 = filter_input(INPUT_POST, 'password2', FILTER_DEFAULT);
 		if ( strlen($password1) == 0 || $password1 <> $password2 ) {
 			$errores[] = "password1";
-		} else {
+		}
+		else {
 			$validos[] = "password1";
 		}
 		if ( strlen($password2) == 0 || $password1 <> $password2 ) {
 			$errores[] = "password2";
-		} else {
+		}
+		else {
 			$validos[] = "password2";
 		}
 		if ( count($errores) == 0 ){
 			$res = $db->prepare("UPDATE usuarios SET password=SHA1('". $password1 ."') WHERE id=". usuarioId() .";");
 			$res->execute();
 			echo json_encode(array('succes' => 1));
-		} else {
+		}
+		else {
 			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
@@ -187,7 +205,8 @@
 		$email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 		if ( $numero < 0 ){
 			$errores[] = "numero";
-		} else {
+		}
+		else {
 			$id = usuarioId();
 			$res = $db->prepare("SELECT id FROM usuarios WHERE numero=". $numero .";");
 			$res->execute();
@@ -196,13 +215,15 @@
 			}
 			if ( $id == usuarioId() ) {
 				$validos[] = "numero";
-			} else {
+			}
+			else {
 				$errores[] = "numero";
 			}
 		}
 		if ( strlen($nombre) == 0 ){
 			$errores[] = "nombre";
-		} else {
+		}
+		else {
 			$id = usuarioId();
 			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $nombre ."') OR LCASE(usuario)=LCASE('". $nombre ."') OR LCASE(email)=LCASE('". $nombre ."');");
 			$res->execute();
@@ -217,7 +238,8 @@
 		}
 		if ( strlen($usuario) == 0 ){
 			$errores[] = "usuario";
-		} else {
+		}
+		else {
 			$id = usuarioId();
 			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $usuario ."') OR LCASE(usuario)=LCASE('". $usuario ."') OR LCASE(email)=LCASE('". $usuario ."');");
 			$res->execute();
@@ -226,13 +248,15 @@
 			}
 			if ( $id == usuarioId() ) {
 				$validos[] = "usuario";
-			} else {
+			}
+			else {
 				$errores[] = "usuario";
 			}
 		}
 		if ( strlen($email) == 0 ){
 			$errores[] = "email";
-		} else {
+		} 
+		else {
 			$id = usuarioId();
 			$res = $db->prepare("SELECT id FROM usuarios WHERE LCASE(nombre)=LCASE('". $email ."') OR LCASE(usuario)=LCASE('". $email ."') OR LCASE(email)=LCASE('". $email ."');");
 			$res->execute();
@@ -241,7 +265,8 @@
 			}
 			if ( $id == usuarioId() ) {
 				$validos[] = "email";
-			} else {
+			}
+			else {
 				$errores[] = "email";
 			}
 		}
@@ -249,7 +274,8 @@
 			$res = $db->prepare("UPDATE usuarios SET numero=". $numero .", nombre='". $nombre ."', usuario='". $usuario ."', email='". $email ."' WHERE id=". usuarioId() .";");
 			$res->execute();
 			echo json_encode(array('succes' => 1));
-		}else{
+		}
+		else {
 			echo json_encode(array('succes' => 0, 'errors' => $errores, 'validos' => $validos));
 		}
 	}
@@ -261,13 +287,14 @@
 		$res->execute([$name, $name, $name, $name]);
 		while ($row = $res->fetch()) {
 			if ($row[1]){
-				$recoverypw=randomString(6);
+				$recoverypw = randomString(6);
 				if ( intval($row[2]) ) {
 					$res = $db->prepare("UPDATE usuarios SET recovery=1, recoverypw=SHA1('". $recoverypw ."') WHERE id=". $row[0]);
 					$res->execute();
-					enviarPorCorreo($row[1],"Recuperacion de password","Su nuevo password temporal es ". $recoverypw ."\nEste password es valido solo por una ocasion.\nSi usted no ha solicitado esta informacion puede seguir usando su password actual.");
-				}else{
-					enviarPorCorreo($row[1],"Su cuenta esta desactivada","Su cuenta de usuario esta desactivada. Pongase en contacto con el administrador del sitio.");
+					enviarPorCorreo($row[1], "Recuperacion de password", "Su nuevo password temporal es <b>". $recoverypw ."</b>.\nEste password es valido solo por una ocasion.\nSi usted no ha solicitado esta informacion puede seguir usando su password actual.");
+				}
+				else {
+					enviarPorCorreo($row[1], "Su cuenta esta desactivada", "Su cuenta de usuario esta desactivada. Pongase en contacto con el administrador del sitio.");
 				}
 				$resultado = "OK";
 			}
@@ -276,33 +303,36 @@
 	}
 
 	function enviarPorCorreo($direccion, $asunto, $mensaje) {
-		$mail_server = obtenerPreferenciaGlobal("mail","server","128.128.5.243");
-		$mail_port = obtenerPreferenciaGlobal("mail","port","25");
-		$mail_user = obtenerPreferenciaGlobal("mail","user","mttocl");
-		$mail_pass = obtenerPreferenciaGlobal("mail","pass","lcottm");
-		$mail_fromaddress = obtenerPreferenciaGlobal("mail","fromaddres","mttocl@cualquierlavado.com.mx");
-		$mail_fromname = obtenerPreferenciaGlobal("mail","fromname","MantenimientoCL");
-		$mail = new PHPMailer(true);
-		try
-		{
+		$mail_server = obtenerPreferenciaGlobal("mail", "server", "128.128.5.243");
+		$mail_port = obtenerPreferenciaGlobal("mail", "port", "25");
+		$mail_user = obtenerPreferenciaGlobal("mail", "user", "mttocl");
+		$mail_pass = obtenerPreferenciaGlobal("mail", "pass", "lcottm");
+		$mail_tls = obtenerPreferenciaGlobal("mail", "usetls", "true");
+		$mail_fromaddress = obtenerPreferenciaGlobal("mail", "fromaddres", "mttocl@cualquierlavado.com.mx");
+		$mail_fromname = obtenerPreferenciaGlobal("mail", "fromname", "MantenimientoCL");
+		try {
+			$mail = new PHPMailer(true);
 			$mail->IsSMTP();
 			$mail->Host = $mail_server;
+			$mail->Port = $mail_port;
 			$mail->SMTPAuth = true;
 			$mail->Username = $mail_user;
 			$mail->Password = $mail_pass;
-			$mail->SMTPSecure = 'tls';
-			$mail->port = $mail_port;
-			$mail->setFrom($mail_fromaddress,$mail_fromname);
+			if ( booleanFromString($mail_tls) ) {
+				$mail->SMTPSecure = 'tls';
+			}
+			$mail->setFrom($mail_fromaddress, $mail_fromname);
 			$mail->addAddress($direccion);
+			writelog('Enviar correo: ' . $asunto . ' a ' . $direccion);
 			$mail->IsHTML(true);
 			$mail->CharSet = 'utf-8';
-			$mail->Subject=$asunto;
-			$mail->Body=$mensaje;
+			$mail->Subject = $asunto;
+			$mail->Body = $mensaje;
 			$mail->send();
 		}
-		catch (Exception $e)
-		{
+		catch (Exception $e) {
 			writelog('Error al enviar correo: '. $asunto . ' a '. $direccion);
+			writelog($mail->ErrorInfo);
 		}
 	}
 
@@ -542,7 +572,7 @@
 		$res = $db->prepare("SELECT id FROM usuarios WHERE id= ? AND activo=1");
 		$res->execute([$idusuario]);
 		while ( $row = $res->fetch() ) {
-			setcookie("usuario",$token);
+			setcookie("usuario", $token);
 			$resultado = $row[0];
 			$res = $db->prepare("UPDATE usuarios SET token= ?, ultimologin=NOW(), recovery=0, recoverypw='' WHERE id=?" );
 			$res->execute([$token, $row[0]]);
@@ -563,8 +593,7 @@
 			$res = $db->prepare("UPDATE opcionesusuarios SET valor= ? WHERE idusuario= ? AND seccion= ? AND clave= ?;");
 			$res->execute([$valor, usuarioId(), $seccion, $clave]);
 		}
-		else
-		{
+		else {
 			$res = $db->prepare("INSERT INTO opcionesusuarios VALUES (0,  ?,  ?,  ?,  ?);");
 			$res->execute([usuarioId(), $seccion, $clave, $valor]);
 		}

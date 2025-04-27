@@ -86,7 +86,12 @@
 		return $resultado;
 	}
 
-	function writelog( $data ) {
+	function booleanFromString($string){
+		$string = strtolower($string);
+		return (in_array($string, array("true", "1", "yes", "on"), true));
+	}
+
+	function writelog($data) {
 		$output = $data;
 		$date = date("Y-m-d");
 		$time = date("Y-m-d H:i:s");

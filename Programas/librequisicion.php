@@ -116,7 +116,7 @@
 					if ( isset($_REQUEST["totalpartadjuntos"]) ) {
 						foreach ( $_REQUEST["totalpartadjuntos"]["tablaadjuntos". $item ] as $elemento ) {
 							$cntarchivoduplicado = 0;
-							$rutaupload=$uploaddir ."p". $ultimoidpart;
+							$rutaupload=$uploaddir . "p" . $ultimoidpart;
 							if (!is_writeable($rutaupload)) {
 								mkdir($rutaupload);
 							}
@@ -124,15 +124,15 @@
 							$rutatemp = $_FILES["partadjuntostablaadjuntos". $item]["tmp_name"][$elemento];
 							$longitudarchivo = $_FILES["partadjuntostablaadjuntos". $item]["size"][$elemento];
 							$nombrearchivo = remove_special_chars($nombrearchivo);
-							$rutadestino = $rutaupload ."/". $nombrearchivo;
+							$rutadestino = $rutaupload . "/" . $nombrearchivo;
 							$nombrearchivooriginal = $nombrearchivo;
 							if ( $longitudarchivo <= file_upload_max_size() ) {
 								while(file_exists($rutadestino)) {
 									$cntarchivoduplicado = $cntarchivoduplicado + 1;
 									$name = filename_get_basename($nombrearchivooriginal);
 									$ext = filename_get_extension($nombrearchivooriginal);
-									$nombrearchivo = $name ." (". $cntarchivoduplicado .").". $ext;
-									$rutadestino = $rutaupload ."/". $nombrearchivo;
+									$nombrearchivo = $name . " (" . $cntarchivoduplicado . ")." . $ext;
+									$rutadestino = $rutaupload . "/" . $nombrearchivo;
 								}
 								if (move_uploaded_file($rutatemp,$rutadestino)) {
 									$res = $db->prepare("INSERT INTO adjuntospartidas VALUES (0, ?, ?, ?, ?,NOW(),1);");
@@ -155,7 +155,7 @@
 			if ( isset($_REQUEST["totalreqadjuntos"]) ) {
 				foreach( $_REQUEST["totalreqadjuntos"] as $item) {
 					$cntarchivoduplicado = 0;
-					$rutaupload=$uploaddir ."r". $ultimoidreq;
+					$rutaupload=$uploaddir . "r" . $ultimoidreq;
 					if (!is_writeable($rutaupload)) {
 						mkdir($rutaupload);
 					}
@@ -163,7 +163,7 @@
 					$rutatemp = $_FILES["reqadjuntos"]["tmp_name"][$item];
 					$longitudarchivo = $_FILES["reqadjuntos"]["size"][$item];
 					$nombrearchivo = remove_special_chars($nombrearchivo);
-					$rutadestino = $rutaupload ."/". $nombrearchivo;
+					$rutadestino = $rutaupload . "/" . $nombrearchivo;
 					$nombrearchivooriginal = $nombrearchivo;
 					if ( $longitudarchivo <= file_upload_max_size() ) {
 						while(file_exists($rutadestino)) {
@@ -197,7 +197,7 @@
 	if ( isset($_POST["accion"]) && $_POST["accion"] == "agregaradjuntoreq" ) {
 		$idrequisicion = filter_input(INPUT_POST, 'requisicion', FILTER_SANITIZE_NUMBER_INT);
 		$cntarchivoduplicado = 0;
-		$rutaupload = $uploaddir ."r". $idrequisicion;
+		$rutaupload = $uploaddir . "r" . $idrequisicion;
 		if (!is_writeable($rutaupload)) {
 			mkdir($rutaupload);
 		}
@@ -205,7 +205,7 @@
 		$rutatemp = $_FILES["archivo"]["tmp_name"];
 		$longitudarchivo = $_FILES["archivo"]["size"];
 		$nombrearchivo = remove_special_chars($nombrearchivo);
-		$rutadestino = $rutaupload ."/". $nombrearchivo;
+		$rutadestino = $rutaupload . "/" . $nombrearchivo;
 		$nombrearchivooriginal = $nombrearchivo;
 		if ( $longitudarchivo <= file_upload_max_size() ) {
 			while(file_exists($rutadestino)) {
@@ -273,7 +273,7 @@
 				break;
 		}
 		if ( $user > 0 ) {
-			$usuario=" AND (idsolicitante=". $user ." OR idusuario=". $user .")";
+			$usuario=" AND (idsolicitante=" . $user . " OR idusuario=" . $user . ")";
 		}
 		switch ($order) {
 			case "0":
@@ -311,29 +311,29 @@
 				break;
 		}
 		if ( strlen($q) == 0 ) {
-			$sql="SELECT DISTINCT(id) FROM requisiciones WHERE". $vista . $usuario ." ORDER BY ". $orden .";"; 
+			$sql="SELECT DISTINCT(id) FROM requisiciones WHERE" . $vista . $usuario . " ORDER BY " . $orden . ";"; 
 		}else{
-			$res = $db->prepare("DROP TABLE IF EXISTS ". $tablatemp .";");
+			$res = $db->prepare("DROP TABLE IF EXISTS " . $tablatemp . ";");
 			$res->execute();
-			$res = $db->prepare("CREATE TABLE ". $tablatemp ." (id INT UNSIGNED) ENGINE MEMORY DEFAULT CHARSET utf8;");
+			$res = $db->prepare("CREATE TABLE " . $tablatemp . " (id INT UNSIGNED) ENGINE MEMORY DEFAULT CHARSET utf8;");
 			$res->execute();
 			if ( is_numeric($q) ){
-				$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT id FROM requisiciones WHERE id=". $q .");");
+				$res = $db->prepare("INSERT INTO " . $tablatemp . " (SELECT id FROM requisiciones WHERE id=" . $q . ");");
 				$res->execute();
 			}
-			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT id FROM requisiciones WHERE requisicion LIKE '%". $q ."%');");
+			$res = $db->prepare("INSERT INTO " . $tablatemp . " (SELECT id FROM requisiciones WHERE requisicion LIKE '%" . $q . "%');");
 			$res->execute();
-			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM partidas WHERE descripcion LIKE '%". $q ."%');");
+			$res = $db->prepare("INSERT INTO " . $tablatemp . " (SELECT idrequisicion AS id FROM partidas WHERE descripcion LIKE '%" . $q . "%');");
 			$res->execute();
-			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM comentariosrequisiciones WHERE comentario LIKE '%". $q ."%');");
+			$res = $db->prepare("INSERT INTO " . $tablatemp . " (SELECT idrequisicion AS id FROM comentariosrequisiciones WHERE comentario LIKE '%" . $q . "%');");
 			$res->execute();
-			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT idrequisicion AS id FROM adjuntosrequisiciones WHERE nombre LIKE '%". $q ."%');");
+			$res = $db->prepare("INSERT INTO " . $tablatemp . " (SELECT idrequisicion AS id FROM adjuntosrequisiciones WHERE nombre LIKE '%" . $q . "%');");
 			$res->execute();
-			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT partidas.idrequisicion AS id FROM partidas, comentariospartidas WHERE partidas.id=comentariospartidas.idpartida AND comentariospartidas.comentario LIKE '%". $q ."%');");
+			$res = $db->prepare("INSERT INTO " . $tablatemp . " (SELECT partidas.idrequisicion AS id FROM partidas, comentariospartidas WHERE partidas.id=comentariospartidas.idpartida AND comentariospartidas.comentario LIKE '%". $q ."%');");
 			$res->execute();
-			$res = $db->prepare("INSERT INTO ". $tablatemp ." (SELECT partidas.idrequisicion AS id FROM partidas, adjuntospartidas WHERE partidas.id=adjuntospartidas.idpartida AND adjuntospartidas.nombre LIKE '%". $q ."%');");
+			$res = $db->prepare("INSERT INTO " . $tablatemp . " (SELECT partidas.idrequisicion AS id FROM partidas, adjuntospartidas WHERE partidas.id=adjuntospartidas.idpartida AND adjuntospartidas.nombre LIKE '%". $q ."%');");
 			$res->execute();
-			$sql="SELECT DISTINCT(id) FROM requisiciones INNER JOIN ". $tablatemp ." USING(id) WHERE". $vista . $usuario ." ORDER BY ". $orden .";";
+			$sql="SELECT DISTINCT(id) FROM requisiciones INNER JOIN " . $tablatemp . " USING(id) WHERE" . $vista . $usuario . " ORDER BY " . $orden . ";";
 		}
 		$res = $db->prepare($sql);
 		$res->execute();
@@ -414,7 +414,7 @@
 			case "saveprinted":
 				if ( isset($_GET["reqno"]) ) {
 					$req = $_GET["reqno"];
-					$res = $db->prepare("UPDATE requisiciones SET requisicion='". $req ."' WHERE id=". $idrequisicion .";");
+					$res = $db->prepare("UPDATE requisiciones SET requisicion='" . $req . "' WHERE id=" . $idrequisicion . ";");
 					$res->execute();
 				}
 				echo "OK";
@@ -434,9 +434,9 @@
 				$pdf->AddPage();
 				ImprimirRequisicion($pdf, $idrequisicion);
 				$pdf->Output();
-				$res = $db->prepare("UPDATE requisiciones SET impresa=1, fecha=NOW(), fechaimpresa=NOW(), idimpresa=". usuarioId() ." WHERE id=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE requisiciones SET impresa=1, fecha=NOW(), fechaimpresa=NOW(), idimpresa=" . usuarioId() . " WHERE id=" . $idrequisicion . ";");
 				$res->execute();
-				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 4, ". $idrequisicion .", ". usuarioId() .", 1);");
+				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 4, " . $idrequisicion . ", " . usuarioId() . ", 1);");
 				$res->execute();
 				break;
 			case "testprint":
@@ -446,34 +446,34 @@
 				$pdf->Output();
 				break;
 			case "tobesupplied":
-				$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE activo=1 AND idrequisicion=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE partidas SET surtida=0 WHERE activo=1 AND idrequisicion=" . $idrequisicion . ";");
 				$res->execute();
-				$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE requisiciones SET surtida=0 WHERE id=" . $idrequisicion . ";");
 				$res->execute();
 				echo "OK";
 				break;
 			case "supplied":
-				$res = $db->prepare("UPDATE partidas SET surtida=1, fechasurtida=NOW(), idsurtida=". usuarioId() ." WHERE activo=1 AND surtida=0 AND idrequisicion=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE partidas SET surtida=1, fechasurtida=NOW(), idsurtida=" . usuarioId() . " WHERE activo=1 AND surtida=0 AND idrequisicion=" . $idrequisicion . ";");
 				$res->execute();
-				$res = $db->prepare("UPDATE requisiciones SET surtida=1, fechasurtida=NOW(), idsurtida=". usuarioId() ." WHERE id=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE requisiciones SET surtida=1, fechasurtida=NOW(), idsurtida=" . usuarioId() . " WHERE id=" . $idrequisicion . ";");
 				$res->execute();
-				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 5, ". $idrequisicion .", ". usuarioId() .", 1);");
+				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 5, " . $idrequisicion . ", " . usuarioId() . ", 1);");
 				$res->execute();
 				echo "OK";
 				break;
 			case "delete":
-				$res = $db->prepare("UPDATE partidas SET activo=0, fechaactiva=NOW(), idactiva=". usuarioId() ." WHERE surtida=0 AND activo=1 AND idrequisicion=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE partidas SET activo=0, fechaactiva=NOW(), idactiva=" . usuarioId() . " WHERE surtida=0 AND activo=1 AND idrequisicion=" . $idrequisicion . ";");
 				$res->execute();
-				$res = $db->prepare("UPDATE requisiciones SET activo=0, fechaactiva=NOW(), idactiva=". usuarioId() ." WHERE id=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE requisiciones SET activo=0, fechaactiva=NOW(), idactiva=" . usuarioId() . " WHERE id=" . $idrequisicion . ";");
 				$res->execute();
-				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 6, ". $idrequisicion .", ". usuarioId() .", 1);");
+				$res = $db->prepare("INSERT INTO notificacionesrequisiciones VALUES (0, NOW(), 6, " . $idrequisicion . ", " . usuarioId() . ", 1);");
 				$res->execute();
 				echo "OK";
 				break;
 			case "undelete":
-				$res = $db->prepare("UPDATE partidas SET activo=1, fechaactiva=NOW(), idactiva=". usuarioId() ." WHERE activo=0 AND idrequisicion=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE partidas SET activo=1, fechaactiva=NOW(), idactiva=" . usuarioId() . " WHERE activo=0 AND idrequisicion=" . $idrequisicion . ";");
 				$res->execute();
-				$res = $db->prepare("UPDATE requisiciones SET activo=1, fechaactiva=NOW(), idactiva=". usuarioId() ." WHERE id=". $idrequisicion .";");
+				$res = $db->prepare("UPDATE requisiciones SET activo=1, fechaactiva=NOW(), idactiva=" . usuarioId() . " WHERE id=" . $idrequisicion . ";");
 				$res->execute();
 				echo "OK";
 				break;
@@ -732,7 +732,6 @@
 				$pdf->SetFont($fontname,'', $fontsize);
 				$pdf->PutRows($x, $y, (float)$row[2], $ancho);
 			}
-
 			$visible = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadVisible', '1');
 			if ( $visible == "1" ) {
 				$fontsize = obtenerPreferenciaGlobal('reporte', 'FormatoUnidadFontSize', '8');

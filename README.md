@@ -14,9 +14,9 @@
 
 ## Herramientas utilizadas
 * Ubuntu 18.04
-* Notepad++
-* MySQSL 5.5
 * PHP 5
+* MySQSL 5.5
+* PHPMailer 6.0.3
 * JavaScript
 
 ## Modelos de PLC, etc.

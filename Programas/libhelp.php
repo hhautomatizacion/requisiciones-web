@@ -41,7 +41,7 @@
 		echo "<table>";
 		echo "<tr><td width=\"20%\"><small>Campo</small></td><td width=\"80%\"><small>Valor</small></td></tr>";
 		echo "<tr><td>Descripcion</td><td>Sistema para control de requisiciones</td></tr>";
-		echo "<tr><td>Version</td><td>2.02</td></tr>";
+		echo "<tr><td>Version</td><td>2.03</td></tr>";
 		echo "<tr><td>Autor</td><td>Emmanuel Castillo</td></tr>";
 		echo "<tr><td>Email</td><td>emmanuel156@gmail.com</td></tr>";
 		echo "</table>";
